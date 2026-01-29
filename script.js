@@ -1,3 +1,4 @@
+const sovraMemory = [];
 function invokeSovra() {
 function parseLegalText(text) {
   const exclusionPatterns = [
@@ -144,9 +145,26 @@ let output = `🔍 Constrained Logic:\nAnalyzing "${query}"...\n✅ References r
 data.organic_results.forEach((r, i) => {
   const domain = classifyActivity(`${r.title} ${r.snippet}`);
   const biasTags = detectBias(`${r.title} ${r.snippet}`);
-  const biasOutput = biasTags.length ? `🧠 Bias Flags: ${biasTags.join(", ")}` : "";
+  const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
   const powerTags = mapPowerStructure(r.link);
   const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
+  const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
+
+  const memoryEntry = sovraMemory[sovraMemory.length - 1];
+  memoryEntry.domains.push(domain);
+  memoryEntry.biasFlags.push(...biasTags);
+  memoryEntry.powerTags.push(powerTags);
+  memoryEntry.syntaxFlags.push(...syntaxFlags);
+
+  output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
+});
+
+// Optional: Trigger comparator after first two results
+if (data.organic_results.length >= 2) {
+  const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
+  output += `\n${comparison}\n`;
+}
+
 
  output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧠 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
 
@@ -181,6 +199,22 @@ function compareDocuments() {
       ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
       : "🧭 No shared exclusion patterns found.");
 }
+function compareNarratives(sourceA, sourceB) {
+  const extract = (r) => ({
+    title: r.title,
+    snippet: r.snippet || "No snippet",
+    link: r.link,
+    domain: classifyActivity(`${r.title} ${r.snippet}`),
+    bias: detectBias(`${r.title} ${r.snippet}`),
+    power: mapPowerStructure(r.link),
+    syntax: detectFramingSyntax(`${r.title} ${r.snippet}`)
+  });
+
+  const a = extract(sourceA);
+  const b = extract(sourceB);
+
+  return `🧠 Narrative Comparator:\n\n🔴 Source A: ${a.title}\n🌐 Domain: ${a.domain}\n🧭 Bias: ${a.bias.join(", ") || "None"}\n🏛️ Power: ${a.power}\n🧠 Syntax: ${a.syntax.join(", ") || "None"}\n\n🔵 Source B: ${b.title}\n🌐 Domain: ${b.domain}\n🧭 Bias: ${b.bias.join(", ") || "None"}\n🏛️ Power: ${b.power}\n🧠 Syntax: ${b.syntax.join(", ") || "None"}\n`;
+}
 
 async function searchSovra() {
   const query = document.getElementById("query").value.trim();
@@ -189,7 +223,15 @@ async function searchSovra() {
   if (!query) {
     results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
     return;
-  }
+  sovraMemory.push({
+  query,
+  timestamp: new Date().toISOString(),
+  domains: [],
+  biasFlags: [],
+  powerTags: [],
+  syntaxFlags: []
+});
+}
 
   const apiKey = "01a0b0cdbab89d254046bba2780ae2bb71ca275e4d118b8a3bb6a5062976189d";
   const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
