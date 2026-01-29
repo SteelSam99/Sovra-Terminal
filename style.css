@@ -5,18 +5,9 @@
 body, html {
   margin: 0;
   padding: 0;
-  height: 100%;
   font-family: monospace;
   background-color: #f9f9f9;
   color: #222;
-}
-
-/* Layout container */
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
 }
 
 /* Banner */
@@ -52,11 +43,10 @@ body, html {
 
 /* Results area */
 #results {
-  flex-grow: 1;
   padding: 20px;
-  overflow-y: auto;
   white-space: pre-wrap;
   line-height: 1.6;
   background: #fff;
   border-top: 1px solid #ddd;
 }
+
