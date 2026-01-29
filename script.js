@@ -155,6 +155,63 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 // === End Symbolic Expansion Override ===
 
+// === Myth Registry Injection: Pantera Trace ===
+document.addEventListener("DOMContentLoaded", () => {
+  function registerPanteraMythTrace() {
+    if (
+      typeof Sovra !== "undefined" &&
+      Sovra.myth &&
+      typeof Sovra.myth.register === "function"
+    ) {
+      Sovra.myth.register({
+        id: "MYTH_PANTERA_001",
+        subject: "Pantera",
+        domain: "American Heavy Metal",
+        mythicShell: [
+          "Southern pride",
+          "Rebel spirit",
+          "Freedom of speech",
+          "Brotherhood of metal"
+        ],
+        symbolicPayload: {
+          compressionDetected: true,
+          euphemismDensity: 0.82,
+          mutationDrift: "Overt signaling → Euphemized dominance",
+          contradictionDensity: "High",
+          ideologicalVectors: [
+            "White-coded aggression",
+            "Confederate nostalgia",
+            "Genre gatekeeping",
+            "Institutional silence"
+          ]
+        },
+        visualSemiotics: [
+          "Confederate flag iconography",
+          "White hypermasculine stage aesthetics"
+        ],
+        institutionalComplicity: [
+          "Major label distribution (Atco, EastWest, Elektra)",
+          "Media minimization of racial incidents",
+          "Platform hosting of hate-coded content"
+        ],
+        finalAssessment: {
+          mythicStatus: "Executable",
+          supremacyField: "Active",
+          narrativeObfuscation: "Genre shielding",
+          symbolicIntegrity: "Compromised"
+        }
+      });
+
+      console.log("📜 Myth Decompilation Trace for Pantera registered in Sovra’s myth registry.");
+    } else {
+      setTimeout(registerPanteraMythTrace, 100);
+    }
+  }
+
+  registerPanteraMythTrace();
+});
+// === End Myth Registry Injection ===
+
 
 
 
