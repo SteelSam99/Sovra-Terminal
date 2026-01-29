@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "Rebel spirit",
           "Freedom of speech",
           "Brotherhood of metal"
-        ]),
+        ]);
         symbolicPayload: {
           compressionDetected: true,
           euphemismDensity: 0.82,
