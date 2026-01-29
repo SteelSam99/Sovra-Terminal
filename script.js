@@ -1,3 +1,5 @@
+const sovraMemory = [];
+
 async function searchSovra() {
   const query = document.getElementById("query").value.trim();
   const compareRaw = document.getElementById("toggleRaw").checked;
