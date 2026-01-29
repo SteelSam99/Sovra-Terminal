@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Freedom of speech",
     "Brotherhood of metal"
   ]
-);
+),
 
           }
         symbolicPayload: {
