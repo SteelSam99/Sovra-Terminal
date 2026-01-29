@@ -94,6 +94,26 @@ function detectBias(text) {
     .filter(flag => text.toLowerCase().includes(flag.keyword))
     .map(flag => flag.label);
 }
+function mapPowerStructure(url) {
+  const sources = {
+    GOVERNMENT: ["gov", "senate.gov", "house.gov", "whitehouse.gov", "cdc.gov", "nasa.gov"],
+    CORPORATE: ["forbes.com", "bloomberg.com", "wsj.com", "businessinsider.com", "cnbc.com"],
+    ACTIVIST: ["aclu.org", "greenpeace.org", "naacp.org", "hrw.org", "amnesty.org"],
+    ACADEMIC: ["harvard.edu", "stanford.edu", "mit.edu", "oxford.edu", "nature.com"],
+    MEDIA: ["cnn.com", "bbc.com", "nytimes.com", "washingtonpost.com", "theguardian.com", "reuters.com"]
+  };
+
+  const domain = url.toLowerCase();
+  const tags = [];
+
+  for (const [label, patterns] of Object.entries(sources)) {
+    if (patterns.some(p => domain.includes(p))) {
+      tags.push(label);
+    }
+  }
+
+  return tags.length ? tags.join(" + ") : "UNKNOWN";
+}
 
  
 
@@ -105,8 +125,10 @@ data.organic_results.forEach((r, i) => {
   const domain = classifyActivity(`${r.title} ${r.snippet}`);
   const biasTags = detectBias(`${r.title} ${r.snippet}`);
   const biasOutput = biasTags.length ? `🧠 Bias Flags: ${biasTags.join(", ")}` : "";
+  const powerTags = mapPowerStructure(r.link);
 
-  output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🏷️ Domain: ${domain}\n${biasOutput}\n\n`;
+ output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n\n`;
+
 });
 
 } else {
