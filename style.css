@@ -1,8 +1,4 @@
 body {
-  overflow-y: auto;
-  max-height: 100vh;
-}
-body {
   background-color: #0A1F30; /* Deep navy */
   color: #00FF00; /* Neon green */
   font-family: 'Courier New', monospace;
