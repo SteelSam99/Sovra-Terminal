@@ -60,19 +60,8 @@ function classifyActivity(text) {
   return matchedDomains.length ? matchedDomains.join(" + ") : "UNCLASSIFIED";
 }
 
-  };
 
-  for (const [domain, keywords] of Object.entries(categories)) {
-    for (const word of keywords) {
-      if (text.toLowerCase().includes(word)) {
-        return domain;
-      }
-    }
-  }
-  return "UNCLASSIFIED";
-}
-
-function searchSovra() {
+async function searchSovra() {
   const query = document.getElementById("query").value.trim();
   const compareRaw = document.getElementById("toggleRaw").checked;
   const results = document.getElementById("results");
@@ -81,121 +70,74 @@ function searchSovra() {
     results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
     return;
   }
-function detectBias(text) {
-  const biasFlags = [
-    { keyword: "some critics say", label: "🧠 Framing: Deflection" },
-    { keyword: "many believe", label: "🧠 Framing: Vagueness" },
-    { keyword: "allegedly", label: "🧠 Framing: Distance" },
-    { keyword: "concerns have been raised", label: "🧠 Framing: Passive Voice" },
-    { keyword: "activists claim", label: "🧠 Framing: Dismissive Tone" },
-    { keyword: "experts warn", label: "🧠 Framing: Alarmism" },
-    { keyword: "critics argue", label: "🧠 Framing: Polarization" }
-  ];
 
-  return biasFlags
-    .filter(flag => text.toLowerCase().includes(flag.keyword))
-    .map(flag => flag.label);
-}
-function mapPowerStructure(url) {
-  const sources = {
-    GOVERNMENT: ["gov", "senate.gov", "house.gov", "whitehouse.gov", "cdc.gov", "nasa.gov"],
-    CORPORATE: ["forbes.com", "bloomberg.com", "wsj.com", "businessinsider.com", "cnbc.com"],
-    ACTIVIST: ["aclu.org", "greenpeace.org", "naacp.org", "hrw.org", "amnesty.org"],
-    ACADEMIC: ["harvard.edu", "stanford.edu", "mit.edu", "oxford.edu", "nature.com"],
-    MEDIA: ["cnn.com", "bbc.com", "nytimes.com", "washingtonpost.com", "theguardian.com", "reuters.com"]
-  };
+  sovraMemory.push({
+    query,
+    timestamp: new Date().toISOString(),
+    domains: [],
+    biasFlags: [],
+    powerTags: [],
+    syntaxFlags: []
+  });
 
-  const domain = url.toLowerCase();
-  const tags = [];
+  const apiKey = "01a0b0cdbab89d254046bba2780ae2bb71ca275e4d118b8a3bb6a5062976189d";
+  const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
 
-  for (const [label, patterns] of Object.entries(sources)) {
-    if (patterns.some(p => domain.includes(p))) {
-      tags.push(label);
+  try {
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
+
+    if (data.organic_results) {
+      data.organic_results.forEach((r, i) => {
+        const domain = classifyActivity(`${r.title} ${r.snippet}`);
+        const biasTags = detectBias(`${r.title} ${r.snippet}`);
+        const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
+        const powerTags = mapPowerStructure(r.link);
+        const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
+        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
+
+        const memoryEntry = sovraMemory[sovraMemory.length - 1];
+        memoryEntry.domains.push(domain);
+        memoryEntry.biasFlags.push(...biasTags);
+        memoryEntry.powerTags.push(powerTags);
+        memoryEntry.syntaxFlags.push(...syntaxFlags);
+
+        output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
+      });
+
+      if (data.organic_results.length >= 2) {
+        const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
+        output += `\n${comparison}\n`;
+      }
+    } else {
+      output += "⚠️ No results found.";
     }
-  }
 
-  return tags.length ? tags.join(" + ") : "UNKNOWN";
-}
+    if (compareRaw) {
+      const rawEndpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
+      const rawResponse = await fetch(rawEndpoint);
+      const rawData = await rawResponse.json();
 
-function detectFramingSyntax(text) {
-  const flags = [];
+      if (rawData.organic_results && rawData.organic_results.length >= 2) {
+        const rawA = rawData.organic_results[0];
+        const rawB = rawData.organic_results[1];
 
-  // Passive voice patterns
-  if (/\bwas\b.*\bby\b|\bwere\b.*\bby\b|\bhas been\b|\bhad been\b/.test(text.toLowerCase())) {
-    flags.push("🧠 Syntax: Passive Voice");
-  }
+        const rawComparison = `🌐 Raw Comparator:\n\n🔴 Source A: ${rawA.title}\n${rawA.snippet || "No snippet"}\n🔗 ${rawA.link}\n\n🔵 Source B: ${rawB.title}\n${rawB.snippet || "No snippet"}\n🔗 ${rawB.link}\n`;
 
-  // Omission strategies
-  if (/\bsome say\b|\bthey claim\b|\bconcerns exist\b|\bit is believed\b/.test(text.toLowerCase())) {
-    flags.push("🧠 Syntax: Omission Strategy");
-  }
+        output += `\n${rawComparison}\n`;
+      }
+    }
 
-  // Loaded modifiers
-  if (/\bradical\b|\bcontroversial\b|\bso-called\b|\balarming\b|\bextreme\b/.test(text.toLowerCase())) {
-    flags.push("🧠 Syntax: Loaded Modifier");
-  }
-
-  return flags;
-}
- 
-
-let output = `🔍 Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n🔎 Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
-
-
-
-data.organic_results.forEach((r, i) => {
-  const domain = classifyActivity(`${r.title} ${r.snippet}`);
-  const biasTags = detectBias(`${r.title} ${r.snippet}`);
-  const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
-  const powerTags = mapPowerStructure(r.link);
-  const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
-  const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
-
-  const memoryEntry = sovraMemory[sovraMemory.length - 1];
-  memoryEntry.domains.push(domain);
-  memoryEntry.biasFlags.push(...biasTags);
-  memoryEntry.powerTags.push(powerTags);
-  memoryEntry.syntaxFlags.push(...syntaxFlags);
-
-  output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
-});
-
-// Optional: Trigger comparator after first two results
-if (data.organic_results.length >= 2) {
-  const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
-  output += `\n${comparison}\n`;
-}
-
-
- output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧠 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
-
-
-});
-const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
-
-} else {
-  output += "⚠️ No results found.";
-}
-if (compareRaw) {
-  const rawEndpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apikey}`;
-  const rawResponse = await fetch(rawEndpoint);
-  const rawData = await rawResponse.json();
-
-  if (rawData.organic_results && rawData.organic_results.length >= 2) {
-    const rawA = rawData.organic_results[0];
-    const rawB = rawData.organic_results[1];
-
-    const rawComparison = `🌐 Raw Comparator:\n\n🔴 Source A: ${rawA.title}\n${rawA.snippet || "No snippet"}\n🔗 ${rawA.link}\n\n🔵 Source B: ${rawB.title}\n${rawB.snippet || "No snippet"}\n🔗 ${rawB.link}\n`;
-
-    output += `\n${rawComparison}\n`;
+    output += "Sovra has spoken.";
+    results.innerText = output;
+  } catch (error) {
+    results.innerText = "⚠️ Sovra encountered a search error.";
+    console.error(error);
   }
 }
 
-  
-  
-  output += "Sovra has spoken.";
-  results.innerText = output;
-}
 
 function compareDocuments() {
   const doc1 = document.getElementById("doc1").value;
@@ -231,44 +173,4 @@ function compareNarratives(sourceA, sourceB) {
   return `🧠 Narrative Comparator:\n\n🔴 Source A: ${a.title}\n🌐 Domain: ${a.domain}\n🧭 Bias: ${a.bias.join(", ") || "None"}\n🏛️ Power: ${a.power}\n🧠 Syntax: ${a.syntax.join(", ") || "None"}\n\n🔵 Source B: ${b.title}\n🌐 Domain: ${b.domain}\n🧭 Bias: ${b.bias.join(", ") || "None"}\n🏛️ Power: ${b.power}\n🧠 Syntax: ${b.syntax.join(", ") || "None"}\n`;
 }
 
-async function searchSovra() {
-  const query = document.getElementById("query").value.trim();
-  const results = document.getElementById("results");
 
-  if (!query) {
-    results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
-    return;
-  sovraMemory.push({
-  query,
-  timestamp: new Date().toISOString(),
-  domains: [],
-  biasFlags: [],
-  powerTags: [],
-  syntaxFlags: []
-});
-}
-
-  const apiKey = "01a0b0cdbab89d254046bba2780ae2bb71ca275e4d118b8a3bb6a5062976189d";
-  const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
-
-  try {
-    const response = await fetch(endpoint);
-    const data = await response.json();
-
-    let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
-
-    if (data.organic_results) {
-      data.organic_results.forEach((r, i) => {
-        output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n\n`;
-      });
-    } else {
-      output += "⚠️ No results found.";
-    }
-
-    output += "Sovra has spoken.";
-    results.innerText = output;
-  } catch (error) {
-    results.innerText = "⚠️ Sovra encountered a search error.";
-    console.error(error);
-  }
-}
