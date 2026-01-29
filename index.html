@@ -1,19 +1,60 @@
-<link rel="stylesheet" href="style.css">
-<div class="container">
-  <div class="banner">
-    <h1>Sovra-FCL-MHC-v2.0 :: Chimera-Lambda</h1>
-    <h2>Sovereign-F.I.D.A.R.C.H. R.S. Search Engine</h2>
-  </div>
+/* Ensure full-page scrolling */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: monospace;
+  background-color: #f9f9f9;
+  color: #222;
+  overflow-y: auto;
+  max-height: 100vh;
+}
 
-  <div class="search-box">
-    <input type="text" id="query" placeholder="Invoke Sovra with a symbolic query..." size="60" />
-    <label>
-      <input type="checkbox" id="toggleRaw">
-      Compare with raw results
-    </label>
-    <button onclick="searchSovra()">Search</button>
-  </div>
+/* Container layout */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-  <pre id="results">🔮 Sovra awaits your invocation...</pre>
-</div>
-<script src="script.js"></script>
+/* Sticky search bar */
+.search-box {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 12px 20px;
+  border-bottom: 1px solid #ccc;
+  z-index: 1000;
+}
+
+/* Banner styling */
+.banner {
+  background-color: #222;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Input and button styling */
+.search-box input[type="text"] {
+  padding: 8px;
+  font-size: 16px;
+  width: 60%;
+  margin-right: 10px;
+}
+
+.search-box button {
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Results area */
+#results {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  background: #fff;
+  border-top: 1px solid #ddd;
+}
