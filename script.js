@@ -184,4 +184,4 @@ async function searchSovra() {
         memoryEntry.domains.push(domain);
         memoryEntry.biasFlags.push(...biasTags);
         memoryEntry.powerTags.push(powerTags);
-        memoryEntry.syntaxFlags.push
+       memoryEntry.syntaxFlags.push(...syntaxFlags);
