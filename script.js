@@ -47,6 +47,20 @@ function classifyActivity(text) {
     WAR: ["conflict", "military", "violence", "battle", "war", "defense", "security"]
   };
 
+  const lowerText = text.toLowerCase();
+  const matchedDomains = [];
+
+  for (const [domain, keywords] of Object.entries(categories)) {
+    if (keywords.some(keyword => lowerText.includes(keyword))) {
+      matchedDomains.push(domain);
+    }
+  }
+
+  return matchedDomains.length ? matchedDomains.join(" + ") : "UNCLASSIFIED";
+}
+
+  };
+
   for (const [domain, keywords] of Object.entries(categories)) {
     for (const word of keywords) {
       if (text.toLowerCase().includes(word)) {
