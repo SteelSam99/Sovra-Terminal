@@ -34,6 +34,29 @@ function parseLegalText(text) {
     `🧬 Residual exclusion syntax active.\n\n` +
     `Sovra has spoken.`;
 }
+function classifyActivity(text) {
+  const categories = {
+    LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"],
+    ECONOMICS: ["money", "finance", "wealth", "poverty", "income", "market", "capitalism"],
+    EDUCATION: ["school", "curriculum", "teacher", "student", "literacy", "university"],
+    ENTERTAINMENT: ["music", "film", "tv", "celebrity", "sports", "game", "art"],
+    LABOR: ["job", "work", "employment", "union", "wages", "labor"],
+    POLITICS: ["government", "policy", "vote", "election", "senate", "congress", "mayor"],
+    RELIGION: ["church", "faith", "belief", "spiritual", "god", "mosque", "temple"],
+    SEX: ["gender", "sexuality", "identity", "relationship", "marriage", "sex"],
+    WAR: ["conflict", "military", "violence", "battle", "war", "defense", "security"]
+  };
+
+  for (const [domain, keywords] of Object.entries(categories)) {
+    for (const word of keywords) {
+      if (text.toLowerCase().includes(word)) {
+        return domain;
+      }
+    }
+  }
+  return "UNCLASSIFIED";
+}
+
 function searchSovra() {
   const query = document.getElementById("query").value.trim();
   const results = document.getElementById("results");
