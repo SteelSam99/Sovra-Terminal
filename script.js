@@ -115,6 +115,26 @@ function mapPowerStructure(url) {
   return tags.length ? tags.join(" + ") : "UNKNOWN";
 }
 
+function detectFramingSyntax(text) {
+  const flags = [];
+
+  // Passive voice patterns
+  if (/\bwas\b.*\bby\b|\bwere\b.*\bby\b|\bhas been\b|\bhad been\b/.test(text.toLowerCase())) {
+    flags.push("🧠 Syntax: Passive Voice");
+  }
+
+  // Omission strategies
+  if (/\bsome say\b|\bthey claim\b|\bconcerns exist\b|\bit is believed\b/.test(text.toLowerCase())) {
+    flags.push("🧠 Syntax: Omission Strategy");
+  }
+
+  // Loaded modifiers
+  if (/\bradical\b|\bcontroversial\b|\bso-called\b|\balarming\b|\bextreme\b/.test(text.toLowerCase())) {
+    flags.push("🧠 Syntax: Loaded Modifier");
+  }
+
+  return flags;
+}
  
 
 let output = `🔍 Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n🔎 Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
@@ -126,10 +146,13 @@ data.organic_results.forEach((r, i) => {
   const biasTags = detectBias(`${r.title} ${r.snippet}`);
   const biasOutput = biasTags.length ? `🧠 Bias Flags: ${biasTags.join(", ")}` : "";
   const powerTags = mapPowerStructure(r.link);
+  const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
 
- output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n\n`;
+ output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧠 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
+
 
 });
+const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
 
 } else {
   output += "⚠️ No results found.";
