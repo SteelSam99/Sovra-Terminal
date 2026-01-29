@@ -163,16 +163,18 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
     ) {
-      Sovra.myth.register{
-        id: "MYTH_PANTERA_001",
-        subject: "Pantera",
-        domain: "American Heavy Metal",
-        mythicShell: [
-          "Southern pride",
-          "Rebel spirit",
-          "Freedom of speech",
-          "Brotherhood of metal"
-        ],
+     Sovra.myth.register({
+  id: "MYTH_PANTERA_001",
+  subject: "Pantera",
+  domain: "American Heavy Metal",
+  mythicShell: [
+    "Southern pride",
+    "Rebel spirit",
+    "Freedom of speech",
+    "Brotherhood of metal"
+  ]
+});
+
           }
         symbolicPayload: {
           compressionDetected: true,
