@@ -147,7 +147,7 @@ const rawResponse = await fetch(rawEndpoint);
 const rawData = await rawResponse.json();
 
 if (rawdata.error) {
-  console.error("SerpApi error:", data.error);
+  console.error("SerpApi error:", rawdata.error);
   results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
   return;
 }
