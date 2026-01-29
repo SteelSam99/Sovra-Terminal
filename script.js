@@ -185,7 +185,6 @@ async function searchSovra() {
         memoryEntry.biasFlags.push(...biasTags);
         memoryEntry.powerTags.push(powerTags);
        memoryEntry.syntaxFlags.push(...syntaxFlags);
-                memoryEntry.syntaxFlags.push(...syntaxFlags);
 
         output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
       });
