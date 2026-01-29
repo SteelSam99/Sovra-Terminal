@@ -212,6 +212,106 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 // === End Myth Registry Injection ===
 
+// === Myth Registry Injection: Multi-Band Trace ===
+document.addEventListener("DOMContentLoaded", () => {
+  function registerMultiBandMythTraces() {
+    if (
+      typeof Sovra !== "undefined" &&
+      Sovra.myth &&
+      typeof Sovra.myth.register === "function"
+    ) {
+      Sovra.myth.register({
+        id: "MYTH_BURZUM_001",
+        subject: "Burzum",
+        domain: "Black Metal",
+        mythicShell: ["Atmospheric genius", "Norse revival", "Pagan purity"],
+        symbolicPayload: {
+          compressionDetected: false,
+          mutationDrift: "Ideology as ambient art",
+          contradictionDensity: "High",
+          ideologicalVectors: [
+            "White nationalism",
+            "Anti-Semitism",
+            "Racial purity",
+            "Mythic Norse encoding"
+          ]
+        },
+        visualSemiotics: ["Runes", "Pagan iconography", "Occult nationalism"],
+        institutionalComplicity: [
+          "Post-incarceration distribution",
+          "Streaming platform hosting",
+          "Label silence"
+        ],
+        finalAssessment: {
+          mythicStatus: "Executable",
+          supremacyField: "Transnational",
+          narrativeObfuscation: "Aesthetic laundering",
+          symbolicIntegrity: "Weaponized"
+        }
+      });
+
+      Sovra.myth.register({
+        id: "MYTH_SLAYER_001",
+        subject: "Slayer",
+        domain: "Thrash Metal",
+        mythicShell: ["Shock art", "Anti-authority", "Metal provocation"],
+        symbolicPayload: {
+          compressionDetected: true,
+          mutationDrift: "Shock → Shield",
+          contradictionDensity: "Extreme",
+          ideologicalVectors: [
+            "Nazi glorification",
+            "Historical sanitization",
+            "Genre shielding"
+          ]
+        },
+        visualSemiotics: ["SS fonts", "War iconography", "Satanic camouflage"],
+        institutionalComplicity: [
+          "Major label profit",
+          "Media minimization",
+          "Cultural normalization"
+        ],
+        finalAssessment: {
+          mythicStatus: "Executable",
+          supremacyField: "Latent",
+          narrativeObfuscation: "Shock-as-cover",
+          symbolicIntegrity: "Compromised"
+        }
+      });
+
+      Sovra.myth.register({
+        id: "MYTH_NSBM_001",
+        subject: "NSBM",
+        domain: "National Socialist Black Metal",
+        mythicShell: ["Pagan revival", "Cultural purity", "Anti-modernism"],
+        symbolicPayload: {
+          compressionDetected: false,
+          mutationDrift: "None — ideology overt",
+          contradictionDensity: "Low",
+          ideologicalVectors: [
+            "Aryan supremacy",
+            "Anti-Semitism",
+            "Racial violence",
+            "Mythic fascism"
+          ]
+        },
+        visualSemiotics: ["Swastikas", "SS uniforms", "Nazi occultism"],
+        institutionalComplicity: [
+          "Independent label proliferation",
+          "Platform monetization",
+          "Algorithmic amplification"
+        ],
+        finalAssessment: {
+          mythicStatus: "Executable",
+          supremacyField: "Fully active",
+          narrativeObfuscation: "None",
+          symbolicIntegrity: "Militant"
+        }
+      });
+
+      console.log("📜 Multi-band myth traces registered: Burzum, Slayer, NSBM.");
+    } else {
+      setTimeout(registerMultiBandMythTraces
 
 
 
