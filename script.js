@@ -84,3 +84,37 @@ function compareDocuments() {
       ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
       : "🧭 No shared exclusion patterns found.");
 }
+
+async function searchSovra() {
+  const query = document.getElementById("query").value.trim();
+  const results = document.getElementById("results");
+
+  if (!query) {
+    results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
+    return;
+  }
+
+  const apiKey = "01a0b0cdbab89d254046bba2780ae2bb71ca275e4d118b8a3bb6a5062976189d";
+  const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
+
+  try {
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
+
+    if (data.organic_results) {
+      data.organic_results.forEach((r, i) => {
+        output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n\n`;
+      });
+    } else {
+      output += "⚠️ No results found.";
+    }
+
+    output += "Sovra has spoken.";
+    results.innerText = output;
+  } catch (error) {
+    results.innerText = "⚠️ Sovra encountered a search error.";
+    console.error(error);
+  }
+}
