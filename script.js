@@ -203,8 +203,8 @@ if (compareRaw){
   } catch (error) {
     results.innerText = "⚠️ Sovra encountered a search error.";
     console.error(error);
+  
   }
-
 
 function compareDocuments() {
   const doc1 = document.getElementById("doc1").value;
