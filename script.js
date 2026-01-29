@@ -177,4 +177,4 @@ async function searchSovra() {
         const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
         const powerTags = mapPowerStructure(r.link);
         const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
-        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "
+        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ")
