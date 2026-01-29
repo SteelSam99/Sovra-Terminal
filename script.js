@@ -204,7 +204,6 @@ if (compareRaw){
     results.innerText = "⚠️ Sovra encountered a search error.";
     console.error(error);
   }
-}
 
 
 function compareDocuments() {
