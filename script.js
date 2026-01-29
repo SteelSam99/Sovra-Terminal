@@ -141,7 +141,7 @@ async function searchSovra() {
 
  const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
 
-
+try {
   const rawEndpoint = `/api/search?q=${encodeURIComponent(query)}`;
 const rawResponse = await fetch(rawEndpoint);
 const rawData = await rawResponse.json();
@@ -180,7 +180,6 @@ if (data.error) {
     } else {
       output += "⚠️ No results found.";
     }
-  Try {
 if (compareRaw) {
   const rawEndpoint = `/api/search?q=${encodeURIComponent(query)}`;
   const rawResponse = await fetch(rawEndpoint);
