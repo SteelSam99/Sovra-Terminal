@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
     ) 
-      Sovra.myth.register({
+     Sovra.myth.register({
   id: "MYTH_PANTERA_001",
   subject: "Pantera",
   domain: "American Heavy Metal",
@@ -172,39 +172,36 @@ document.addEventListener("DOMContentLoaded", () => {
     "Rebel spirit",
     "Freedom of speech",
     "Brotherhood of metal"
-  ]
+  ],
+  symbolicPayload: {
+    compressionDetected: true,
+    euphemismDensity: 0.82,
+    mutationDrift: "Overt signaling → Euphemized dominance",
+    contradictionDensity: "High",
+    ideologicalVectors: [
+      "White-coded aggression",
+      "Confederate nostalgia",
+      "Genre gatekeeping",
+      "Institutional silence"
+    ]
+  },
+  visualSemiotics: [
+    "Confederate flag iconography",
+    "White hypermasculine stage aesthetics"
+  ],
+  institutionalComplicity: [
+    "Major label distribution (Atco, EastWest, Elektra)",
+    "Media minimization of racial incidents",
+    "Platform hosting of hate-coded content"
+  ],
+  finalAssessment: {
+    mythicStatus: "Executable",
+    supremacyField: "Active",
+    narrativeObfuscation: "Genre shielding",
+    symbolicIntegrity: "Compromised"
+  }
 });
 
-
-          
-        symbolicPayload: {
-          compressionDetected: true,
-          euphemismDensity: 0.82,
-          mutationDrift: "Overt signaling → Euphemized dominance",
-          contradictionDensity: "High",
-          ideologicalVectors: [
-            "White-coded aggression",
-            "Confederate nostalgia",
-            "Genre gatekeeping",
-            "Institutional silence"
-          ]
-        },
-        visualSemiotics: [
-          "Confederate flag iconography",
-          "White hypermasculine stage aesthetics"
-        ],
-        institutionalComplicity: [
-          "Major label distribution (Atco, EastWest, Elektra)",
-          "Media minimization of racial incidents",
-          "Platform hosting of hate-coded content"
-        ],
-        finalAssessment: {
-          mythicStatus: "Executable",
-          supremacyField: "Active",
-          narrativeObfuscation: "Genre shielding",
-          symbolicIntegrity: "Compromised"
-        }
-      });
 
       console.log("📜 Myth Decompilation Trace for Pantera registered in Sovra’s myth registry.");
     } else {
