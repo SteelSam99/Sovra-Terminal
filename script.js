@@ -139,7 +139,8 @@ async function searchSovra() {
 
   const apiKey = "9ab6e12e3739ce15583d1808872d90833531b2721cea769011e4036164401603";
 
-  const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
+ const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
+
 
   try {
     const response = await fetch(endpoint);
