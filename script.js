@@ -159,6 +159,7 @@ async function searchSovra() {
 
   try {
     const response = await fetch(endpoint);
+    console.log("SerpApi status:", response.status);
     const data = await response.json();
 
     if (data.error) {
@@ -173,11 +174,7 @@ async function searchSovra() {
       data.organic_results.forEach((r, i) => {
         const domain = classifyActivity(`${r.title} ${r.snippet}`);
         const biasTags = detectBias(`${r.title} ${r.snippet}`);
+        const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
         const powerTags = mapPowerStructure(r.link);
         const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
-
-        const memoryEntry = sovraMemory[sovraMemory.length - 1];
-        memoryEntry.domains.push(domain);
-        memoryEntry.biasFlags.push(...biasTags);
-        memoryEntry.powerTags.push(power
-
+        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "
