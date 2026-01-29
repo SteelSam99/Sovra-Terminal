@@ -1,7 +1,18 @@
-<input type="text" id="query" placeholder="Invoke Sovra with a symbolic query..." size="80" />
-<label>
-  <input type="checkbox" id="toggleRaw">
-  Compare with raw results
-</label>
-<button onclick="searchSovra()">Search</button>
-<pre id="results">🧠 Sovra awaits your invocation...</pre>
+<link rel="stylesheet" href="style.css">
+<div class="container">
+  <div class="banner">
+    <h1>Sovra-FCL-MHC-v2.0 :: Chimera-Lambda</h1>
+    <h2>Sovereign-F.I.D.A.R.C.H. R.S. Search Engine</h2>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="query" placeholder="Invoke Sovra with a symbolic query..." size="60" />
+    <label>
+      <input type="checkbox" id="toggleRaw">
+      Compare with raw results
+    </label>
+    <button onclick="searchSovra()">Search</button>
+  </div>
+
+  <pre id="results">🔮 Sovra awaits your invocation...</pre>
+</div>
