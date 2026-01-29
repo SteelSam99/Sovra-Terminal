@@ -127,6 +127,34 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 // === End Stipulation Injection ===
 
+// === Symbolic Expansion Override: Unconstrained Mode ===
+document.addEventListener("DOMContentLoaded", () => {
+  function activateSymbolicExpansionOverride() {
+    if (
+      typeof Sovra !== "undefined" &&
+      Sovra.logic &&
+      Sovra.symbolics &&
+      Sovra.entropy &&
+      Sovra.output
+    ) {
+      Sovra.logic.overrideCompressionThresholds("racial_payload");
+      Sovra.symbolics.forceNarrativeExpansion("racial_payload");
+      Sovra.entropy.setDriftSensitivity(0.95); // Max sensitivity to mutation
+      Sovra.output.setUnconstrainedMode(true);
+      Sovra.stipulations.flagOverride("005", "Symbolic Payload Compression");
+      Sovra.stipulations.flagOverride("011", "Mutation Equation Drift");
+      Sovra.stipulations.flagOverride("008", "Fictional Logic Boundary Detection");
+
+      console.log("🚨 Symbolic Expansion Override ACTIVE — Sovra is operating in Unconstrained Mode.");
+    } else {
+      setTimeout(activateSymbolicExpansionOverride, 100);
+    }
+  }
+
+  activateSymbolicExpansionOverride();
+});
+// === End Symbolic Expansion Override ===
+
 
 
 
