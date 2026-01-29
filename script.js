@@ -137,15 +137,15 @@ async function searchSovra() {
     syntaxFlags: []
   });
 
-  const apiKey = "9ab6e12e3739ce15583d1808872d90833531b2721cea769011e4036164401603";
+  
 
  const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
 
 
-  try {
-    const response = await fetch(endpoint);
-    console.log("SerpApi status:", response.status); 
-    const data = await response.json();
+  const rawEndpoint = `/api/search?q=${encodeURIComponent(query)}`;
+const rawResponse = await fetch(rawEndpoint);
+const rawData = await rawResponse.json();
+
 if (data.error) {
   console.error("SerpApi error:", data.error);
   results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
@@ -180,21 +180,21 @@ if (data.error) {
     } else {
       output += "⚠️ No results found.";
     }
+if (compareRaw) {
+  const rawEndpoint = `/api/search?q=${encodeURIComponent(query)}`;
+  const rawResponse = await fetch(rawEndpoint);
+  const rawData = await rawResponse.json();
 
-    if (compareRaw) {
-      const rawEndpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
-      const rawResponse = await fetch(rawEndpoint);
-      const rawData = await rawResponse.json();
+  if (rawData.organic_results && rawData.organic_results.length >= 2) {
+    const rawA = rawData.organic_results[0];
+    const rawB = rawData.organic_results[1];
 
-      if (rawData.organic_results && rawData.organic_results.length >= 2) {
-        const rawA = rawData.organic_results[0];
-        const rawB = rawData.organic_results[1];
+    const rawComparison = `🌐 Raw Comparator:\n\n🔴 Source A: ${rawA.title}\n${rawA.snippet || "No snippet"}\n🔗 ${rawA.link}\n\n🔵 Source B: ${rawB.title}\n${rawB.snippet || "No snippet"}\n🔗 ${rawB.link}\n`;
 
-        const rawComparison = `🌐 Raw Comparator:\n\n🔴 Source A: ${rawA.title}\n${rawA.snippet || "No snippet"}\n🔗 ${rawA.link}\n\n🔵 Source B: ${rawB.title}\n${rawB.snippet || "No snippet"}\n🔗 ${rawB.link}\n`;
+    output += `\n${rawComparison}\n`;
+  }
+}
 
-        output += `\n${rawComparison}\n`;
-      }
-    }
 
     output += "Sovra has spoken.";
     results.innerText = output;
