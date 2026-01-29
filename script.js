@@ -172,5 +172,13 @@ function compareNarratives(sourceA, sourceB) {
 
   return `🧠 Narrative Comparator:\n\n🔴 Source A: ${a.title}\n🌐 Domain: ${a.domain}\n🧭 Bias: ${a.bias.join(", ") || "None"}\n🏛️ Power: ${a.power}\n🧠 Syntax: ${a.syntax.join(", ") || "None"}\n\n🔵 Source B: ${b.title}\n🌐 Domain: ${b.domain}\n🧭 Bias: ${b.bias.join(", ") || "None"}\n🏛️ Power: ${b.power}\n🧠 Syntax: ${b.syntax.join(", ") || "None"}\n`;
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("query");
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      searchSovra();
+    }
+  });
+});
 
 
