@@ -65,6 +65,21 @@ function searchSovra() {
     results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
     return;
   }
+function detectBias(text) {
+  const biasFlags = [
+    { keyword: "some critics say", label: "🧠 Framing: Deflection" },
+    { keyword: "many believe", label: "🧠 Framing: Vagueness" },
+    { keyword: "allegedly", label: "🧠 Framing: Distance" },
+    { keyword: "concerns have been raised", label: "🧠 Framing: Passive Voice" },
+    { keyword: "activists claim", label: "🧠 Framing: Dismissive Tone" },
+    { keyword: "experts warn", label: "🧠 Framing: Alarmism" },
+    { keyword: "critics argue", label: "🧠 Framing: Polarization" }
+  ];
+
+  return biasFlags
+    .filter(flag => text.toLowerCase().includes(flag.keyword))
+    .map(flag => flag.label);
+}
 
  
 
@@ -72,11 +87,14 @@ let output = `🔍 Constrained Logic:\nAnalyzing "${query}"...\n✅ References r
 
 
 
-if (data.organic_results) {
-  data.organic_results.forEach((r, i) => {
-    const domain = classifyActivity(`${r.title} ${r.snippet}`);
-    output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🏷️ Domain: ${domain}\n\n`;
-  });
+data.organic_results.forEach((r, i) => {
+  const domain = classifyActivity(`${r.title} ${r.snippet}`);
+  const biasTags = detectBias(`${r.title} ${r.snippet}`);
+  const biasOutput = biasTags.length ? `🧠 Bias Flags: ${biasTags.join(", ")}` : "";
+
+  output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🏷️ Domain: ${domain}\n${biasOutput}\n\n`;
+});
+
 } else {
   output += "⚠️ No results found.";
 }
