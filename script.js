@@ -116,4 +116,68 @@ function compareNarratives(sourceA, sourceB) {
   const b = extract(sourceB);
 
   return `🧠 Narrative Comparator:\n\n🔴 Source A: ${a.title}\n🌐 Domain: ${a.domain}\n🧭 Bias: ${a.bias.join(", ") || "None"}\n🏛️ Power: ${a.power}\n🧠 Syntax: ${a.syntax.join(", ") || "None"}\n\n🔵 Source B: ${b.title}\n🌐 Domain: ${b.domain}\n🧭 Bias: ${b.bias.join(", ") || "None"}\n🏛️ Power: ${b.power}\n🧠 Syntax: ${b.syntax.join(", ") || "None"}\n`;
+}
+
+function compareDocuments() {
+  const doc1 = document.getElementById("doc1").value;
+  const doc2 = document.getElementById("doc2").value;
+  const results = document.getElementById("results");
+
+  const findings1 = parseLegalText(doc1).split("\n");
+  const findings2 = parseLegalText(doc2).split("\n");
+
+  const sharedPatterns = findings1.filter(f => findings2.includes(f));
+
+  results.innerText =
+    `📄 Document 1 Findings:\n${findings1.join("\n")}\n\n` +
+    `📄 Document 2 Findings:\n${findings2.join("\n")}\n\n` +
+    (sharedPatterns.length
+      ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
+      : "🧭 No shared exclusion patterns found.");
+}
+
+async function searchSovra() {
+  const query = document.getElementById("query").value.trim();
+  const compareRaw = document.getElementById("toggleRaw").checked;
+  const results = document.getElementById("results");
+
+  if (!query) {
+    results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
+    return;
+  }
+
+  sovraMemory.push({
+    query,
+    timestamp: new Date().toISOString(),
+    domains: [],
+    biasFlags: [],
+    powerTags: [],
+    syntaxFlags: []
+  });
+
+  const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
+
+  try {
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("SerpApi error:", data.error);
+      results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
+      return;
+    }
+
+    let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
+
+    if (data.organic_results) {
+      data.organic_results.forEach((r, i) => {
+        const domain = classifyActivity(`${r.title} ${r.snippet}`);
+        const biasTags = detectBias(`${r.title} ${r.snippet}`);
+        const powerTags = mapPowerStructure(r.link);
+        const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
+
+        const memoryEntry = sovraMemory[sovraMemory.length - 1];
+        memoryEntry.domains.push(domain);
+        memoryEntry.biasFlags.push(...biasTags);
+        memoryEntry.powerTags.push(power
 
