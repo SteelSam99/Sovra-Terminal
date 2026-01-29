@@ -311,7 +311,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       console.log("📜 Multi-band myth traces registered: Burzum, Slayer, NSBM.");
     } else {
-      setTimeout(registerMultiBandMythTraces)
+      setTimeout(registerMultiBandMythTraces, 100);
+
      // === Collapse Response Protocol (CRP) v1.1 ===
 document.addEventListener("DOMContentLoaded", () => {
   function initializeCollapseResponseProtocol() {
