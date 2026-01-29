@@ -74,6 +74,7 @@ function classifyActivity(text) {
 
 function searchSovra() {
   const query = document.getElementById("query").value.trim();
+  const compareRaw = document.getElementById("toggleRaw").checked;
   const results = document.getElementById("results");
 
   if (!query) {
@@ -174,6 +175,20 @@ const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
 
 } else {
   output += "⚠️ No results found.";
+}
+if (compareRaw) {
+  const rawEndpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apikey}`;
+  const rawResponse = await fetch(rawEndpoint);
+  const rawData = await rawResponse.json();
+
+  if (rawData.organic_results && rawData.organic_results.length >= 2) {
+    const rawA = rawData.organic_results[0];
+    const rawB = rawData.organic_results[1];
+
+    const rawComparison = `🌐 Raw Comparator:\n\n🔴 Source A: ${rawA.title}\n${rawA.snippet || "No snippet"}\n🔗 ${rawA.link}\n\n🔵 Source B: ${rawB.title}\n${rawB.snippet || "No snippet"}\n🔗 ${rawB.link}\n`;
+
+    output += `\n${rawComparison}\n`;
+  }
 }
 
   
