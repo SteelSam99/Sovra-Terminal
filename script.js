@@ -59,6 +59,63 @@ function classifyActivity(text) {
 
   return matchedDomains.length ? matchedDomains.join(" + ") : "UNCLASSIFIED";
 }
+function detectBias(text) {
+  const biasFlags = [
+    { keyword: "some critics say", label: "🧠 Framing: Deflection" },
+    { keyword: "many believe", label: "🧠 Framing: Vagueness" },
+    { keyword: "allegedly", label: "🧠 Framing: Distance" },
+    { keyword: "concerns have been raised", label: "🧠 Framing: Passive Voice" },
+    { keyword: "activists claim", label: "🧠 Framing: Dismissive Tone" },
+    { keyword: "experts warn", label: "🧠 Framing: Alarmism" },
+    { keyword: "critics argue", label: "🧠 Framing: Polarization" }
+  ];
+
+  return biasFlags
+    .filter(flag => text.toLowerCase().includes(flag.keyword))
+    .map(flag => flag.label);
+}
+
+function mapPowerStructure(url) {
+  const sources = {
+    GOVERNMENT: ["gov", "senate.gov", "house.gov", "whitehouse.gov", "cdc.gov", "nasa.gov"],
+    CORPORATE: ["forbes.com", "bloomberg.com", "wsj.com", "businessinsider.com", "cnbc.com"],
+    ACTIVIST: ["aclu.org", "greenpeace.org", "naacp.org", "hrw.org", "amnesty.org"],
+    ACADEMIC: ["harvard.edu", "stanford.edu", "mit.edu", "oxford.edu", "nature.com"],
+    MEDIA: ["cnn.com", "bbc.com", "nytimes.com", "washingtonpost.com", "theguardian.com", "reuters.com"]
+  };
+
+  const domain = url.toLowerCase();
+  const tags = [];
+
+  for (const [label, patterns] of Object.entries(sources)) {
+    if (patterns.some(p => domain.includes(p))) {
+      tags.push(label);
+    }
+  }
+
+  return tags.length ? tags.join(" + ") : "UNKNOWN";
+}
+
+function detectFramingSyntax(text) {
+  const flags = [];
+
+  // Passive voice patterns
+  if (/\bwas\b.*\bby\b|\bwere\b.*\bby\b|\bhas been\b|\bhad been\b/.test(text.toLowerCase())) {
+    flags.push("🧠 Syntax: Passive Voice");
+  }
+
+  // Omission strategies
+  if (/\bsome say\b|\bthey claim\b|\bconcerns exist\b|\bit is believed\b/.test(text.toLowerCase())) {
+    flags.push("🧠 Syntax: Omission Strategy");
+  }
+
+  // Loaded modifiers
+  if (/\bradical\b|\bcontroversial\b|\bso-called\b|\balarming\b|\bextreme\b/.test(text.toLowerCase())) {
+    flags.push("🧠 Syntax: Loaded Modifier");
+  }
+
+  return flags;
+}
 
 
 async function searchSovra() {
@@ -81,6 +138,7 @@ async function searchSovra() {
   });
 
   const apiKey = "9ab6e12e3739ce15583d1808872d90833531b2721cea769011e4036164401603";
+
   const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
 
   try {
