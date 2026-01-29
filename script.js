@@ -211,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 registerPanteraMythTrace();
+
 // === End Myth Registry Injection ===
 
 
