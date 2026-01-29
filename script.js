@@ -80,7 +80,7 @@ async function searchSovra() {
     syntaxFlags: []
   });
 
-  const apiKey = "01a0b0cdbab89d254046bba2780ae2bb71ca275e4d118b8a3bb6a5062976189d";
+  const apiKey = "9ab6e12e3739ce15583d1808872d90833531b2721cea769011e4036164401603";
   const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&engine=google&api_key=${apiKey}`;
 
   try {
