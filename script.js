@@ -173,9 +173,9 @@ document.addEventListener("DOMContentLoaded", () => {
     "Freedom of speech",
     "Brotherhood of metal"
   ]
-),
+)};
 
-          }
+          
         symbolicPayload: {
           compressionDetected: true,
           euphemismDensity: 0.82,
