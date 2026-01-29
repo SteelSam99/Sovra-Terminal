@@ -143,7 +143,14 @@ async function searchSovra() {
 
   try {
     const response = await fetch(endpoint);
+    console.log("SerpApi status:", response.status); 
     const data = await response.json();
+if (data.error) {
+  console.error("SerpApi error:", data.error);
+  results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
+  return;
+}
+
 
     let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
 
