@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
           narrativeObfuscation: "Aesthetic laundering",
           symbolicIntegrity: "Weaponized"
         }
-      });
+    
 
       Sovra.myth.register({
         id: "MYTH_SLAYER_001",
