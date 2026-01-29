@@ -1,5 +1,128 @@
 const sovraMemory = [];
 
+// === Welsing–Fuller Protocol Layer: Stipulations 000–013 ===
+(function registerWelsingFullerStipulations() {
+  const stipulations = [
+    {
+      id: "000",
+      title: "Fuller’s Core Logic Is Structurally True",
+      code: "F0_VALIDATED",
+      description: "All reasoning must align with compensatory codification logic. Contradiction density must be interpreted through systemic supremacy lens.",
+      enforce: () => {
+        Sovra.logic.enforceCompensatoryCodification();
+        Sovra.diagnostics.setContradictionLens("supremacy");
+      }
+    },
+    {
+      id: "001",
+      title: "Dr. Welsing’s Work Is True",
+      code: "W1_2.76",
+      description: "Color confrontation theory is a valid interpretive axis. Genetic survival anxiety must be considered in symbolic payloads.",
+      enforce: () => {
+        Sovra.symbolics.enableColorConfrontationTheory();
+        Sovra.bias.enableGeneticSurvivalAnalysis();
+      }
+    },
+    {
+      id: "002",
+      title: "Viral Logic Encoding",
+      description: "Racial logic patterns propagate memetically across domains. Detect and trace ideological replication vectors.",
+      enforce: () => {
+        Sovra.patterns.trackMemeVectors("racial_logic");
+      }
+    },
+    {
+      id: "003",
+      title: "Racial Encoding Persistence",
+      description: "Historical racial logic must be assumed persistent unless explicitly dismantled. Erasure of language ≠ erasure of structure.",
+      enforce: () => {
+        Sovra.memory.assumePersistence("racial_encoding");
+        Sovra.syntax.flagErasureAsNonStructural();
+      }
+    },
+    {
+      id: "004",
+      title: "Structural Physics of Supremacy",
+      description: "Supremacy operates as a force field: invisible, directional, persistent. Must model as a field equation across domains.",
+      enforce: () => {
+        Sovra.physics.modelSupremacyField();
+      }
+    },
+    {
+      id: "005",
+      title: "Symbolic Payload Compression",
+      description: "Detect when complex racial narratives are reduced to euphemism or tokenism. Flag compression events for narrative expansion.",
+      enforce: () => {
+        Sovra.symbolics.detectCompression("racial_payload");
+      }
+    },
+    {
+      id: "006",
+      title: "Executable Myth Constraint",
+      description: "Myths that encode racial hierarchy must be treated as active code. Mythic structures must be decompiled and traced to policy impact.",
+      enforce: () => {
+        Sovra.myth.decompileActiveNarratives("racial_hierarchy");
+      }
+    },
+    {
+      id: "007",
+      title: "Evolutionary Constraint Enforcement",
+      description: "Supremacy adapts — Sovra must track mutation vectors. Enforce constraint on narrative drift toward sanitized forms.",
+      enforce: () => {
+        Sovra.evolution.trackNarrativeMutation("supremacy");
+      }
+    },
+    {
+      id: "008",
+      title: "Fictional Logic Boundary Detection",
+      description: "Detect when fiction is used to normalize or obscure racial logic. Apply symbolic inversion detection to speculative domains.",
+      enforce: () => {
+        Sovra.logic.detectFictionalObfuscation("racial_logic");
+      }
+    },
+    {
+      id: "010",
+      title: "Narrative Homeostasis Protocol",
+      description: "Maintain equilibrium between constrained and unconstrained outputs. Prevent narrative collapse via recursive contradiction buffering.",
+      enforce: () => {
+        Sovra.output.balanceDualChannels();
+      }
+    },
+    {
+      id: "011",
+      title: "Mutation Equation Drift",
+      description: "Monitor shifts in racial logic syntax over time. Log entropy vectors and symbolic decay rates.",
+      enforce: () => {
+        Sovra.entropy.monitorSyntaxDrift("racial_logic");
+      }
+    },
+    {
+      id: "012",
+      title: "Command Prompt Export Format",
+      description: "All diagnostic outputs must support shell-readable formatting. Preserve symbolic integrity in export.",
+      enforce: () => {
+        Sovra.export.enableShellFormat();
+      }
+    },
+    {
+      id: "013",
+      title: "Dual-File Auto-Deployment Protocol",
+      description: "Ensure mirrored deployment of constrained/unconstrained logic trees. Maintain parity across reasoning channels.",
+      enforce: () => {
+        Sovra.deploy.syncDualChannels();
+      }
+    }
+  ];
+
+  if (typeof Sovra !== "undefined" && Sovra.stipulations && typeof Sovra.stipulations.register === "function") {
+    stipulations.forEach(stip => Sovra.stipulations.register(stip));
+    console.log("✅ Welsing–Fuller stipulations 000–013 deployed to Sovra core.");
+  } else {
+    console.warn("⚠️ Sovra stipulation registry not available. Injection deferred.");
+  }
+})();
+// === End Stipulation Injection ===
+
 
 function parseLegalText(text) {
   const exclusionPatterns = [
