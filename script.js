@@ -185,7 +185,8 @@ if (compareRaw)
   const rawEndpoint = `/api/search?q=${encodeURIComponent(query)}`;
   const rawResponse = await fetch(rawEndpoint);
   const rawData = await rawResponse.json();
-
+  }
+}
   if (rawData.organic_results && rawData.organic_results.length >= 2) {
     const rawA = rawData.organic_results[0];
     const rawB = rawData.organic_results[1];
