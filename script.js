@@ -180,6 +180,7 @@ if (data.error) {
     } else {
       output += "⚠️ No results found.";
     }
+  Try {
 if (compareRaw) {
   const rawEndpoint = `/api/search?q=${encodeURIComponent(query)}`;
   const rawResponse = await fetch(rawEndpoint);
