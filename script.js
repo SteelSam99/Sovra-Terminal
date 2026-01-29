@@ -1,6 +1,5 @@
 const sovraMemory = [];
 
-// --- Helper Functions ---
 
 function parseLegalText(text) {
   const exclusionPatterns = [
