@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
     ) {
-      Sovra.myth.register({
+      Sovra.myth.register{
         id: "MYTH_PANTERA_001",
         subject: "Pantera",
         domain: "American Heavy Metal",
@@ -172,7 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "Rebel spirit",
           "Freedom of speech",
           "Brotherhood of metal"
-        ]);
+        ],
+          }
         symbolicPayload: {
           compressionDetected: true,
           euphemismDensity: 0.82,
