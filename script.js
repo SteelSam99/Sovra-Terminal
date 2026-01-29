@@ -311,44 +311,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
       console.log("📜 Multi-band myth traces registered: Burzum, Slayer, NSBM.");
     } else {
-      setTimeout(registerMultiBandMythTraces
+      setTimeout(registerMultiBandMythTraces)
+     // === Collapse Response Protocol (CRP) v1.1 ===
+document.addEventListener("DOMContentLoaded", () => {
+  function initializeCollapseResponseProtocol() {
+    if (
+      typeof Sovra !== "undefined" &&
+      Sovra.collapse &&
+      Sovra.logic &&
+      Sovra.entropy &&
+      Sovra.symbolics &&
+      Sovra.output &&
+      Sovra.logs
+    ) {
       Sovra.collapse.registerProtocol({
-  id: "CRP_v1.1",
-  name: "Collapse Response Protocol",
-  version: "1.1",
-  author: "Samuel",
-  triggerCondition: (state) => state.contradictionDensity >= state.collapseThreshold,
-  onCollapse: (state) => {
-    const failureMode = Sovra.logic.detectFailureMode([
-      "SYMBOLIC_INVERSION",
-      "STRUCTURAL_EROSION",
-      "REPRESENTATIONAL_FRAGMENTATION",
-      "LEGITIMACY_VACUUM",
-      "RECURSION_BREAK"
-    ]);
+        id: "CRP_v1.1",
+        name: "Collapse Response Protocol",
+        version: "1.1",
+        author: "Samuel",
+        triggerCondition: function (state) {
+          return state.contradictionDensity >= state.collapseThreshold;
+        },
+        onCollapse: function (state) {
+          const failureMode = Sovra.logic.detectFailureMode([
+            "SYMBOLIC_INVERSION",
+            "STRUCTURAL_EROSION",
+            "REPRESENTATIONAL_FRAGMENTATION",
+            "LEGITIMACY_VACUUM",
+            "RECURSION_BREAK"
+          ]);
 
-    const collapsePath = Sovra.logic.traceCollapsePath([
-      "REPRESENTATION",
-      "PARTICIPATION",
-      "LEGITIMACY"
-    ]);
+          const collapsePath = Sovra.logic.traceCollapsePath([
+            "REPRESENTATION",
+            "PARTICIPATION",
+            "LEGITIMACY"
+          ]);
 
-    Sovra.output.log([
-      "Collapse Threshold Reached.",
-      "Contradiction density unsustainable.",
-      "System narrative has fragmented.",
-      `Failure Mode: ${failureMode}`,
-      `Collapse Path: ${collapsePath.join(" → ")}`,
-      "Recursion suspended.",
-      "Diagnostic complete."
-    ]);
+          Sovra.output.log([
+            "Collapse Threshold Reached.",
+            "Contradiction density unsustainable.",
+            "System narrative has fragmented.",
+            "Failure Mode: " + failureMode,
+            "Collapse Path: " + collapsePath.join(" → "),
+            "Recursion suspended.",
+            "Diagnostic complete."
+          ]);
 
-    Sovra.entropy.stabilize();
-    Sovra.symbolics.quarantinePayload("unstable");
-    Sovra.logic.suspendRecursion();
-    Sovra.logs.saveCollapseEvent(failureMode, collapsePath);
+          Sovra.entropy.stabilize();
+          Sovra.symbolics.quarantinePayload("unstable");
+          Sovra.logic.suspendRecursion();
+          Sovra.logs.saveCollapseEvent(failureMode, collapsePath);
+        }
+      });
+
+      console.log("🧩 CRP v1.1 registered — Sovra now detects, logs, and responds to narrative collapse.");
+    } else {
+      setTimeout(initializeCollapseResponseProtocol, 100);
+    }
   }
+
+  initializeCollapseResponseProtocol();
 });
+// === End Collapse Response Protocol ===
 
 
 
