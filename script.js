@@ -162,8 +162,8 @@ document.addEventListener("DOMContentLoaded", () => {
       typeof Sovra !== "undefined" &&
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
-    ) {
-     Sovra.myth.register(
+    ) 
+      Sovra.myth.register({
   id: "MYTH_PANTERA_001",
   subject: "Pantera",
   domain: "American Heavy Metal",
@@ -173,7 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "Freedom of speech",
     "Brotherhood of metal"
   ]
-)},
+});
+
 
           
         symbolicPayload: {
