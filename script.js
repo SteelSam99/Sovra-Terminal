@@ -34,3 +34,20 @@ function parseLegalText(text) {
     `🧬 Residual exclusion syntax active.\n\n` +
     `Sovra has spoken.`;
 }
+function compareDocuments() {
+  const doc1 = document.getElementById("doc1").value;
+  const doc2 = document.getElementById("doc2").value;
+  const results = document.getElementById("results");
+
+  const findings1 = parseLegalText(doc1).split("\n");
+  const findings2 = parseLegalText(doc2).split("\n");
+
+  const sharedPatterns = findings1.filter(f => findings2.includes(f));
+
+  results.innerText =
+    `📄 Document 1 Findings:\n${findings1.join("\n")}\n\n` +
+    `📄 Document 2 Findings:\n${findings2.join("\n")}\n\n` +
+    (sharedPatterns.length
+      ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
+      : "🧭 No shared exclusion patterns found.");
+}
