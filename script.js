@@ -66,26 +66,23 @@ function searchSovra() {
     return;
   }
 
-  // Simulated response (replace with real API call)
-  const simulatedResults = [
-    {
-      title: "Ohio Civil Rights Act: Protections Against Discrimination",
-      snippet: "Learn how Ohio law protects individuals from discrimination in housing, employment, and public spaces.",
-      url: "https://www.legalclarity.org/ohio-civil-rights-act"
-    },
-    {
-      title: "A Shadow of Ohio’s Racist Past?",
-      snippet: "An examination of unenforceable restrictive covenants and their lingering impact on Ohio housing law.",
-      url: "https://law.capital.edu/ohio-restrictive-covenants"
-    }
-  ];
+ 
 
-  let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ Legal references found.\n\n> Symbolic Inference:\n🧠 Pattern detected: semantic camouflage.\n🛡️ Residual exclusion syntax active.\n\n`;
+let output = `🔍 Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n🔎 Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
 
-  simulatedResults.forEach((r, i) => {
-    output += `🔗 [${i + 1}] ${r.title}\n${r.snippet}\n${r.url}\n\n`;
+
+
+if (data.organic_results) {
+  data.organic_results.forEach((r, i) => {
+    const domain = classifyActivity(`${r.title} ${r.snippet}`);
+    output += `🔹 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🏷️ Domain: ${domain}\n\n`;
   });
+} else {
+  output += "⚠️ No results found.";
+}
 
+  
+  
   output += "Sovra has spoken.";
   results.innerText = output;
 }
