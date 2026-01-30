@@ -524,7 +524,6 @@ function compareDocuments() {
 }
 
 // --- Main Function ---
-
 async function searchSovra() {
   const query = document.getElementById("query").value;
   const results = document.getElementById("results");
@@ -547,25 +546,26 @@ async function searchSovra() {
 
     let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
 
-   if (data.organic_results) {
-  data.organic_results.forEach((r, i) => {
-    output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
-  });
+    if (data.organic_results) {
+      data.organic_results.forEach((r, i) => {
+        output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
+      });
 
-  if (data.organic_results.length >= 2) {
-    const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
-    output += `\n${comparison}\n`;
+      if (data.organic_results.length >= 2) {
+        const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
+        output += `\n${comparison}\n`;
+      }
+    } else {
+      output += "⚠️ No results found.";
+    }
+
+    output += "Sovra has spoken.";
+    results.innerText = output;
+
+  } catch (error) {
+    results.innerText = "⚠️ Sovra encountered a search error.";
+    console.error(error);
   }
-} else {
-  output += "⚠️ No results found.";
-}
-
-output += "Sovra has spoken.";
-results.innerText = output;
-
-} catch (error) {
-  results.innerText = "⚠️ Sovra encountered a search error.";
-  console.error(error);
 }
 
 function compareNarratives(a, b) {
@@ -583,5 +583,6 @@ function compareNarratives(a, b) {
   return "🔍 Multiple viewpoints identified across sources.";
 }
 
-
 console.log("✅ End of script.js reached");
+Fix syntax and finalize script.js
+
