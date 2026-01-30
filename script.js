@@ -1,7 +1,7 @@
 const sovraMemory = [];
 
 // === Welsing–Fuller Protocol Layer: Stipulations 000–013 ===
-document.addEventListener("DOMContentLoaded"), () => {
+document.addEventListener("DOMContentLoaded", () => {
   const stipulations = [
     {
       id: "000",
