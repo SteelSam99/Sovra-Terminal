@@ -555,41 +555,39 @@ async function searchSovra() {
       return;
     }
 
-let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
+    let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
 
-try {
+    if (data.organic_results) {
+      data.organic_results.forEach((r, i) => {
+        const domain = classifyActivity(`${r.title} ${r.snippet}`);
+        const biasTags = detectBias(`${r.title} ${r.snippet}`);
+        const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
+        const powerTags = mapPowerStructure(r.link);
+        const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
+        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
 
-  if (data.organic_results) {
-    data.organic_results.forEach((r, i) => {
-      const domain = classifyActivity(`${r.title} ${r.snippet}`);
-      const biasTags = detectBias(`${r.title} ${r.snippet}`);
-      const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
-      const powerTags = mapPowerStructure(r.link);
-      const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
-      const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
+        const memoryEntry = sovraMemory[sovraMemory.length - 1];
+        memoryEntry.domains.push(domain);
+        memoryEntry.biasFlags.push(...biasTags);
+        memoryEntry.powerTags.push(powerTags);
+        memoryEntry.syntaxFlags.push(...syntaxFlags);
 
-      const memoryEntry = sovraMemory[sovraMemory.length - 1];
-      memoryEntry.domains.push(domain);
-      memoryEntry.biasFlags.push(...biasTags);
-      memoryEntry.powerTags.push(powerTags);
-      memoryEntry.syntaxFlags.push(...syntaxFlags);
+        output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
+      });
 
-      output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
-    });
-
-    if (data.organic_results.length >= 2) {
-      const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
-      output += `\n${comparison}\n`;
+      if (data.organic_results.length >= 2) {
+        const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
+        output += `\n${comparison}\n`;
+      }
+    } else {
+      output += "⚠️ No results found.";
     }
-  } else {
-    output += "⚠️ No results found.";
+
+    output += "Sovra has spoken.";
+    results.innerText = output;
+
+  } catch (error) {
+    results.innerText = "⚠️ Sovra encountered a search error.";
+    console.error(error);
   }
-
-  output += "Sovra has spoken.";
-  results.innerText = output;
-
-} catch (error) {
-  results.innerText = "⚠️ Sovra encountered a search error.";
-  console.error(error);
 }
-
