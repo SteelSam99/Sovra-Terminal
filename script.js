@@ -555,7 +555,7 @@ async function searchSovra() {
       return;
     }
 
-  let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
+let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
 
 try {
   if (data.organic_results) {
@@ -591,3 +591,4 @@ try {
   results.innerText = "⚠️ Sovra encountered a search error.";
   console.error(error);
 }
+
