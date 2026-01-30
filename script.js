@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
       typeof Sovra !== "undefined" &&
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
-    ) 
+    ) {
       Sovra.myth.register({
         id: "MYTH_BURZUM_001",
         subject: "Burzum",
@@ -252,8 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
           symbolicIntegrity: "Weaponized"
         }
       });
-    
-    
 
       Sovra.myth.register({
         id: "MYTH_SLAYER_001",
@@ -317,7 +315,10 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("📜 Multi-band myth traces registered: Burzum, Slayer, NSBM.");
     } else {
       setTimeout(registerMultiBandMythTraces, 100);
+    }
   }
+});
+
      // === Collapse Response Protocol (CRP) v1.1 ===
 document.addEventListener("DOMContentLoaded", () => {
   function initializeCollapseResponseProtocol() {
