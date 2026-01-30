@@ -527,14 +527,15 @@ function compareDocuments() {
  
 async function searchSovra() {
   const query = document.getElementById("query").value.trim();
-  const compareRaw = document.getElementById("toggleRaw").checked;
+  const compareRaw = document.getElementById("toggleRaw")?.checked || false;
   const results = document.getElementById("results");
- 
+
   if (!query) {
     results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
     return;
   }
- 
+
+  // Log query to Sovra memory
   sovraMemory.push({
     query,
     timestamp: new Date().toISOString(),
@@ -543,38 +544,25 @@ async function searchSovra() {
     powerTags: [],
     syntaxFlags: []
   });
- 
-  const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
- 
+
+  const endpoint = `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}`;
+
   try {
     const response = await fetch(endpoint);
     const data = await response.json();
- 
+
     if (data.error) {
       results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
       return;
     }
- 
+
     let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
- 
-    if (data.organic_results) {
+
+    if (data.organic_results && data.organic_results.length > 0) {
       data.organic_results.forEach((r, i) => {
-        const domain = classifyActivity(`${r.title} ${r.snippet}`);
-        const biasTags = detectBias(`${r.title} ${r.snippet}`);
-        const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
-        const powerTags = mapPowerStructure(r.link);
-        const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
-        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
- 
-        const memoryEntry = sovraMemory[sovraMemory.length - 1];
-        memoryEntry.domains.push(domain);
-        memoryEntry.biasFlags.push(...biasTags);
-        memoryEntry.powerTags.push(powerTags);
-        memoryEntry.syntaxFlags.push(...syntaxFlags);
- 
-        output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
+        output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
       });
- 
+
       if (data.organic_results.length >= 2) {
         const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
         output += `\n${comparison}\n`;
@@ -582,13 +570,29 @@ async function searchSovra() {
     } else {
       output += "⚠️ No results found.";
     }
- 
-    output += "Sovra has spoken.";
+
+    output += "\nSovra has spoken.";
     results.innerText = output;
- 
+
   } catch (error) {
     results.innerText = "⚠️ Sovra encountered a search error.";
-    console.error(error);
+    console.error("Sovra fetch error:", error);
   }
 }
-console.log("✅ End of script.js reached");
+
+function compareNarratives(a, b) {
+  const titleA = a.title.toLowerCase();
+  const titleB = b.title.toLowerCase();
+
+  if (titleA.includes("opinion") || titleB.includes("opinion")) {
+    return "🧭 Divergent perspectives detected between sources.";
+  }
+
+  if (titleA === titleB) {
+    return "🔁 Sources appear to echo the same narrative.";
+  }
+
+  return "🔍 Multiple viewpoints identified across sources.";
+}
+
+console.log("✅ searchSovra() function loaded and ready.");
