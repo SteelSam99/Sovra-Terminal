@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
 
-      Sovra.myth.register{
+      Sovra.myth.register({
         id: "MYTH_SLAYER_001",
         subject: "Slayer",
         domain: "Thrash Metal",
@@ -282,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
           narrativeObfuscation: "Shock-as-cover",
           symbolicIntegrity: "Compromised"
         }
-      };
+      });
 
       Sovra.myth.register({
         id: "MYTH_NSBM_001",
