@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded"), () => {
   }
 
   inject();
-});
+
 // === End Stipulation Injection ===
 
 // === Symbolic Expansion Override: Unconstrained Mode ===
