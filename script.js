@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
       typeof Sovra !== "undefined" &&
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
-    ) {
+    ) 
       Sovra.myth.register({
         id: "MYTH_BURZUM_001",
         subject: "Burzum",
@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
           symbolicIntegrity: "Weaponized"
         }
       });
-    }
+    
     
 
       Sovra.myth.register({
