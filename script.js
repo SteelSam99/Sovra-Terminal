@@ -523,7 +523,7 @@ function compareDocuments() {
       ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
       : "🧭 No shared exclusion patterns found.");
 }
- }); // closes the DOMContentLoaded block
+
 
 // --- Main Function ---
  
