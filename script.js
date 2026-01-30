@@ -558,6 +558,8 @@ async function searchSovra() {
 let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
 
 try {
+  let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
+
   if (data.organic_results) {
     data.organic_results.forEach((r, i) => {
       const domain = classifyActivity(`${r.title} ${r.snippet}`);
