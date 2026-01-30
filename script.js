@@ -526,23 +526,13 @@ function compareDocuments() {
 // --- Main Function ---
 
 async function searchSovra() {
-  const query = document.getElementById("query").value.trim();
-  const compareRaw = document.getElementById("toggleRaw").checked;
+  const query = document.getElementById("query").value;
   const results = document.getElementById("results");
 
   if (!query) {
-    results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
+    results.innerText = "⚠️ Please enter a query.";
     return;
   }
-
-  sovraMemory.push({
-    query,
-    timestamp: new Date().toISOString(),
-    domains: [],
-    biasFlags: [],
-    powerTags: [],
-    syntaxFlags: []
-  });
 
   const endpoint = `/api/search?q=${encodeURIComponent(query)}`;
 
@@ -559,20 +549,7 @@ async function searchSovra() {
 
     if (data.organic_results) {
       data.organic_results.forEach((r, i) => {
-        const domain = classifyActivity(`${r.title} ${r.snippet}`);
-        const biasTags = detectBias(`${r.title} ${r.snippet}`);
-        const biasOutput = biasTags.length > 0 ? biasTags.join(", ") : "None";
-        const powerTags = mapPowerStructure(r.link);
-        const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
-        const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "None";
-
-        const memoryEntry = sovraMemory[sovraMemory.length - 1];
-        memoryEntry.domains.push(domain);
-        memoryEntry.biasFlags.push(...biasTags);
-        memoryEntry.powerTags.push(powerTags);
-        memoryEntry.syntaxFlags.push(...syntaxFlags);
-
-        output += `🔗 [${i + 1}] ${r.title}\n${r.snippet || "No snippet"}\n${r.link}\n🌐 Domain: ${domain}\n🧭 Bias Flags: ${biasOutput}\n🏛️ Power Structure: ${powerTags}\n🧠 Syntax Flags: ${syntaxOutput}\n\n`;
+        output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
       });
 
       if (data.organic_results.length >= 2) {
@@ -585,10 +562,26 @@ async function searchSovra() {
 
     output += "Sovra has spoken.";
     results.innerText = output;
-  }
+
   } catch (error) {
     results.innerText = "⚠️ Sovra encountered a search error.";
     console.error(error);
   }
 }
+
+function compareNarratives(a, b) {
+  const titleA = a.title.toLowerCase();
+  const titleB = b.title.toLowerCase();
+
+  if (titleA.includes("opinion") || titleB.includes("opinion")) {
+    return "🧭 Divergent perspectives detected between sources.";
+  }
+
+  if (titleA === titleB) {
+    return "🔁 Sources appear to echo the same narrative.";
+  }
+
+  return "🔍 Multiple viewpoints identified across sources.";
+}
+
 console.log("✅ End of script.js reached");
