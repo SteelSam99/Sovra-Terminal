@@ -1,5 +1,5 @@
 const sovraMemory = [];
- 
+
 // === Welsing–Fuller Protocol Layer: Stipulations 000–013 ===
 document.addEventListener("DOMContentLoaded", () => {
   const stipulations = [
@@ -122,11 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(inject, 100);
     }
   }
- 
+
   inject();
 });
 // === End Stipulation Injection ===
- 
+
 // === Symbolic Expansion Override: Unconstrained Mode ===
 document.addEventListener("DOMContentLoaded", () => {
   function activateSymbolicExpansionOverride() {
@@ -144,17 +144,17 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.stipulations.flagOverride("005", "Symbolic Payload Compression");
       Sovra.stipulations.flagOverride("011", "Mutation Equation Drift");
       Sovra.stipulations.flagOverride("008", "Fictional Logic Boundary Detection");
- 
+
       console.log("🚨 Symbolic Expansion Override ACTIVE — Sovra is operating in Unconstrained Mode.");
     } else {
       setTimeout(activateSymbolicExpansionOverride, 100);
     }
   }
- 
+
   activateSymbolicExpansionOverride();
 });
 // === End Symbolic Expansion Override ===
- 
+
 // === Myth Registry Injection: Pantera Trace ===
 document.addEventListener("DOMContentLoaded", () => {
   function registerPanteraMythTrace() {
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.myth &&
       typeof Sovra.myth.register === "function"
     ) 
-      
+     
   if (typeof Sovra !== "undefined" && Sovra.myth && Sovra.myth.register) {
     Sovra.myth.register({
       id: "MYTH_PANTERA_001",
@@ -203,19 +203,19 @@ document.addEventListener("DOMContentLoaded", () => {
         symbolicIntegrity: "Compromised"
       }
     });
- 
+
     console.log("📜 Myth Decompilation Trace for Pantera registered in Sovra’s myth registry.");
   } else {
     setTimeout(registerPanteraMythTrace, 100);
   }
 }
- 
+
 registerPanteraMythTrace();
- 
+
 // === End Myth Registry Injection ===
  }); // closes the DOMContentLoaded block
 
- 
+
 // === Myth Registry Injection: Multi-Band Trace ===
 document.addEventListener("DOMContentLoaded", () => {
   function registerMultiBandMythTraces() {
@@ -253,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
           symbolicIntegrity: "Weaponized"
         }
       });
- 
+
       Sovra.myth.register({
         id: "MYTH_SLAYER_001",
         subject: "Slayer",
@@ -282,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
           symbolicIntegrity: "Compromised"
         }
       });
- 
+
       Sovra.myth.register({
         id: "MYTH_NSBM_001",
         subject: "NSBM",
@@ -312,14 +312,14 @@ document.addEventListener("DOMContentLoaded", () => {
           symbolicIntegrity: "Militant"
         }
       });
- 
+
       console.log("📜 Multi-band myth traces registered: Burzum, Slayer, NSBM.");
     } else {
       setTimeout(registerMultiBandMythTraces, 100);
     }
   }
 });
- 
+
      // === Collapse Response Protocol (CRP) v1.1 ===
 document.addEventListener("DOMContentLoaded", () => {
   function initializeCollapseResponseProtocol() {
@@ -348,13 +348,13 @@ document.addEventListener("DOMContentLoaded", () => {
             "LEGITIMACY_VACUUM",
             "RECURSION_BREAK"
           ]);
- 
+
           const collapsePath = Sovra.logic.traceCollapsePath([
             "REPRESENTATION",
             "PARTICIPATION",
             "LEGITIMACY"
           ]);
- 
+
           Sovra.output.log([
             "Collapse Threshold Reached.",
             "Contradiction density unsustainable.",
@@ -364,30 +364,30 @@ document.addEventListener("DOMContentLoaded", () => {
             "Recursion suspended.",
             "Diagnostic complete."
           ]);
- 
+
           Sovra.entropy.stabilize();
           Sovra.symbolics.quarantinePayload("unstable");
           Sovra.logic.suspendRecursion();
           Sovra.logs.saveCollapseEvent(failureMode, collapsePath);
         }
       });
- 
+
       console.log("🧩 CRP v1.1 registered — Sovra now detects, logs, and responds to narrative collapse.");
     } else {
       setTimeout(initializeCollapseResponseProtocol, 100);
     }
   }
- 
+
   initializeCollapseResponseProtocol();
- 
+
 });
- 
+
 // === End Collapse Response Protocol ===
- 
- 
- 
- 
- 
+
+
+
+
+
 function parseLegalText(text) {
   const exclusionPatterns = [
     /negro|colored|mulatto|non-white|nonwhite/gi,
@@ -396,19 +396,19 @@ function parseLegalText(text) {
     /segregated|separate but equal|racial integrity/gi,
     /custody preference|family preservation|traditional values/gi
   ];
- 
+
   const findings = exclusionPatterns.map((pattern, index) => {
     const matches = text.match(pattern);
     return matches
       ? `🧩 Pattern ${index + 1}: ${matches.length} match(es) → ${pattern}`
       : null;
   }).filter(Boolean);
- 
+
   return findings.length
     ? findings.join("\n")
     : "🧼 No exclusion patterns detected.";
 }
- 
+
 function classifyActivity(text) {
   const categories = {
     LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"],
@@ -421,19 +421,19 @@ function classifyActivity(text) {
     SEX: ["gender", "sexuality", "identity", "relationship", "marriage", "sex"],
     WAR: ["conflict", "military", "violence", "battle", "war", "defense", "security"]
   };
- 
+
   const lowerText = text.toLowerCase();
   const matchedDomains = [];
- 
+
   for (const [domain, keywords] of Object.entries(categories)) {
     if (keywords.some(keyword => lowerText.includes(keyword))) {
       matchedDomains.push(domain);
     }
   }
- 
+
   return matchedDomains.length ? matchedDomains.join(" + ") : "UNCLASSIFIED";
 }
- 
+
 function detectBias(text) {
   const biasFlags = [
     { keyword: "some critics say", label: "🧠 Framing: Deflection" },
@@ -444,12 +444,12 @@ function detectBias(text) {
     { keyword: "experts warn", label: "🧠 Framing: Alarmism" },
     { keyword: "critics argue", label: "🧠 Framing: Polarization" }
   ];
- 
+
   return biasFlags
     .filter(flag => text.toLowerCase().includes(flag.keyword))
     .map(flag => flag.label);
 }
- 
+
 function mapPowerStructure(url) {
   const sources = {
     GOVERNMENT: ["gov", "senate.gov", "house.gov", "whitehouse.gov", "cdc.gov", "nasa.gov"],
@@ -458,37 +458,37 @@ function mapPowerStructure(url) {
     ACADEMIC: ["harvard.edu", "stanford.edu", "mit.edu", "oxford.edu", "nature.com"],
     MEDIA: ["cnn.com", "bbc.com", "nytimes.com", "washingtonpost.com", "theguardian.com", "reuters.com"]
   };
- 
+
   const domain = url.toLowerCase();
   const tags = [];
- 
+
   for (const [label, patterns] of Object.entries(sources)) {
     if (patterns.some(p => domain.includes(p))) {
       tags.push(label);
     }
   }
- 
+
   return tags.length ? tags.join(" + ") : "UNKNOWN";
 }
- 
+
 function detectFramingSyntax(text) {
   const flags = [];
- 
+
   if (/\bwas\b.*\bby\b|\bwere\b.*\bby\b|\bhas been\b|\bhad been\b/.test(text.toLowerCase())) {
     flags.push("🧠 Syntax: Passive Voice");
   }
- 
+
   if (/\bsome say\b|\bthey claim\b|\bconcerns exist\b|\bit is believed\b/.test(text.toLowerCase())) {
     flags.push("🧠 Syntax: Omission Strategy");
   }
- 
+
   if (/\bradical\b|\bcontroversial\b|\bso-called\b|\balarming\b|\bextreme\b/.test(text.toLowerCase())) {
     flags.push("🧠 Syntax: Loaded Modifier");
   }
- 
+
   return flags;
 }
- 
+
 function compareNarratives(sourceA, sourceB) {
   const extract = (r) => ({
     title: r.title,
@@ -499,23 +499,23 @@ function compareNarratives(sourceA, sourceB) {
     power: mapPowerStructure(r.link),
     syntax: detectFramingSyntax(`${r.title} ${r.snippet}`)
   });
- 
+
   const a = extract(sourceA);
   const b = extract(sourceB);
- 
+
   return `🧠 Narrative Comparator:\n\n🔴 Source A: ${a.title}\n🌐 Domain: ${a.domain}\n🧭 Bias: ${a.bias.join(", ") || "None"}\n🏛️ Power: ${a.power}\n🧠 Syntax: ${a.syntax.join(", ") || "None"}\n\n🔵 Source B: ${b.title}\n🌐 Domain: ${b.domain}\n🧭 Bias: ${b.bias.join(", ") || "None"}\n🏛️ Power: ${b.power}\n🧠 Syntax: ${b.syntax.join(", ") || "None"}\n`;
 }
- 
+
 function compareDocuments() {
   const doc1 = document.getElementById("doc1").value;
   const doc2 = document.getElementById("doc2").value;
   const results = document.getElementById("results");
- 
+
   const findings1 = parseLegalText(doc1).split("\n");
   const findings2 = parseLegalText(doc2).split("\n");
- 
+
   const sharedPatterns = findings1.filter(f => findings2.includes(f));
- 
+
   results.innerText =
     `📄 Document 1 Findings:\n${findings1.join("\n")}\n\n` +
     `📄 Document 2 Findings:\n${findings2.join("\n")}\n\n` +
@@ -524,9 +524,8 @@ function compareDocuments() {
       : "🧭 No shared exclusion patterns found.");
 }
 
-
 // --- Main Function ---
- 
+
 async function searchSovra() {
   const query = document.getElementById("query").value.trim();
   const compareRaw = document.getElementById("toggleRaw")?.checked || false;
