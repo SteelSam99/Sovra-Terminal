@@ -179,3 +179,6 @@ async function searchSovra() {
         const powerTags = mapPowerStructure(r.link);
         const syntaxFlags = detectFramingSyntax(`${r.title} ${r.snippet}`);
         const syntaxOutput = syntaxFlags.length > 0 ? syntaxFlags.join(", ") : "
+      }
+  }
+    });
