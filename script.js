@@ -591,3 +591,4 @@ async function searchSovra() {
     console.error(error);
   }
 }
+console.log("✅ End of script.js reached");
