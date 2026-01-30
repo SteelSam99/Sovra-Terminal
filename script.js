@@ -213,7 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
 registerPanteraMythTrace();
  
 // === End Myth Registry Injection ===
- 
+ }); // closes the DOMContentLoaded block
+
  
 // === Myth Registry Injection: Multi-Band Trace ===
 document.addEventListener("DOMContentLoaded", () => {
@@ -522,7 +523,8 @@ function compareDocuments() {
       ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
       : "🧭 No shared exclusion patterns found.");
 }
- 
+ }); // closes the DOMContentLoaded block
+
 // --- Main Function ---
  
 async function searchSovra() {
@@ -594,5 +596,6 @@ function compareNarratives(a, b) {
 
   return "🔍 Multiple viewpoints identified across sources.";
 }
+}); // closes the DOMContentLoaded block
 
 console.log("✅ searchSovra() function loaded and ready.");
