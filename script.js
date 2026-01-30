@@ -113,7 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   ];
- 
+ });
+
   function inject() {
     if (typeof Sovra !== "undefined" && Sovra.stipulations && typeof Sovra.stipulations.register === "function") {
       stipulations.forEach(stip => Sovra.stipulations.register(stip));
@@ -523,6 +524,7 @@ function compareDocuments() {
       ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
       : "🧭 No shared exclusion patterns found.");
 }
+
 
 // --- Main Function ---
 
