@@ -562,7 +562,7 @@ async function searchSovra() {
 
     output += "Sovra has spoken.";
     results.innerText = output;
-
+  }
   } catch (error) {
     results.innerText = "⚠️ Sovra encountered a search error.";
     console.error(error);
