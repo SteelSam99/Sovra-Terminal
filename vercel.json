@@ -6,6 +6,12 @@
     { "src": "style.css", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/(.*)",
+      "has": [
+        { "type": "header", "key": "accept", "value": "text/html" }
+      ],
+      "dest": "/index.html"
+    }
   ]
 }
