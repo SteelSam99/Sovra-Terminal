@@ -400,7 +400,20 @@ function parseLegalText(text) {
 function classifyActivity(text) {
   const categories = {
     LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"],
+  };
+
+  for (const category in categories) {
+    const keywords = categories[category];
+    for (let i = 0; i < keywords.length; i++) {
+      if (text.toLowerCase().includes(keywords[i])) {
+        return category;
+      }
+    }
   }
+
+  return "OTHER";
+}
+
     function compareNarratives(sourceA, sourceB) {
   const extract = (r) => ({
     title: r.title,
@@ -411,7 +424,7 @@ function classifyActivity(text) {
     power: mapPowerStructure(r.link),
     syntax: detectFramingSyntax(`${r.title} ${r.snippet}`)
   });
-
+    
   const a = extract(sourceA);
   const b = extract(sourceB);
 
@@ -492,5 +505,5 @@ window.searchSovra = async function () {
     console.error("Sovra fetch error:", error);
   }
 }
-};
+
 console.log("✅ searchSovra() function loaded and ready.");
