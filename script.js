@@ -492,5 +492,5 @@ async function searchSovra() {
     console.error("Sovra fetch error:", error);
   }
 }
-
+}
 console.log("✅ searchSovra() function loaded and ready.");
