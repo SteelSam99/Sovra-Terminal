@@ -413,6 +413,10 @@ function classifyActivity(text) {
 
   return "OTHER";
 }
+function detectBias(text) {
+  // Placeholder logic — replace with real bias detection later
+  return ["neutral"];
+}
 
     function compareNarratives(sourceA, sourceB) {
   const extract = (r) => ({
@@ -505,5 +509,5 @@ window.searchSovra = async function () {
     console.error("Sovra fetch error:", error);
   }
 }
-}
+
 console.log("✅ searchSovra() function loaded and ready.");
