@@ -438,7 +438,7 @@ function compareDocuments() {
 
 // --- Main Function ---
 
-async function searchSovra() {
+async function window.searchSovra() {
   const query = document.getElementById("query").value.trim();
   const compareRaw = document.getElementById("toggleRaw")?.checked || false;
   const results = document.getElementById("results");
