@@ -400,7 +400,8 @@ function parseLegalText(text) {
 function classifyActivity(text) {
   const categories = {
     LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"],
-function compareNarratives(sourceA, sourceB) {
+  }
+    function compareNarratives(sourceA, sourceB) {
   const extract = (r) => ({
     title: r.title,
     snippet: r.snippet || "No snippet",
