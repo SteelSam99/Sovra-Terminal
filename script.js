@@ -497,6 +497,7 @@ window.searchSovra = async function () {
         const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
         output += `\n${comparison}\n`;
       }
+    }
     } else {
       output += "⚠️ No results found.";
     }
