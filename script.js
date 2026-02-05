@@ -507,7 +507,7 @@ Analyzing "${query}"...
 data.organic_results.forEach(r => {
     const card = document.createElement("div");
     card.className = "source-card";
-';
+
 card.innerHTML = `
   <div class="card-header">${r.title}</div>
 
