@@ -379,6 +379,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function mapPowerStructure(url) {
   return "UNMAPPED";
 }
+function detectFramingSyntax(text) {
+  return [];
+}
 
 function parseLegalText(text) {
   const exclusionPatterns = [
