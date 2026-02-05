@@ -508,12 +508,25 @@ data.organic_results.forEach(r => {
     const card = document.createElement("div");
     card.className = "source-card";
 
-    card.innerHTML = `
-        <div class="card-header">${r.title}</div>
-        <div class="card-description">${r.snippet}</div>
-        <div class="card-meta">Source · ${new URL(r.link).hostname}</div>
-        <a class="card-link" href="${r.link}" target="_blank">View Source</a>
-    `;
+card.innerHTML = `
+  <div class="card-header">${r.title}</div>
+
+  <div class="card-description">
+    ${r.snippet}
+  </div>
+
+  <div class="card-annotation">
+    ${inferRelevance(r, query)}
+  </div>
+
+  <div class="card-meta">
+    Source · ${new URL(r.link).hostname}
+  </div>
+
+  <a class="card-link" href="${r.link}" target="_blank">
+    View Source
+  </a>
+`;
 
     results.appendChild(card);
 });
