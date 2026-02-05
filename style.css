@@ -50,3 +50,28 @@ body, html {
   border-top: 1px solid #ddd;
 }
 
+/* Sovra Source Card Layout */
+
+.card-header {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.card-description {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
+.card-meta {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  margin-top: 0.4rem;
+}
+
+.card-link {
+  font-size: 0.7rem;
+  color: #7aa2ff;
+  text-decoration: none;
+}
