@@ -502,9 +502,22 @@ Analyzing "${query}"...
 `;
 
   if (data.organic_results && data.organic_results.length > 0) {
-    data.organic_results.forEach((r, i) => {
-      output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
-    });
+   results.innerHTML = "";
+
+data.organic_results.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "source-card";
+
+    card.innerHTML = `
+        <div class="card-header">${r.title}</div>
+        <div class="card-description">${r.snippet}</div>
+        <div class="card-meta">Source · ${new URL(r.link).hostname}</div>
+        <a class="card-link" href="${r.link}" target="_blank">View Source</a>
+    `;
+
+    results.appendChild(card);
+});
+
 
     if (data.organic_results.length >= 2) {
       const comparison = compareNarratives(
@@ -518,7 +531,7 @@ Analyzing "${query}"...
   }
 
   output += "\nSovra has spoken.";
-  results.innerText = output;
+  
 
 } catch (error) {
   results.innerText = "⚠️ Sovra encountered a search error.";
