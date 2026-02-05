@@ -507,7 +507,7 @@ Analyzing "${query}"...
 data.organic_results.forEach(r => {
     const card = document.createElement("div");
     card.className = "source-card";
-;
+';
 card.innerHTML = `
   <div class="card-header">${r.title}</div>
 
@@ -552,4 +552,22 @@ card.innerHTML = `
 }
 
 console.log("✅ searchSovra() function loaded and ready.");
+}
+function inferRelevance(result, query) {
+  const text = `${result.title} ${result.snippet}`.toLowerCase();
+  const q = query.toLowerCase();
+
+  if (q.includes("covert") && text.includes("policy")) {
+    return "This source frames discrimination through neutral policy language, a common mechanism for structural bias without explicit intent.";
+  }
+
+  if (text.includes("equal opportunity")) {
+    return "This source emphasizes formal equality, which can obscure unequal outcomes in practice.";
+  }
+
+  if (text.includes("administrative") || text.includes("regulation")) {
+    return "Administrative language often encodes power through procedure rather than explicit prohibition.";
+  }
+
+  return "This source provides contextual grounding relevant to the query.";
 }
