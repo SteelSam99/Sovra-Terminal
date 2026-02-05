@@ -57,7 +57,10 @@ body, html {
   letter-spacing: 0.08em;
   opacity: 0.6;
   margin: 1.5rem 0 0.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.25rem;
 }
+
 
 .card-header {
   font-weight: 600;
