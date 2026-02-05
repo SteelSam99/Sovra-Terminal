@@ -519,7 +519,7 @@ card.innerHTML = `
   <div class="card-annotation">
     ${inferRelevance(r, query)}
   </div>
-
+*/
   <div class="card-meta">
     Source · ${new URL(r.link).hostname}
   </div>
