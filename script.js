@@ -465,7 +465,8 @@ function compareDocuments() {
 window.searchSovra = async function () {
   const query = document.getElementById("query").value.trim();
   const compareRaw = document.getElementById("toggleRaw")?.checked || false;
-  const results = document.getElementById("results");
+ const results = document.querySelector(".results-left");
+
 
   if (!query) {
     results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
