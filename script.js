@@ -519,3 +519,4 @@ Analyzing "${query}"...
 }
 
 console.log("✅ searchSovra() function loaded and ready.");
+});
