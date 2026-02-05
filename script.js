@@ -373,15 +373,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeCollapseResponseProtocol();
 });
-
-
-// === Text Analysis Engine ===
 function mapPowerStructure(url) {
   return "UNMAPPED";
 }
 function detectFramingSyntax(text) {
   return [];
 }
+
+// === Text Analysis Engine ===
+
 
 function parseLegalText(text) {
   const exclusionPatterns = [
