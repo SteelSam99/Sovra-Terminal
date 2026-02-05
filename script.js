@@ -502,7 +502,7 @@ Analyzing "${query}"...
 `;
 
   if (data.organic_results && data.organic_results.length > 0) {
-   results.innerHTML = "";
+   results.innerHTML = `<div class="section-label">Relevant Statutory Language</div>`;
 
 data.organic_results.forEach(r => {
     const card = document.createElement("div");
