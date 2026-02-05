@@ -477,38 +477,45 @@ window.searchSovra = async function () {
 
   const endpoint = `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}`;
 
-  try {
-    const response = await fetch(endpoint);
-    const data = await response.json();
+try {
+  const response = await fetch(endpoint);
+  const data = await response.json();
 
-    if (data.error) {
-      results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
-      return;
-    }
-
-    let output = `> Constrained Logic:\nAnalyzing "${query}"...\n✅ References retrieved.\n\n> Symbolic Inference:\n🧠 Pattern scan initiated...\n`;
-
-    if (data.organic_results && data.organic_results.length > 0) {
-      data.organic_results.forEach((r, i) => {
-        output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
-      });
-
-      if (data.organic_results.length >= 2) {
-        const comparison = compareNarratives(data.organic_results[0], data.organic_results[1]);
-        output += `\n${comparison}\n`;
-      }
-    }
-    } else {
-      output += "⚠️ No results found.";
-    }
-
-    output += "\nSovra has spoken.";
-    results.innerText = output;
-
-  } catch (error) {
-    results.innerText = "⚠️ Sovra encountered a search error.";
-    console.error("Sovra fetch error:", error);
+  if (data.error) {
+    results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
+    return;
   }
+
+  let output = `> Constrained Logic:
+Analyzing "${query}"...
+✅ References retrieved.
+
+> Symbolic Inference:
+🧠 Pattern scan initiated...
+`;
+
+  if (data.organic_results && data.organic_results.length > 0) {
+    data.organic_results.forEach((r, i) => {
+      output += `\n${i + 1}. ${r.title}\n${r.snippet}\n🔗 ${r.link}\n`;
+    });
+
+    if (data.organic_results.length >= 2) {
+      const comparison = compareNarratives(
+        data.organic_results[0],
+        data.organic_results[1]
+      );
+      output += `\n${comparison}\n`;
+    }
+  } else {
+    output += "⚠️ No results found.";
+  }
+
+  output += "\nSovra has spoken.";
+  results.innerText = output;
+
+} catch (error) {
+  results.innerText = "⚠️ Sovra encountered a search error.";
+  console.error("Sovra fetch error:", error);
 }
 
 console.log("✅ searchSovra() function loaded and ready.");
