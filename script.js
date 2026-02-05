@@ -417,6 +417,9 @@ function detectBias(text) {
   // Placeholder logic — replace with real bias detection later
   return ["neutral"];
 }
+function mapPowerStructure(url) {
+  return "UNMAPPED";
+}
 
     function compareNarratives(sourceA, sourceB) {
   const extract = (r) => ({
