@@ -373,6 +373,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeCollapseResponseProtocol();
 });
+function mapPowerStructure(url) {
+  return "UNMAPPED";
+}
 
 // === Text Analysis Engine ===
 
@@ -416,9 +419,6 @@ function classifyActivity(text) {
 function detectBias(text) {
   // Placeholder logic — replace with real bias detection later
   return ["neutral"];
-}
-function mapPowerStructure(url) {
-  return "UNMAPPED";
 }
 
     function compareNarratives(sourceA, sourceB) {
