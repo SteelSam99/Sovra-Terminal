@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.output.balanceDualChannels();
     }
   },
-  {
+   {
     id: "011",
     title: "Mutation Equation Drift",
     description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
@@ -131,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.deploy.syncDualChannels();
     }
   }
-]; // end of stipulations array
-}); // end of DOMContentLoaded
+];
+});
 
 
 
