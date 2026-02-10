@@ -172,7 +172,9 @@ window.compareDocuments = compareDocuments;
    5) UI behavior: provenance toggle + hash copy (deduped)
    ============================================================ */
 document.addEventListener("click", (e) => {
-  const provBtn = e.target.closest?.(".expand-provenance");
+const provBtn = e.target.closest
+  ? e.target.closest(".expand-provenance")
+  : null;
   if (provBtn) {
     const panel = document.getElementById(provBtn.getAttribute("aria-controls"));
     const expanded = provBtn.getAttribute("aria-expanded") === "true";
@@ -181,7 +183,9 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  const hashBtn = e.target.closest?.(".hash-btn");
+  const hashBtn = e.target.closest
+  ? e.target.closest(".hash-btn")
+  : null;
   if (hashBtn) {
     const hash = hashBtn.dataset.hash || "";
     if (navigator.clipboard && hash) {
