@@ -97,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   },
    {
+      {
     id: "011",
     title: "Mutation Equation Drift",
     description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
@@ -131,23 +132,13 @@ document.addEventListener("DOMContentLoaded", () => {
       Sovra.deploy.syncDualChannels();
     }
   }
-];
-});
+]; // end of stipulations array
+}); // end of DOMContentLoaded
 
+// call inject at file scope
+inject();
 
-
-  function inject() {
-    if (typeof Sovra !== "undefined" && Sovra.stipulations && typeof Sovra.stipulations.register === "function") {
-      stipulations.forEach(stip => Sovra.stipulations.register(stip));
-      console.log("✅ Welsing–Fuller stipulations 000–013 deployed to Sovra core.");
-    } else {
-      setTimeout(inject, 100);
-    }
-  }
-
-  inject();
-});
-
+// delegated click handler for provenance toggles and hash copy
 document.addEventListener('click', (e) => {
   const provBtn = e.target.closest('.expand-provenance');
   if (provBtn) {
@@ -174,6 +165,7 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
 
 // === Symbolic Expansion Override: Unconstrained Mode ===
 document.addEventListener("DOMContentLoaded", () => {
