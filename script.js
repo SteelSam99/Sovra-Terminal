@@ -56,16 +56,15 @@ document.addEventListener("DOMContentLoaded", () => {
         Sovra.symbolics.detectCompression("racial_payload");
       }
     },
-    {
-      id: "006",
-      title: "Executable Myth Constraint",
-      description: "Myths that encode racial hierarchy must be treated as active code. Mythic structures must be decompiled and traced to policy impact.",
-      enforce: () => {
-        Sovra.myth.decompileActiveNarratives("racial_hierarchy");
-      }
-    },
-    {
-       {
+      {
+    id: "006",
+    title: "Executable Myth Constraint",
+    description: "Myths that encode racial hierarchy must be treated as active code. Mythic structures must be decompiled and traced to policy impact.",
+    enforce: () => {
+      Sovra.myth.decompileActiveNarratives("racial_hierarchy");
+    }
+  },
+  {
     id: "007",
     title: "Evolutionary Constraint Enforcement",
     description: "Supremacy adapts — Sovra must track mutation vectors. Enforce constraint on narrative drift toward sanitized forms.",
@@ -108,6 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   },
+
 
     id: "012",
     title: "Command Prompt Export Format",
