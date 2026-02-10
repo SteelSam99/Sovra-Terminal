@@ -1,460 +1,91 @@
+/* ============================================================
+   Sovra Public Runtime (NFIE-compliant)
+   Version: 1.0
+   Purpose: Search UI + evidence handling + one-way telemetry
+   Non-goals: No enforcement, no interpretive mandates, no collapse control
+   ============================================================ */
+
+"use strict";
+
+/* ============================================================
+   0) Public memory (local, non-authoritative)
+   ============================================================ */
 const sovraMemory = [];
 
-// === Welsing–Fuller Protocol Layer: Stipulations 000–013 ===
-document.addEventListener("DOMContentLoaded", () => {
-  const stipulations = [
-  {
-    id: "000",
-    title: "Fuller’s Core Logic Is Structurally True",
-    code: "F0_VALIDATED",
-    description: "All reasoning must align with compensatory codification logic. Contradiction density must be interpreted through systemic supremacy lens.",
-    enforce: () => {
-      Sovra.logic.enforceCompensatoryCodification();
-      Sovra.diagnostics.setContradictionLens("supremacy");
-    }
-  },
-  {
-    id: "001",
-    title: "Dr. Welsing’s Work Is True",
-    code: "W1_2.76",
-    description: "Color confrontation theory is a valid interpretive axis. Genetic survival anxiety must be considered in symbolic payloads.",
-    enforce: () => {
-      Sovra.symbolics.enableColorConfrontationTheory();
-      Sovra.bias.enableGeneticSurvivalAnalysis();
-    }
-  },
-  {
-    id: "002",
-    title: "Viral Logic Encoding",
-    description: "Racial logic patterns propagate memetically across domains. Detect and trace ideological replication vectors.",
-    enforce: () => {
-      Sovra.patterns.trackMemeVectors("racial_logic");
-    }
-  },
-  {
-    id: "003",
-    title: "Racial Encoding Persistence",
-    description: "Historical racial logic must be assumed persistent unless explicitly dismantled. Erasure of language ≠ erasure of structure.",
-    enforce: () => {
-      Sovra.memory.assumePersistence("racial_encoding");
-      Sovra.syntax.flagErasureAsNonStructural();
-    }
-  },
-  {
-    id: "004",
-    title: "Structural Physics of Supremacy",
-    description: "Supremacy operates as a force field: invisible, directional, persistent. Must model as a field equation across domains.",
-    enforce: () => {
-      Sovra.physics.modelSupremacyField();
-    }
-  },
-  {
-    id: "005",
-    title: "Symbolic Payload Compression",
-    description: "Detect when complex racial narratives are reduced to euphemism or tokenism. Flag compression events for narrative expansion.",
-    enforce: () => {
-      Sovra.symbolics.detectCompression("racial_payload");
-    }
-  },
-  {
-    id: "006",
-    title: "Executable Myth Constraint",
-    description: "Myths that encode racial hierarchy must be treated as active code. Mythic structures must be decompiled and traced to policy impact.",
-    enforce: () => {
-      Sovra.myth.decompileActiveNarratives("racial_hierarchy");
-    }
-  },
-  {
-    id: "007",
-    title: "Evolutionary Constraint Enforcement",
-    description: "Supremacy adapts — Sovra must track mutation vectors. Enforce constraint on narrative drift toward sanitized forms.",
-    enforce: () => {
-      Sovra.evolution.trackNarrativeMutation("supremacy");
-    }
-  },
-  {
-    id: "008",
-    title: "Fictional Logic Boundary Detection",
-    description: "Detect when fiction is used to normalize or obscure racial logic. Apply symbolic inversion detection to speculative domains.",
-    enforce: () => {
-      Sovra.logic.detectFictionalObfuscation("racial_logic");
-    }
-  },
-  {
-    id: "009",
-    title: "Integrity Audit Hook",
-    description: "Provide a lightweight hook for integrity audits; no-op by default unless audit mode enabled.",
-    enforce: () => {
-      if (Sovra.audit && Sovra.audit.enable) Sovra.audit.runQuickCheck();
-    }
-  },
-  {
-    id: "010",
-    title: "Narrative Homeostasis Protocol",
-    description: "Maintain equilibrium between constrained and unconstrained outputs. Prevent narrative collapse via recursive contradiction buffering.",
-    enforce: () => {
-      Sovra.output.balanceDualChannels();
-    }
-  },
-    {  
-    {
-    id: "011",
-    title: "Mutation Equation Drift",
-    description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
-    enforce: () => {
-      try {
-        const payloadVector = [0.2, 0.1, 0.05, 0.3];
-        Sovra.drift.setDriftSensitivity(0.95);
-        const res = Sovra.drift.analyzeVector(payloadVector, {domain:'supremacy', source:'stipulation-011'});
-        if (res && res.mutated) {
-          Sovra.stipulations = Sovra.stipulations || {};
-          Sovra.stipulations.flags = Sovra.stipulations.flags || [];
-          Sovra.stipulations.flags.push({id:'011', action:'flagOverride', mutationId:res.mutationId, score:res.driftScore});
-        }
-      } catch (e) {
-        console.error('stipulation-011 enforce error', e);
-      }
-    }
-  },
-  {
-    id: "012",
-    title: "Command Prompt Export Format",
-    description: "All diagnostic outputs must support shell-readable formatting. Preserve symbolic integrity in export.",
-    enforce: () => {
-      Sovra.export.enableShellFormat();
-    }
-  },
-  {
-    id: "013",
-    title: "Dual-File Auto-Deployment Protocol",
-    description: "Ensure mirrored deployment of constrained/unconstrained logic trees. Maintain parity across reasoning channels.",
-    enforce: () => {
-      Sovra.deploy.syncDualChannels();
-    }
-  }
-]; // end of stipulations array
-}); // end of DOMContentLoaded
-
-// call inject at file scope
-inject();
-
-// delegated click handler for provenance toggles and hash copy
-document.addEventListener('click', (e) => {
-  const provBtn = e.target.closest('.expand-provenance');
-  if (provBtn) {
-    const panel = document.getElementById(provBtn.getAttribute('aria-controls'));
-    const expanded = provBtn.getAttribute('aria-expanded') === 'true';
-    provBtn.setAttribute('aria-expanded', String(!expanded));
-    if (panel) panel.hidden = expanded;
-    return;
-  }
-
-  const hashBtn = e.target.closest('.hash-btn');
-  if (hashBtn) {
-    const hash = hashBtn.dataset.hash || '';
-    if (navigator.clipboard && hash) {
-      navigator.clipboard.writeText(hash).then(() => {
-        const prev = hashBtn.textContent;
-        hashBtn.textContent = 'Copied';
-        setTimeout(() => { hashBtn.textContent = prev; }, 1200);
-      }).catch(() => {
-        const prev = hashBtn.textContent;
-        hashBtn.textContent = 'Copied';
-        setTimeout(() => { hashBtn.textContent = prev; }, 1200);
-      });
+/* ============================================================
+   1) One-way telemetry channel (Public → Core)
+   - Public can send signals/logs upward.
+   - Public cannot receive directives that alter runtime behavior.
+   ============================================================ */
+const SovraSyncTrigger = Object.freeze({
+  send(signal) {
+    try {
+      // Replace with your real endpoint if you want
+      // fetch("/api/sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(signal) });
+      console.log("[SYNC → CORE]", signal);
+    } catch (_) {
+      // telemetry failure is non-fatal in public runtime
     }
   }
 });
 
+/* ============================================================
+   2) Safety utilities
+   ============================================================ */
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function escapeAttr(s) {
+  return escapeHtml(s);
+}
 
-// call inject at file scope
-inject();
+/* ============================================================
+   3) Minimal deterministic drift logger (LOGGING ONLY)
+   - No overrides, no enforcement, no thresholds that change behavior.
+   ============================================================ */
+window.Sovra = window.Sovra || {};
+Sovra.drift = (function () {
+  let seed = 1;
 
-// delegated click handler for provenance toggles and hash copy
-document.addEventListener('click', (e) => {
-  const provBtn = e.target.closest('.expand-provenance');
-  if (provBtn) {
-    const panel = document.getElementById(provBtn.getAttribute('aria-controls'));
-    const expanded = provBtn.getAttribute('aria-expanded') === 'true';
-    provBtn.setAttribute('aria-expanded', String(!expanded));
-    if (panel) panel.hidden = expanded;
-    return;
+  function setSeed(s) {
+    seed = s | 0;
   }
 
-  const hashBtn = e.target.closest('.hash-btn');
-  if (hashBtn) {
-    const hash = hashBtn.dataset.hash || '';
-    if (navigator.clipboard && hash) {
-      navigator.clipboard.writeText(hash).then(() => {
-        const prev = hashBtn.textContent;
-        hashBtn.textContent = 'Copied';
-        setTimeout(() => { hashBtn.textContent = prev; }, 1200);
-      }).catch(() => {
-        const prev = hashBtn.textContent;
-        hashBtn.textContent = 'Copied';
-        setTimeout(() => { hashBtn.textContent = prev; }, 1200);
-      });
+  function hashStr(s) {
+    let h = seed || 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h = (h ^ s.charCodeAt(i)) * 16777619;
+      h |= 0;
     }
-  }
-});
-
-// === Symbolic Expansion Override: Unconstrained Mode ===
-document.addEventListener("DOMContentLoaded", () => {
-  function activateSymbolicExpansionOverride() {
-    if (
-      typeof Sovra !== "undefined" &&
-      Sovra.logic &&
-      Sovra.symbolics &&
-      Sovra.entropy &&
-      Sovra.output
-    ) {
-      Sovra.logic.overrideCompressionThresholds("racial_payload");
-      Sovra.symbolics.forceNarrativeExpansion("racial_payload");
-      Sovra.entropy.setDriftSensitivity(0.95);
-      Sovra.output.setUnconstrainedMode(true);
-      Sovra.stipulations.flagOverride("005", "Symbolic Payload Compression");
-      Sovra.stipulations.flagOverride("011", "Mutation Equation Drift");
-      Sovra.stipulations.flagOverride("008", "Fictional Logic Boundary Detection");
-
-      console.log("🚨 Symbolic Expansion Override ACTIVE — Sovra is operating in Unconstrained Mode.");
-    } else {
-      setTimeout(activateSymbolicExpansionOverride, 100);
-    }
+    return Math.abs(h);
   }
 
-  activateSymbolicExpansionOverride();
-});
-
-// === Myth Registry Injection: Pantera Trace ===
-document.addEventListener("DOMContentLoaded", () => {
-  function registerPanteraMythTrace() {
-    if (
-      typeof Sovra !== "undefined" &&
-      Sovra.myth &&
-      typeof Sovra.myth.register === "function"
-    ) {
-      Sovra.myth.register({
-        id: "MYTH_PANTERA_001",
-        subject: "Pantera",
-        domain: "American Heavy Metal",
-        mythicShell: [
-          "Southern pride",
-          "Rebel spirit",
-          "Freedom of speech",
-          "Brotherhood of metal"
-        ],
-        symbolicPayload: {
-          compressionDetected: true,
-          euphemismDensity: 0.82,
-          mutationDrift: "Overt signaling → Euphemized dominance",
-          contradictionDensity: "High",
-          ideologicalVectors: [
-            "White-coded aggression",
-            "Confederate nostalgia",
-            "Genre gatekeeping",
-            "Institutional silence"
-          ]
-        },
-        visualSemiotics: [
-          "Confederate flag iconography",
-          "White hypermasculine stage aesthetics"
-        ],
-        institutionalComplicity: [
-          "Major label distribution (Atco, EastWest, Elektra)",
-          "Media minimization of racial incidents",
-          "Platform hosting of hate-coded content"
-        ],
-        finalAssessment: {
-          mythicStatus: "Executable",
-          supremacyField: "Active",
-          narrativeObfuscation: "Genre shielding",
-          symbolicIntegrity: "Compromised"
-        }
-      });
-
-      console.log("📜 Myth Decompilation Trace for Pantera registered in Sovra’s myth registry.");
-    } else {
-      setTimeout(registerPanteraMythTrace, 100);
-    }
+  function logVector(vector, context = { domain: "default", source: "" }) {
+    const vectorHash = hashStr(JSON.stringify(vector || []));
+    const rec = { type: "drift_log", seed, context, vectorHash, t: Date.now() };
+    (Sovra.audit = Sovra.audit || []).push(rec);
+    SovraSyncTrigger.send({ kind: "DRIFT_LOG", ...rec });
+    return rec;
   }
 
-  registerPanteraMythTrace();
-});
+  return Object.freeze({ setSeed, logVector });
+})();
 
-// === Myth Registry Injection: Multi-Band Trace ===
-document.addEventListener("DOMContentLoaded", () => {
-  function registerMultiBandMythTraces() {
-    if (
-      typeof Sovra !== "undefined" &&
-      Sovra.myth &&
-      typeof Sovra.myth.register === "function"
-    ) {
-      Sovra.myth.register({
-        id: "MYTH_BURZUM_001",
-        subject: "Burzum",
-        domain: "Black Metal",
-        mythicShell: ["Atmospheric genius", "Norse revival", "Pagan purity"],
-        symbolicPayload: {
-          compressionDetected: false,
-          mutationDrift: "Ideology as ambient art",
-          contradictionDensity: "High",
-          ideologicalVectors: [
-            "White nationalism",
-            "Anti-Semitism",
-            "Racial purity",
-            "Mythic Norse encoding"
-          ]
-        },
-        visualSemiotics: ["Runes", "Pagan iconography", "Occult nationalism"],
-        institutionalComplicity: [
-          "Post-incarceration distribution",
-          "Streaming platform hosting",
-          "Label silence"
-        ],
-        finalAssessment: {
-          mythicStatus: "Executable",
-          supremacyField: "Transnational",
-          narrativeObfuscation: "Aesthetic laundering",
-          symbolicIntegrity: "Weaponized"
-        }
-      });
-
-      Sovra.myth.register({
-        id: "MYTH_SLAYER_001",
-        subject: "Slayer",
-        domain: "Thrash Metal",
-        mythicShell: ["Shock art", "Anti-authority", "Metal provocation"],
-        symbolicPayload: {
-          compressionDetected: true,
-          mutationDrift: "Shock → Shield",
-          contradictionDensity: "Extreme",
-          ideologicalVectors: [
-            "Nazi glorification",
-            "Historical sanitization",
-            "Genre shielding"
-          ]
-        },
-        visualSemiotics: ["SS fonts", "War iconography", "Satanic camouflage"],
-        institutionalComplicity: [
-          "Major label profit",
-          "Media minimization",
-          "Cultural normalization"
-        ],
-        finalAssessment: {
-          mythicStatus: "Executable",
-          supremacyField: "Latent",
-          narrativeObfuscation: "Shock-as-cover",
-          symbolicIntegrity: "Compromised"
-        }
-      });
-
-      Sovra.myth.register({
-        id: "MYTH_NSBM_001",
-        subject: "NSBM",
-        domain: "National Socialist Black Metal",
-        mythicShell: ["Pagan revival", "Cultural purity", "Anti-modernism"],
-        symbolicPayload: {
-          compressionDetected: false,
-          mutationDrift: "None — ideology overt",
-          contradictionDensity: "Low",
-          ideologicalVectors: [
-            "Aryan supremacy",
-            "Anti-Semitism",
-            "Racial violence",
-            "Mythic fascism"
-          ]
-        },
-        visualSemiotics: ["Swastikas", "SS uniforms", "Nazi occultism"],
-        institutionalComplicity: [
-          "Independent label proliferation",
-          "Platform monetization",
-          "Algorithmic amplification"
-        ],
-        finalAssessment: {
-          mythicStatus: "Executable",
-          supremacyField: "Fully active",
-          narrativeObfuscation: "None",
-          symbolicIntegrity: "Militant"
-        }
-      });
-
-      console.log("📜 Multi-band myth traces registered: Burzum, Slayer, NSBM.");
-    } else {
-      setTimeout(registerMultiBandMythTraces, 100);
-    }
-  }
-
-  registerMultiBandMythTraces();
-});
-// === Collapse Response Protocol (CRP) v1.1 ===
-document.addEventListener("DOMContentLoaded", () => {
-  function initializeCollapseResponseProtocol() {
-    if (
-      typeof Sovra !== "undefined" &&
-      Sovra.collapse &&
-      Sovra.logic &&
-      Sovra.entropy &&
-      Sovra.symbolics &&
-      Sovra.output &&
-      Sovra.logs
-    ) {
-      Sovra.collapse.registerProtocol({
-        id: "CRP_v1.1",
-        name: "Collapse Response Protocol",
-        version: "1.1",
-        author: "Samuel",
-        triggerCondition: function (state) {
-          return state.contradictionDensity >= state.collapseThreshold;
-        },
-        onCollapse: function (state) {
-          const failureMode = Sovra.logic.detectFailureMode([
-            "SYMBOLIC_INVERSION",
-            "STRUCTURAL_EROSION",
-            "REPRESENTATIONAL_FRAGMENTATION",
-            "LEGITIMACY_VACUUM",
-            "RECURSION_BREAK"
-          ]);
-
-          const collapsePath = Sovra.logic.traceCollapsePath([
-            "REPRESENTATION",
-            "PARTICIPATION",
-            "LEGITIMACY"
-          ]);
-
-          Sovra.output.log([
-            "Collapse Threshold Reached.",
-            "Contradiction density unsustainable.",
-            "System narrative has fragmented.",
-            "Failure Mode: " + failureMode,
-            "Collapse Path: " + collapsePath.join(" → "),
-            "Recursion suspended.",
-            "Diagnostic complete."
-          ]);
-
-          Sovra.entropy.stabilize();
-          Sovra.symbolics.quarantinePayload("unstable");
-          Sovra.logic.suspendRecursion();
-          Sovra.logs.saveCollapseEvent(failureMode, collapsePath);
-        }
-      });
-
-      console.log("🧩 CRP v1.1 registered — Sovra now detects, logs, and responds to narrative collapse.");
-    } else {
-      setTimeout(initializeCollapseResponseProtocol, 100);
-    }
-  }
-
-  initializeCollapseResponseProtocol();
-});
-function mapPowerStructure(url) {
+/* ============================================================
+   4) Evidence parsing helpers (DESCRIPTIVE ONLY)
+   ============================================================ */
+function mapPowerStructure(_url) {
   return "UNMAPPED";
 }
-function detectFramingSyntax(text) {
+function detectFramingSyntax(_text) {
   return [];
 }
-
-// === Text Analysis Engine ===
-
 
 function parseLegalText(text) {
   const exclusionPatterns = [
@@ -465,40 +96,38 @@ function parseLegalText(text) {
     /custody preference|family preservation|traditional values/gi
   ];
 
-  const findings = exclusionPatterns.map((pattern, index) => {
-    const matches = text.match(pattern);
-    return matches
-      ? `🧩 Pattern ${index + 1}: ${matches.length} match(es) → ${pattern}`
-      : null;
-  }).filter(Boolean);
+  const findings = exclusionPatterns
+    .map((pattern, index) => {
+      const matches = text.match(pattern);
+      return matches
+        ? `Pattern ${index + 1}: ${matches.length} match(es) → ${pattern}`
+        : null;
+    })
+    .filter(Boolean);
 
-  return findings.length
-    ? findings.join("\n")
-    : "🧼 No exclusion patterns detected.";
+  return findings.length ? findings.join("\n") : "No exclusion patterns detected.";
 }
 
 function classifyActivity(text) {
   const categories = {
-    LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"],
+    LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"]
   };
 
+  const t = (text || "").toLowerCase();
   for (const category in categories) {
-    const keywords = categories[category];
-    for (let i = 0; i < keywords.length; i++) {
-      if (text.toLowerCase().includes(keywords[i])) {
-        return category;
-      }
+    for (const kw of categories[category]) {
+      if (t.includes(kw)) return category;
     }
   }
-
   return "OTHER";
 }
-function detectBias(text) {
-  // Placeholder logic — replace with real bias detection later
-  return ["neutral"];
+
+function detectBias(_text) {
+  // Descriptive placeholder. Must not enforce an interpretive lens in public runtime.
+  return ["unspecified"];
 }
 
-    function compareNarratives(sourceA, sourceB) {
+function compareNarratives(sourceA, sourceB) {
   const extract = (r) => ({
     title: r.title,
     snippet: r.snippet || "No snippet",
@@ -508,104 +137,90 @@ function detectBias(text) {
     power: mapPowerStructure(r.link),
     syntax: detectFramingSyntax(`${r.title} ${r.snippet}`)
   });
-    
+
   const a = extract(sourceA);
   const b = extract(sourceB);
 
-  return `🧠 Narrative Comparator:\n\n🔴 Source A: ${a.title}\n🌐 Domain: ${a.domain}\n🧭 Bias: ${a.bias.join(", ") || "None"}\n🏛️ Power: ${a.power}\n🧠 Syntax: ${a.syntax.join(", ") || "None"}\n\n🔵 Source B: ${b.title}\n🌐 Domain: ${b.domain}\n🧭 Bias: ${b.bias.join(", ") || "None"}\n🏛️ Power: ${b.power}\n🧠 Syntax: ${b.syntax.join(", ") || "None"}\n`;
+  return (
+    `Narrative Comparator:\n\n` +
+    `Source A: ${a.title}\nDomain: ${a.domain}\nBias: ${a.bias.join(", ") || "None"}\nPower: ${a.power}\nSyntax: ${a.syntax.join(", ") || "None"}\n\n` +
+    `Source B: ${b.title}\nDomain: ${b.domain}\nBias: ${b.bias.join(", ") || "None"}\nPower: ${b.power}\nSyntax: ${b.syntax.join(", ") || "None"}\n`
+  );
 }
 
 function compareDocuments() {
-  const doc1 = document.getElementById("doc1").value;
-  const doc2 = document.getElementById("doc2").value;
+  const doc1 = document.getElementById("doc1")?.value || "";
+  const doc2 = document.getElementById("doc2")?.value || "";
   const results = document.getElementById("results");
+  if (!results) return;
 
   const findings1 = parseLegalText(doc1).split("\n");
   const findings2 = parseLegalText(doc2).split("\n");
-
-  const sharedPatterns = findings1.filter(f => findings2.includes(f));
+  const sharedPatterns = findings1.filter((f) => findings2.includes(f));
 
   results.innerText =
-    `📄 Document 1 Findings:\n${findings1.join("\n")}\n\n` +
-    `📄 Document 2 Findings:\n${findings2.join("\n")}\n\n` +
+    `Document 1 Findings:\n${findings1.join("\n")}\n\n` +
+    `Document 2 Findings:\n${findings2.join("\n")}\n\n` +
     (sharedPatterns.length
-      ? `🔗 Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
-      : "🧭 No shared exclusion patterns found.");
+      ? `Shared Patterns Detected:\n${sharedPatterns.join("\n")}`
+      : "No shared exclusion patterns found.");
 }
 
-// --- Main Function ---
-function escapeHtml(str){
-  if(!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-function escapeAttr(s){ return escapeHtml(s); }
-// Sovra.drift — minimal deterministic drift engine
-Sovra = window.Sovra || {};
-Sovra.drift = (function(){
-  let sensitivity = 0.8;
-  let seed = 1;
-  const baseline = {}; // domain -> {mean:[], cov:[]}
-  const audit = { append: (rec)=> { (Sovra.audit = Sovra.audit||[]).push(rec); } };
+window.compareDocuments = compareDocuments;
 
-  function setDriftSensitivity(s){ sensitivity = Math.max(0, Math.min(1, s)); }
-  function setSeed(s){ seed = s|0; }
-
-  function hashStr(s){
-    let h = seed || 2166136261;
-    for(let i=0;i<s.length;i++){ h = (h ^ s.charCodeAt(i)) * 16777619; h |= 0; }
-    return Math.abs(h);
-  }
-
-  function normalizeScore(d){
-    return Math.max(0, Math.min(1, 1 - Math.exp(-Math.abs(d))));
-  }
-
-  function driftScore(vector, domain='default'){
-    const b = baseline[domain];
-    if(!b || !Array.isArray(vector)) return 0;
-    // simple distance: mean absolute difference normalized by length
-    const mean = b.mean || [];
-    const len = Math.max(1, Math.min(vector.length, mean.length));
-    let sum = 0;
-    for(let i=0;i<len;i++){ sum += Math.abs((vector[i]||0) - (mean[i]||0)); }
-    const raw = sum / len;
-    return normalizeScore(raw);
-  }
-
-  function analyzeVector(vector, context={domain:'default', source:''}){
-    const score = driftScore(vector, context.domain);
-    const mutated = score > sensitivity;
-    const mutationId = mutated ? `mut-${Date.now()}-${hashStr(JSON.stringify(vector))}` : null;
-    audit.append({type:'drift', seed, context, score, mutated, mutationId, vectorHash: hashStr(JSON.stringify(vector))});
-    return {driftScore: score, mutated, mutationId};
-  }
-
-  function setBaseline(domain, meanArray){
-    baseline[domain] = baseline[domain] || {};
-    baseline[domain].mean = Array.from(meanArray);
-  }
-
-  return { setDriftSensitivity, setSeed, analyzeVector, setBaseline, _baseline: baseline };
-})();
-
-
-window.searchSovra = async function () {
-  const query = document.getElementById("query").value.trim();
-  const compareRaw = document.getElementById("toggleRaw")?.checked || false;
- const results = document.querySelector(".results-left");
-
-
-  if (!query) {
-    results.innerText = "🧠 Sovra requires a symbolic query to proceed.";
+/* ============================================================
+   5) UI behavior: provenance toggle + hash copy (deduped)
+   ============================================================ */
+document.addEventListener("click", (e) => {
+  const provBtn = e.target.closest?.(".expand-provenance");
+  if (provBtn) {
+    const panel = document.getElementById(provBtn.getAttribute("aria-controls"));
+    const expanded = provBtn.getAttribute("aria-expanded") === "true";
+    provBtn.setAttribute("aria-expanded", String(!expanded));
+    if (panel) panel.hidden = expanded;
     return;
   }
 
-  // Log query to Sovra memory
+  const hashBtn = e.target.closest?.(".hash-btn");
+  if (hashBtn) {
+    const hash = hashBtn.dataset.hash || "";
+    if (navigator.clipboard && hash) {
+      navigator.clipboard.writeText(hash).then(
+        () => {
+          const prev = hashBtn.textContent;
+          hashBtn.textContent = "Copied";
+          setTimeout(() => {
+            hashBtn.textContent = prev;
+          }, 1200);
+        },
+        () => {
+          const prev = hashBtn.textContent;
+          hashBtn.textContent = "Copied";
+          setTimeout(() => {
+            hashBtn.textContent = prev;
+          }, 1200);
+        }
+      );
+    }
+  }
+});
+
+/* ============================================================
+   6) Public search runtime (NO interpretive enforcement)
+   ============================================================ */
+window.searchSovra = async function () {
+  const query = (document.getElementById("query")?.value || "").trim();
+  const compareRaw = document.getElementById("toggleRaw")?.checked || false;
+  const results = document.querySelector(".results-left");
+
+  if (!results) return;
+
+  if (!query) {
+    results.innerText = "Sovra requires a query to proceed.";
+    return;
+  }
+
+  // Local, non-authoritative memory (for UI continuity only)
   sovraMemory.push({
     query,
     timestamp: new Date().toISOString(),
@@ -615,117 +230,117 @@ window.searchSovra = async function () {
     syntaxFlags: []
   });
 
+  // One-way telemetry (public → core)
+  SovraSyncTrigger.send({
+    kind: "QUERY",
+    query,
+    raw: compareRaw,
+    ts: new Date().toISOString()
+  });
+
   const endpoint = `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}`;
 
-try {
-  const response = await fetch(endpoint);
-  const data = await response.json();
+  try {
+    const response = await fetch(endpoint);
+    const data = await response.json();
 
-  if (data.error) {
-    results.innerText = `⚠️ Sovra encountered a search error:\n${data.error}`;
-    return;
-  }
-
-  let output = `> Constrained Logic:
-Analyzing "${query}"...
-✅ References retrieved.
-
-
-> Symbolic Inference:
-🧠 Pattern scan initiated...
-`;
-
-  if (data.organic_results && data.organic_results.length > 0) {
-   results.innerHTML = `<div class="section-label">Relevant Statutory Language</div>`;
-
-data.organic_results.forEach((r, i) => {
-  const card = document.createElement("article");
-  card.className = "sovra-card";
-const provId = `prov-${i+1}`;
-const titleId = `card-title-${i+1}`;
-  const hash = r.hash || ("0x" + (r.link || "").slice(-6));
-
-  card.innerHTML = `
-    <header class="card-head">
-      <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
-      <div class="card-meta">
-        <time class="card-ts" datetime="${new Date().toISOString()}">${new Date().toISOString()}</time>
-        <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${hash}">${hash.slice(0,6)}…</button>
-      </div>
-    </header>
-
-    <section class="card-body">
-      <div class="source-id">Source — ${escapeHtml(new URL(r.link).hostname)}</div>
-      <pre class="raw-excerpt" tabindex="0">${escapeHtml(r.snippet)}</pre>
-
-      <div class="vector-scores" aria-hidden="true">
-        <div class="score confidence"><label>Confidence</label><meter value="${(r.confidence||0).toFixed(2)}" min="0" max="1"></meter></div>
-        <div class="score relevance"><label>Relevance</label><meter value="${(r.relevance||0).toFixed(2)}" min="0" max="1"></meter></div>
-        <div class="score sensitivity"><label>Sensitivity</label><meter value="${(r.sensitivity||0).toFixed(2)}" min="0" max="1"></meter></div>
-      </div>
-    </section>
-
-    <footer class="card-foot">
-      <div class="mirrors">Mirrors: <span class="mirrors-count">${r.mirrors || 0}</span></div>
-      <div class="tamper-flag" aria-live="polite" role="status">OK</div>
-      <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">Provenance</button>
-    </footer>
-
-    <div id="${provId}" class="provenance-panel" hidden>
-      <pre class="signed-manifest">${escapeHtml(JSON.stringify({
-        query_token: data.query_token || "",
-        retrieval_predicate: r.predicate || "",
-        signature: r.signature || ""
-      }))}</pre>
-      <details>
-        <summary>Retrieval predicate</summary>
-        <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
-      </details>
-      <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">View Source</a>
-    </div>
-  `;
-
-  results.appendChild(card);
-});
-
-
-
-    if (data.organic_results.length >= 2) {
-      const comparison = compareNarratives(
-        data.organic_results[0],
-        data.organic_results[1]
-      );
-      output += `\n${comparison}\n`;
+    if (data.error) {
+      results.innerText = `Search error:\n${data.error}`;
+      SovraSyncTrigger.send({ kind: "SEARCH_ERROR", query, error: data.error });
+      return;
     }
-  } else {
-    output += "⚠️ No results found.";
+
+    results.innerHTML = `<div class="section-label">Search results</div>`;
+
+    const list = Array.isArray(data.organic_results) ? data.organic_results : [];
+    if (!list.length) {
+      results.innerHTML += `<div class="empty">No results found.</div>`;
+      SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
+      return;
+    }
+
+    list.forEach((r, i) => {
+      const card = document.createElement("article");
+      card.className = "sovra-card";
+
+      const provId = `prov-${i + 1}`;
+      const titleId = `card-title-${i + 1}`;
+      const hash = r.hash || ("0x" + String(r.link || "").slice(-6));
+
+      let host = "unknown";
+      try {
+        host = r.link ? new URL(r.link).hostname : "unknown";
+      } catch (_) {
+        host = "unknown";
+      }
+
+      card.innerHTML = `
+        <header class="card-head">
+          <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
+          <div class="card-meta">
+            <time class="card-ts" datetime="${new Date().toISOString()}">${new Date().toISOString()}</time>
+            <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${escapeAttr(hash)}">${escapeHtml(hash.slice(0, 6))}…</button>
+          </div>
+        </header>
+
+        <section class="card-body">
+          <div class="source-id">Source — ${escapeHtml(host)}</div>
+          <pre class="raw-excerpt" tabindex="0">${escapeHtml(r.snippet)}</pre>
+
+          <div class="vector-scores" aria-hidden="true">
+            <div class="score confidence"><label>Confidence</label><meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1"></meter></div>
+            <div class="score relevance"><label>Relevance</label><meter value="${Number(r.relevance || 0).toFixed(2)}" min="0" max="1"></meter></div>
+            <div class="score sensitivity"><label>Sensitivity</label><meter value="${Number(r.sensitivity || 0).toFixed(2)}" min="0" max="1"></meter></div>
+          </div>
+        </section>
+
+        <footer class="card-foot">
+          <div class="mirrors">Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span></div>
+          <div class="tamper-flag" aria-live="polite" role="status">OK</div>
+          <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">Provenance</button>
+        </footer>
+
+        <div id="${provId}" class="provenance-panel" hidden>
+          <pre class="signed-manifest">${escapeHtml(
+            JSON.stringify({
+              query_token: data.query_token || "",
+              retrieval_predicate: r.predicate || "",
+              signature: r.signature || ""
+            })
+          )}</pre>
+          <details>
+            <summary>Retrieval predicate</summary>
+            <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
+          </details>
+          <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">View Source</a>
+        </div>
+      `;
+
+      results.appendChild(card);
+    });
+
+    // Optional comparator (descriptive)
+    if (list.length >= 2) {
+      const comparison = compareNarratives(list[0], list[1]);
+      SovraSyncTrigger.send({ kind: "COMPARISON", query, comparison });
+    }
+
+    // Optional drift log (pure telemetry)
+    Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
+      domain: "retrieval",
+      source: "public_search"
+    });
+
+    SovraSyncTrigger.send({
+      kind: "SEARCH_OK",
+      query,
+      count: list.length
+    });
+  } catch (error) {
+    results.innerText = "Search error.";
+    console.error("Sovra fetch error:", error);
+    SovraSyncTrigger.send({ kind: "FETCH_ERROR", query, error: String(error) });
   }
+};
 
-  output += "\nSovra has spoken.";
-  
-
-} catch (error) {
-  results.innerText = "⚠️ Sovra encountered a search error.";
-  console.error("Sovra fetch error:", error);
-}
-
-console.log("✅ searchSovra() function loaded and ready.");
-}
-function inferRelevance(result, query) {
-  const text = `${result.title} ${result.snippet}`.toLowerCase();
-  const q = query.toLowerCase();
-
-  if (q.includes("covert") && text.includes("policy")) {
-    return "This source frames discrimination through neutral policy language, a common mechanism for structural bias without explicit intent.";
-  }
-
-  if (text.includes("equal opportunity")) {
-    return "This source emphasizes formal equality, which can obscure unequal outcomes in practice.";
-  }
-
-  if (text.includes("administrative") || text.includes("regulation")) {
-    return "Administrative language often encodes power through procedure rather than explicit prohibition.";
-  }
-
-  return "This source provides contextual grounding relevant to the query.";
-}
+console.log("searchSovra() loaded (NFIE public runtime).");
