@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sovra-FCL-MHC-v2.0</title>
+  <title>Sovra-FCL-MHCE-v2.1 :: Foxtrot-Chimera-Lambda</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -16,21 +16,21 @@
     <div class="search-box">
       <input type="text" id="query" placeholder="Invoke Sovra with a symbolic query..." size="60" />
       <label><input type="checkbox" id="toggleRaw" /> Compare with raw results</label>
-      <button id="search-btn">Search</button>
+      <button id="search-btn" type="button">Search</button>
     </div>
 
-    <div id="results" class="results-container">
-      <div class="results-left"></div>
-      <div class="results-right"></div>
+    <div id="results" class="results-container" aria-live="polite">
+      <div class="results-left" id="results-left"></div>
+      <div class="results-right" id="results-right"></div>
     </div>
 
-    <!-- SOVRA CARD START -->
+    <!-- Example SOVRA CARD START -->
     <article class="sovra-card" role="article" aria-labelledby="card-title-1">
       <header class="card-head">
         <h3 id="card-title-1" class="card-title">What laws in Ohio support covert racism?</h3>
         <div class="card-meta">
           <time class="card-ts" datetime="2026-02-09T20:48:00Z">2026-02-09T20:48:00Z</time>
-          <button class="hash-btn" aria-label="Copy canonical hash" data-hash="0xabc123">0xabc…</button>
+          <button class="hash-btn" aria-label="Copy canonical hash" data-hash="0xabc123" type="button">0xabc…</button>
         </div>
       </header>
 
@@ -48,7 +48,7 @@
       <footer class="card-foot">
         <div class="mirrors">Mirrors: <span class="mirrors-count">3</span></div>
         <div class="tamper-flag" aria-live="polite" role="status">OK</div>
-        <button class="expand-provenance" aria-expanded="false" aria-controls="prov-1">Provenance</button>
+        <button class="expand-provenance" aria-expanded="false" aria-controls="prov-1" type="button">Provenance</button>
       </footer>
 
       <div id="prov-1" class="provenance-panel" hidden>
@@ -59,12 +59,11 @@
         </details>
       </div>
     </article>
-    <!-- SOVRA CARD END -->
+    <!-- Example SOVRA CARD END -->
 
     <pre>🔮 Sovra awaits your invocation...</pre>
   </div>
 
   <script src="script.js"></script>
 </body>
-
-
+</html>
