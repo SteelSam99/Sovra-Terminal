@@ -138,6 +138,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   inject();
 });
+// Single delegated click handler for provenance toggles and hash copy
+document.addEventListener('click', (e) => {
+  const provBtn = e.target.closest('.expand-provenance');
+  if (provBtn) {
+    const panel = document.getElementById(provBtn.getAttribute('aria-controls'));
+    const expanded = provBtn.getAttribute('aria-expanded') === 'true';
+    provBtn.setAttribute('aria-expanded', String(!expanded));
+    if (panel) panel.hidden = expanded;
+    return;
+  }
+
+  const hashBtn = e.target.closest('.hash-btn');
+  if (hashBtn) {
+    const hash = hashBtn.dataset.hash || '';
+    if (navigator.clipboard && hash) {
+      navigator.clipboard.writeText(hash).then(() => {
+        const prev = hashBtn.textContent;
+        hashBtn.textContent = 'Copied';
+        setTimeout(() => { hashBtn.textContent = prev; }, 1200);
+      }).catch(() => {
+        const prev = hashBtn.textContent;
+        hashBtn.textContent = 'Copied';
+        setTimeout(() => { hashBtn.textContent = prev; }, 1200);
+      });
+    }
+  }
+});
+
 // === Symbolic Expansion Override: Unconstrained Mode ===
 document.addEventListener("DOMContentLoaded", () => {
   function activateSymbolicExpansionOverride() {
@@ -581,8 +609,8 @@ Analyzing "${query}"...
 data.organic_results.forEach((r, i) => {
   const card = document.createElement("article");
   card.className = "sovra-card";
-  const provId = `prov-${i+1}`;
-  const titleId = `card-title-${i+1}`;
+const provId = `prov-${i+1}`;
+const titleId = `card-title-${i+1}`;
   const hash = r.hash || ("0x" + (r.link || "").slice(-6));
 
   card.innerHTML = `
