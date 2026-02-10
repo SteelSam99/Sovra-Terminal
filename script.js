@@ -505,32 +505,56 @@ Analyzing "${query}"...
   if (data.organic_results && data.organic_results.length > 0) {
    results.innerHTML = `<div class="section-label">Relevant Statutory Language</div>`;
 
-data.organic_results.forEach(r => {
-    const card = document.createElement("div");
-    card.className = "source-card";
+data.organic_results.forEach((r, i) => {
+  const card = document.createElement("article");
+  card.className = "sovra-card";
+  const provId = `prov-${i+1}`;
+  const titleId = `card-title-${i+1}`;
+  const hash = r.hash || ("0x" + (r.link || "").slice(-6));
 
-card.innerHTML = `
-  <div class="card-header">${r.title}</div>
+  card.innerHTML = `
+    <header class="card-head">
+      <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
+      <div class="card-meta">
+        <time class="card-ts" datetime="${new Date().toISOString()}">${new Date().toISOString()}</time>
+        <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${hash}">${hash.slice(0,6)}…</button>
+      </div>
+    </header>
 
-  <div class="card-description">
-    ${r.snippet}
-  </div>
+    <section class="card-body">
+      <div class="source-id">Source — ${escapeHtml(new URL(r.link).hostname)}</div>
+      <pre class="raw-excerpt" tabindex="0">${escapeHtml(r.snippet)}</pre>
 
-  <div class="card-annotation">
-    ${inferRelevance(r, query)}
-  </div>
-*/
-  <div class="card-meta">
-    Source · ${new URL(r.link).hostname}
-  </div>
+      <div class="vector-scores" aria-hidden="true">
+        <div class="score confidence"><label>Confidence</label><meter value="${(r.confidence||0).toFixed(2)}" min="0" max="1"></meter></div>
+        <div class="score relevance"><label>Relevance</label><meter value="${(r.relevance||0).toFixed(2)}" min="0" max="1"></meter></div>
+        <div class="score sensitivity"><label>Sensitivity</label><meter value="${(r.sensitivity||0).toFixed(2)}" min="0" max="1"></meter></div>
+      </div>
+    </section>
 
-  <a class="card-link" href="${r.link}" target="_blank">
-    View Source
-  </a>
-`;
+    <footer class="card-foot">
+      <div class="mirrors">Mirrors: <span class="mirrors-count">${r.mirrors || 0}</span></div>
+      <div class="tamper-flag" aria-live="polite" role="status">OK</div>
+      <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">Provenance</button>
+    </footer>
 
-    results.appendChild(card);
+    <div id="${provId}" class="provenance-panel" hidden>
+      <pre class="signed-manifest">${escapeHtml(JSON.stringify({
+        query_token: data.query_token || "",
+        retrieval_predicate: r.predicate || "",
+        signature: r.signature || ""
+      }))}</pre>
+      <details>
+        <summary>Retrieval predicate</summary>
+        <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
+      </details>
+      <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">View Source</a>
+    </div>
+  `;
+
+  results.appendChild(card);
 });
+
 
 
     if (data.organic_results.length >= 2) {
