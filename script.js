@@ -166,7 +166,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-
 // === Symbolic Expansion Override: Unconstrained Mode ===
 document.addEventListener("DOMContentLoaded", () => {
   function activateSymbolicExpansionOverride() {
