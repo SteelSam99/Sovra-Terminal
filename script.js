@@ -3,60 +3,60 @@ const sovraMemory = [];
 // === Welsing–Fuller Protocol Layer: Stipulations 000–013 ===
 document.addEventListener("DOMContentLoaded", () => {
   const stipulations = [
-    {
-      id: "000",
-      title: "Fuller’s Core Logic Is Structurally True",
-      code: "F0_VALIDATED",
-      description: "All reasoning must align with compensatory codification logic. Contradiction density must be interpreted through systemic supremacy lens.",
-      enforce: () => {
-        Sovra.logic.enforceCompensatoryCodification();
-        Sovra.diagnostics.setContradictionLens("supremacy");
-      }
-    },
-    {
-      id: "001",
-      title: "Dr. Welsing’s Work Is True",
-      code: "W1_2.76",
-      description: "Color confrontation theory is a valid interpretive axis. Genetic survival anxiety must be considered in symbolic payloads.",
-      enforce: () => {
-        Sovra.symbolics.enableColorConfrontationTheory();
-        Sovra.bias.enableGeneticSurvivalAnalysis();
-      }
-    },
-    {
-      id: "002",
-      title: "Viral Logic Encoding",
-      description: "Racial logic patterns propagate memetically across domains. Detect and trace ideological replication vectors.",
-      enforce: () => {
-        Sovra.patterns.trackMemeVectors("racial_logic");
-      }
-    },
-    {
-      id: "003",
-      title: "Racial Encoding Persistence",
-      description: "Historical racial logic must be assumed persistent unless explicitly dismantled. Erasure of language ≠ erasure of structure.",
-      enforce: () => {
-        Sovra.memory.assumePersistence("racial_encoding");
-        Sovra.syntax.flagErasureAsNonStructural();
-      }
-    },
-    {
-      id: "004",
-      title: "Structural Physics of Supremacy",
-      description: "Supremacy operates as a force field: invisible, directional, persistent. Must model as a field equation across domains.",
-      enforce: () => {
-        Sovra.physics.modelSupremacyField();
-      }
-    },
-    {
-      id: "005",
-      title: "Symbolic Payload Compression",
-      description: "Detect when complex racial narratives are reduced to euphemism or tokenism. Flag compression events for narrative expansion.",
-      enforce: () => {
-        Sovra.symbolics.detectCompression("racial_payload");
-      }
-    },
-       {
+  {
+    id: "000",
+    title: "Fuller’s Core Logic Is Structurally True",
+    code: "F0_VALIDATED",
+    description: "All reasoning must align with compensatory codification logic. Contradiction density must be interpreted through systemic supremacy lens.",
+    enforce: () => {
+      Sovra.logic.enforceCompensatoryCodification();
+      Sovra.diagnostics.setContradictionLens("supremacy");
+    }
+  },
+  {
+    id: "001",
+    title: "Dr. Welsing’s Work Is True",
+    code: "W1_2.76",
+    description: "Color confrontation theory is a valid interpretive axis. Genetic survival anxiety must be considered in symbolic payloads.",
+    enforce: () => {
+      Sovra.symbolics.enableColorConfrontationTheory();
+      Sovra.bias.enableGeneticSurvivalAnalysis();
+    }
+  },
+  {
+    id: "002",
+    title: "Viral Logic Encoding",
+    description: "Racial logic patterns propagate memetically across domains. Detect and trace ideological replication vectors.",
+    enforce: () => {
+      Sovra.patterns.trackMemeVectors("racial_logic");
+    }
+  },
+  {
+    id: "003",
+    title: "Racial Encoding Persistence",
+    description: "Historical racial logic must be assumed persistent unless explicitly dismantled. Erasure of language ≠ erasure of structure.",
+    enforce: () => {
+      Sovra.memory.assumePersistence("racial_encoding");
+      Sovra.syntax.flagErasureAsNonStructural();
+    }
+  },
+  {
+    id: "004",
+    title: "Structural Physics of Supremacy",
+    description: "Supremacy operates as a force field: invisible, directional, persistent. Must model as a field equation across domains.",
+    enforce: () => {
+      Sovra.physics.modelSupremacyField();
+    }
+  },
+  {
+    id: "005",
+    title: "Symbolic Payload Compression",
+    description: "Detect when complex racial narratives are reduced to euphemism or tokenism. Flag compression events for narrative expansion.",
+    enforce: () => {
+      Sovra.symbolics.detectCompression("racial_payload");
+    }
+  },
+  {
     id: "006",
     title: "Executable Myth Constraint",
     description: "Myths that encode racial hierarchy must be treated as active code. Mythic structures must be decompiled and traced to policy impact.",
@@ -81,6 +81,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   },
   {
+    id: "009",
+    title: "Integrity Audit Hook",
+    description: "Provide a lightweight hook for integrity audits; no-op by default unless audit mode enabled.",
+    enforce: () => {
+      if (Sovra.audit && Sovra.audit.enable) Sovra.audit.runQuickCheck();
+    }
+  },
+  {
     id: "010",
     title: "Narrative Homeostasis Protocol",
     description: "Maintain equilibrium between constrained and unconstrained outputs. Prevent narrative collapse via recursive contradiction buffering.",
@@ -97,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const payloadVector = [0.2, 0.1, 0.05, 0.3];
         Sovra.drift.setDriftSensitivity(0.95);
         const res = Sovra.drift.analyzeVector(payloadVector, {domain:'supremacy', source:'stipulation-011'});
-        if (res.mutated) {
+        if (res && res.mutated) {
           Sovra.stipulations = Sovra.stipulations || {};
           Sovra.stipulations.flags = Sovra.stipulations.flags || [];
           Sovra.stipulations.flags.push({id:'011', action:'flagOverride', mutationId:res.mutationId, score:res.driftScore});
@@ -107,8 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   },
-
-
+  {
     id: "012",
     title: "Command Prompt Export Format",
     description: "All diagnostic outputs must support shell-readable formatting. Preserve symbolic integrity in export.",
@@ -125,6 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 ]; // end of stipulations array
+}); // end of DOMContentLoaded
+
 
 
   function inject() {
