@@ -6,64 +6,94 @@
   <title>Sovra-FCL-MHCE-v2.1 :: Foxtrot-Chimera-Lambda</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div class="container">
-    <div class="banner">
+    <header class="banner">
       <h1>Sovra-FCL-MHCE-v2.1 :: Foxtrot-Chimera-Lambda</h1>
-      <h2>Sovereign-F.I.D.A.R.C.H. R.S. Search Engine</h2>
-    </div>
+      <h2>Sovereign‑F.I.D.A.R.C.H. R.S. Search Engine</h2>
+    </header>
 
-    <div class="search-box">
-      <input type="text" id="query" placeholder="Invoke Sovra and look into the mirror..." size="60" />
-      <label><input type="checkbox" id="toggleRaw" /> Compare with raw results</label>
+    <section class="search-box">
+      <input
+        type="text"
+        id="query"
+        placeholder="Invoke Sovra and look into the mirror…"
+        size="60"
+        aria-label="Search query"
+      />
+
+      <label>
+        <input type="checkbox" id="toggleRaw" />
+        Compare with raw results
+      </label>
+
       <button id="search-btn" type="button">Search</button>
-    </div>
+    </section>
 
-    <div id="results" class="results-container" aria-live="polite">
-      <div class="results-left" id="results-left"></div>
-      <div class="results-right" id="results-right"></div>
-    </div>
+    <main
+      id="results"
+      class="results-container"
+      aria-live="polite"
+    >
+      <div class="results-left"></div>
+      <div class="results-right"></div>
+    </main>
 
-    <!-- Example SOVRA CARD START -->
+    <footer>
+      <pre>🔮 Sovra awaits your invocation…</pre>
+    </footer>
+  </div>
+
+  <!--
+    SOVRA CARD TEMPLATE (REFERENCE ONLY — DO NOT RENDER)
+
     <article class="sovra-card" role="article" aria-labelledby="card-title-1">
       <header class="card-head">
-        <h3 id="card-title-1" class="card-title">What laws in Ohio support covert racism?</h3>
+        <h3 id="card-title-1" class="card-title">Query title</h3>
         <div class="card-meta">
-          <time class="card-ts" datetime="2026-02-09T20:48:00Z">2026-02-09T20:48:00Z</time>
-          <button class="hash-btn" aria-label="Copy canonical hash" data-hash="0xabc123" type="button">0xabc…</button>
+          <time class="card-ts">timestamp</time>
+          <button class="hash-btn">hash</button>
         </div>
       </header>
 
       <section class="card-body">
-        <div class="source-id">Source — civ.ohio.gov</div>
-        <pre class="raw-excerpt" tabindex="0">"This source provides contextual grounding relevant to the query."</pre>
+        <div class="source-id">Source — domain</div>
+        <pre class="raw-excerpt">snippet</pre>
 
-        <div class="vector-scores" aria-hidden="true">
-          <div class="score confidence"><label>Confidence</label><meter value="0.82" min="0" max="1"></meter></div>
-          <div class="score relevance"><label>Relevance</label><meter value="0.76" min="0" max="1"></meter></div>
-          <div class="score sensitivity"><label>Sensitivity</label><meter value="0.12" min="0" max="1"></meter></div>
+        <div class="vector-scores">
+          <meter></meter>
         </div>
       </section>
 
       <footer class="card-foot">
-        <div class="mirrors">Mirrors: <span class="mirrors-count">3</span></div>
-        <div class="tamper-flag" aria-live="polite" role="status">OK</div>
-        <button class="expand-provenance" aria-expanded="false" aria-controls="prov-1" type="button">Provenance</button>
+        <button class="expand-provenance">Provenance</button>
       </footer>
-
-      <div id="prov-1" class="provenance-panel" hidden>
-        <pre class="signed-manifest">{"query_token":"...","retrieval_predicate":"...","signature":"..."}</pre>
-        <details>
-          <summary>Retrieval predicate</summary>
-          <code>predicate: source:ohio; keywords:covert racism; date_range:all</code>
-        </details>
-      </div>
     </article>
-    <!-- Example SOVRA CARD END -->
-
-    <pre>🔮 Sovra awaits your invocation...</pre>
-  </div>
+  -->
 
   <script src="script.js"></script>
+
+  <script>
+    (function () {
+      const searchButton = document.getElementById("search-btn");
+      const queryInput = document.getElementById("query");
+
+      function invokeSearch() {
+        if (typeof window.searchSovra === "function") {
+          window.searchSovra();
+        }
+      }
+
+      searchButton.addEventListener("click", invokeSearch);
+
+      queryInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          invokeSearch();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
