@@ -89,13 +89,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
     {
-      id: "011",
-      title: "Mutation Equation Drift",
-      description: "Monitor shifts in racial logic syntax over time. Log entropy vectors and symbolic decay rates.",
-      enforce: () => {
-        Sovra.entropy.monitorSyntaxDrift("racial_logic");
+  id: "011",
+  title: "Mutation Equation Drift",
+  description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
+  enforce: () => {
+    try {
+      // example payload vector — replace with real vector extraction
+      const payloadVector = [0.2, 0.1, 0.05, 0.3]; // numeric features
+      Sovra.drift.setDriftSensitivity(0.95);
+      const res = Sovra.drift.analyzeVector(payloadVector, {domain:'supremacy', source:'stipulation-011'});
+      if (res.mutated) {
+        Sovra.stipulations = Sovra.stipulations || {};
+        Sovra.stipulations.flags = Sovra.stipulations.flags || [];
+        Sovra.stipulations.flags.push({id:'011', action:'flagOverride', mutationId:res.mutationId, score:res.driftScore});
       }
-    },
+    } catch (e) {
+      console.error('stipulation-011 enforce error', e);
+    }
+  }
+}
+
     {
       id: "012",
       title: "Command Prompt Export Format",
@@ -471,6 +484,54 @@ function escapeHtml(str){
     .replace(/'/g, "&#39;");
 }
 function escapeAttr(s){ return escapeHtml(s); }
+// Sovra.drift — minimal deterministic drift engine
+Sovra = window.Sovra || {};
+Sovra.drift = (function(){
+  let sensitivity = 0.8;
+  let seed = 1;
+  const baseline = {}; // domain -> {mean:[], cov:[]}
+  const audit = { append: (rec)=> { (Sovra.audit = Sovra.audit||[]).push(rec); } };
+
+  function setDriftSensitivity(s){ sensitivity = Math.max(0, Math.min(1, s)); }
+  function setSeed(s){ seed = s|0; }
+
+  function hashStr(s){
+    let h = seed || 2166136261;
+    for(let i=0;i<s.length;i++){ h = (h ^ s.charCodeAt(i)) * 16777619; h |= 0; }
+    return Math.abs(h);
+  }
+
+  function normalizeScore(d){
+    return Math.max(0, Math.min(1, 1 - Math.exp(-Math.abs(d))));
+  }
+
+  function driftScore(vector, domain='default'){
+    const b = baseline[domain];
+    if(!b || !Array.isArray(vector)) return 0;
+    // simple distance: mean absolute difference normalized by length
+    const mean = b.mean || [];
+    const len = Math.max(1, Math.min(vector.length, mean.length));
+    let sum = 0;
+    for(let i=0;i<len;i++){ sum += Math.abs((vector[i]||0) - (mean[i]||0)); }
+    const raw = sum / len;
+    return normalizeScore(raw);
+  }
+
+  function analyzeVector(vector, context={domain:'default', source:''}){
+    const score = driftScore(vector, context.domain);
+    const mutated = score > sensitivity;
+    const mutationId = mutated ? `mut-${Date.now()}-${hashStr(JSON.stringify(vector))}` : null;
+    audit.append({type:'drift', seed, context, score, mutated, mutationId, vectorHash: hashStr(JSON.stringify(vector))});
+    return {driftScore: score, mutated, mutationId};
+  }
+
+  function setBaseline(domain, meanArray){
+    baseline[domain] = baseline[domain] || {};
+    baseline[domain].mean = Array.from(meanArray);
+  }
+
+  return { setDriftSensitivity, setSeed, analyzeVector, setBaseline, _baseline: baseline };
+})();
 
 
 window.searchSovra = async function () {
