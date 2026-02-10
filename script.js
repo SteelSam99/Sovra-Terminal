@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   inject();
 });
-// Single delegated click handler for provenance toggles and hash copy
+
 document.addEventListener('click', (e) => {
   const provBtn = e.target.closest('.expand-provenance');
   if (provBtn) {
