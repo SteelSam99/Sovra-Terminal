@@ -472,9 +472,6 @@ function escapeHtml(str){
 }
 function escapeAttr(s){ return escapeHtml(s); }
 
-// --- rest of your script below ---
-// window.searchSovra = function searchSovra() { ... }
-// data.organic_results.forEach(...) { ... uses escapeHtml(...) ... }
 
 window.searchSovra = async function () {
   const query = document.getElementById("query").value.trim();
