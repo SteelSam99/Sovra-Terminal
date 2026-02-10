@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error('stipulation-011 enforce error', e);
     }
   }
-}
+},
 
     {
       id: "012",
