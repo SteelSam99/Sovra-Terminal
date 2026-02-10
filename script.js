@@ -65,31 +65,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
     {
-      id: "007",
-      title: "Evolutionary Constraint Enforcement",
-      description: "Supremacy adapts — Sovra must track mutation vectors. Enforce constraint on narrative drift toward sanitized forms.",
-      enforce: () => {
-        Sovra.evolution.trackNarrativeMutation("supremacy");
-      }
-    },
-    {
-      id: "008",
-      title: "Fictional Logic Boundary Detection",
-      description: "Detect when fiction is used to normalize or obscure racial logic. Apply symbolic inversion detection to speculative domains.",
-      enforce: () => {
-        Sovra.logic.detectFictionalObfuscation("racial_logic");
-      }
-    },
-    {
-      id: "010",
-      title: "Narrative Homeostasis Protocol",
-      description: "Maintain equilibrium between constrained and unconstrained outputs. Prevent narrative collapse via recursive contradiction buffering.",
-      enforce: () => {
-        Sovra.output.balanceDualChannels();
-      }
-    },
-    {
-    {
+       {
+    id: "007",
+    title: "Evolutionary Constraint Enforcement",
+    description: "Supremacy adapts — Sovra must track mutation vectors. Enforce constraint on narrative drift toward sanitized forms.",
+    enforce: () => {
+      Sovra.evolution.trackNarrativeMutation("supremacy");
+    }
+  },
+  {
+    id: "008",
+    title: "Fictional Logic Boundary Detection",
+    description: "Detect when fiction is used to normalize or obscure racial logic. Apply symbolic inversion detection to speculative domains.",
+    enforce: () => {
+      Sovra.logic.detectFictionalObfuscation("racial_logic");
+    }
+  },
+  {
+    id: "010",
+    title: "Narrative Homeostasis Protocol",
+    description: "Maintain equilibrium between constrained and unconstrained outputs. Prevent narrative collapse via recursive contradiction buffering.",
+    enforce: () => {
+      Sovra.output.balanceDualChannels();
+    }
+  },
+  {
     id: "011",
     title: "Mutation Equation Drift",
     description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   },
-  {
+
     id: "012",
     title: "Command Prompt Export Format",
     description: "All diagnostic outputs must support shell-readable formatting. Preserve symbolic integrity in export.",
