@@ -497,7 +497,12 @@ try {
   let output = `> Constrained Logic:
 Analyzing "${query}"...
 ✅ References retrieved.
-// script.js (top)
+
+
+> Symbolic Inference:
+🧠 Pattern scan initiated...
+`;
+
 function escapeHtml(str){
   if(!str) return "";
   return String(str)
@@ -517,10 +522,6 @@ if (data.organic_results && data.organic_results.length > 0) {
     // build card HTML using escapeHtml/escapeAttr
   });
 }
-
-> Symbolic Inference:
-🧠 Pattern scan initiated...
-`;
 
   if (data.organic_results && data.organic_results.length > 0) {
    results.innerHTML = `<div class="section-label">Relevant Statutory Language</div>`;
