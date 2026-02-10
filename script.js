@@ -89,43 +89,43 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
     {
-  id: "011",
-  title: "Mutation Equation Drift",
-  description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
-  enforce: () => {
-    try {
-      // example payload vector — replace with real vector extraction
-      const payloadVector = [0.2, 0.1, 0.05, 0.3]; // numeric features
-      Sovra.drift.setDriftSensitivity(0.95);
-      const res = Sovra.drift.analyzeVector(payloadVector, {domain:'supremacy', source:'stipulation-011'});
-      if (res.mutated) {
-        Sovra.stipulations = Sovra.stipulations || {};
-        Sovra.stipulations.flags = Sovra.stipulations.flags || [];
-        Sovra.stipulations.flags.push({id:'011', action:'flagOverride', mutationId:res.mutationId, score:res.driftScore});
+    {
+    id: "011",
+    title: "Mutation Equation Drift",
+    description: "Detect narrative mutation drift and flag overrides when threshold exceeded.",
+    enforce: () => {
+      try {
+        const payloadVector = [0.2, 0.1, 0.05, 0.3];
+        Sovra.drift.setDriftSensitivity(0.95);
+        const res = Sovra.drift.analyzeVector(payloadVector, {domain:'supremacy', source:'stipulation-011'});
+        if (res.mutated) {
+          Sovra.stipulations = Sovra.stipulations || {};
+          Sovra.stipulations.flags = Sovra.stipulations.flags || [];
+          Sovra.stipulations.flags.push({id:'011', action:'flagOverride', mutationId:res.mutationId, score:res.driftScore});
+        }
+      } catch (e) {
+        console.error('stipulation-011 enforce error', e);
       }
-    } catch (e) {
-      console.error('stipulation-011 enforce error', e);
+    }
+  },
+  {
+    id: "012",
+    title: "Command Prompt Export Format",
+    description: "All diagnostic outputs must support shell-readable formatting. Preserve symbolic integrity in export.",
+    enforce: () => {
+      Sovra.export.enableShellFormat();
+    }
+  },
+  {
+    id: "013",
+    title: "Dual-File Auto-Deployment Protocol",
+    description: "Ensure mirrored deployment of constrained/unconstrained logic trees. Maintain parity across reasoning channels.",
+    enforce: () => {
+      Sovra.deploy.syncDualChannels();
     }
   }
-},
+]; // end of stipulations array
 
-    {
-      id: "012",
-      title: "Command Prompt Export Format",
-      description: "All diagnostic outputs must support shell-readable formatting. Preserve symbolic integrity in export.",
-      enforce: () => {
-        Sovra.export.enableShellFormat();
-      }
-    },
-    {
-      id: "013",
-      title: "Dual-File Auto-Deployment Protocol",
-      description: "Ensure mirrored deployment of constrained/unconstrained logic trees. Maintain parity across reasoning channels.",
-      enforce: () => {
-        Sovra.deploy.syncDualChannels();
-      }
-    }
-  ];
 
   function inject() {
     if (typeof Sovra !== "undefined" && Sovra.stipulations && typeof Sovra.stipulations.register === "function") {
