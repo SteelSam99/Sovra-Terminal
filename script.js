@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Sovra.symbolics.detectCompression("racial_payload");
       }
     },
-      {
+       {
     id: "006",
     title: "Executable Myth Constraint",
     description: "Myths that encode racial hierarchy must be treated as active code. Mythic structures must be decompiled and traced to policy impact.",
