@@ -15,7 +15,8 @@ export default async function handler(req, res) {
     `&api_key=${apiKey}`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeoutMs = 8000; // 8 seconds — safely under platform limits
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(endpoint, {
@@ -44,16 +45,19 @@ export default async function handler(req, res) {
     res.status(200).json({
       query_token: data.search_metadata?.id || "",
       organic_results: organic,
-      raw: raw ? undefined : null
+      raw: raw ? data : null
     });
   } catch (error) {
-    const msg =
+    const message =
       error.name === "AbortError"
-        ? "Upstream timeout"
-        : error.message || "Unknown error";
+        ? "Upstream search exceeded time budget"
+        : error.message || "Unknown upstream error";
 
-    res.status(500).json({ error: "Sovra proxy error: " + msg });
+    res.status(504).json({
+      error: "Sovra proxy error: " + message
+    });
   } finally {
     clearTimeout(timeout);
   }
 }
+
