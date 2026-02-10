@@ -497,6 +497,26 @@ try {
   let output = `> Constrained Logic:
 Analyzing "${query}"...
 ✅ References retrieved.
+// script.js (top)
+function escapeHtml(str){
+  if(!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function escapeAttr(s){ return escapeHtml(s); }
+
+// ...other top-level helpers or initialization...
+
+// Later: response handling that uses the helpers
+if (data.organic_results && data.organic_results.length > 0) {
+  data.organic_results.forEach((r, i) => {
+    // build card HTML using escapeHtml/escapeAttr
+  });
+}
 
 > Symbolic Inference:
 🧠 Pattern scan initiated...
