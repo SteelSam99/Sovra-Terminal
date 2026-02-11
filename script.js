@@ -273,7 +273,7 @@ const provBtn = e.target.closest
     }
   }
 });
-function renderZSEStandalone(result) {
+function renderZSE Standalone(result) {
   if (!result.detected) return;
 
   const container = document.querySelector(".results-left");
