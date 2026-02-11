@@ -6,6 +6,18 @@
    ============================================================ */
 
 "use strict";
+/* ================================================================
+SOVRA GATE SURFACE (Public, inertial, read-only)
+================================================================ */
+const SOVRA_GATES = Object.freeze({
+  welsingFuller: () => !!document.getElementById("modWelsingFuller")?.checked,
+  contraCollapse: () => !!document.getElementById("modContraCollapse")?.checked,
+  zeroSum: () => !!document.getElementById("modZeroSum")?.checked,
+  driftMatrix: () => !!document.getElementById("modDriftMatrix")?.checked,
+  rawData: () => !!document.getElementById("toggleRaw")?.checked,
+  voice: () => !!document.getElementById("toggleVoice")?.checked
+});
+
 
 /* ============================================================
    0) Public memory (local, non-authoritative)
