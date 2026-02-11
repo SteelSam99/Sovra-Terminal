@@ -167,6 +167,9 @@ function compareDocuments() {
 }
 
 window.compareDocuments = compareDocuments;
+document.getElementById("toggleVoice").addEventListener("change", () => {
+  NFIE.registerUserAction("toggleVoice");
+});
 
 /* ============================================================
    5) UI behavior: provenance toggle + hash copy (deduped)
@@ -319,6 +322,15 @@ window.searchSovra = async function () {
           <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">View Source</a>
         </div>
       `;
+if (isSovraVoiceEnabled()) {
+  NFIE.validateStateTransition("SovraVoice");
+
+  const excerpt = card.querySelector(".raw-excerpt");
+  if (excerpt) {
+    excerpt.textContent = applySovraVoice(excerpt.textContent);
+    card.classList.add("voice-enabled");
+  }
+}
 
       results.appendChild(card);
     });
