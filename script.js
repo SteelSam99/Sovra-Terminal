@@ -415,7 +415,7 @@ function renderZSEStandalone(result) {
           <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">View Source</a>
         </div>
       `;
-if (isSovraVoiceEnabled()) {
+if (SOVRA_GATES.voice()) {
   NFIE.validateStateTransition("SovraVoice");
 
   const excerpt = card.querySelector(".raw-excerpt");
