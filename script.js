@@ -17,6 +17,56 @@ const SOVRA_GATES = Object.freeze({
   rawData: () => !!document.getElementById("toggleRaw")?.checked,
   voice: () => !!document.getElementById("toggleVoice")?.checked
 });
+const ZERO_SUM_TERMS = [
+  "take from", "steal", "replace", "erase", "dilute", "threaten", "lose ground",
+  "reverse discrimination", "they’re taking", "our jobs", "our schools", "our culture",
+  "zero-sum", "finite", "limited", "scarce", "only one", "either/or", "us vs them"
+];
+
+function detectZeroSum(inputText) {
+  const lowerInput = inputText.toLowerCase();
+  const matches = ZERO_SUM_TERMS.filter(term => lowerInput.includes(term));
+  return {
+    detected: matches.length > 0,
+    matches,
+    score: matches.length / ZERO_SUM_TERMS.length
+  };
+}
+const ZSE_PAYLOADS = {
+  "reverse discrimination": {
+    inversion: "Reframes equity as oppression",
+    logic: "Encodes zero-sum scarcity (us vs them)",
+    camouflage: "Uses fairness language to obscure structural power",
+    legalVector: {
+      statute: "Title VII, Civil Rights Act (1964)",
+      case: "Ames v. Ohio DYS (2025)",
+      impact: "Removes evidentiary barrier for majority-group discrimination claims"
+    },
+    diagnosticNotes: [
+      "Flags narrative inversion of historical power asymmetry",
+      "Signals contradiction between stated fairness and structural inequity",
+      "Functions as a semantic weapon in the white supremacy program"
+    ]
+  }
+};
+function runZSEStandalone(inputText) {
+  const zs = detectZeroSum(inputText);
+
+  if (!zs.detected) {
+    return { detected: false };
+  }
+
+  const enriched = zs.matches.map(term => ({
+    term,
+    payload: ZSE_PAYLOADS[term] || null
+  }));
+
+  return {
+    detected: true,
+    score: zs.score,
+    matches: enriched
+  };
+}
 
 
 /* ============================================================
@@ -238,6 +288,10 @@ window.searchSovra = async function () {
     results.innerText = "Sovra requires a query to proceed.";
     return;
   }
+if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
+  const zseResult = runZSEStandalone(queryText);
+  renderZSEStandalone(zseResult);
+}
 
   // Local, non-authoritative memory (for UI continuity only)
   sovraMemory.push({
@@ -292,6 +346,33 @@ window.searchSovra = async function () {
       } catch (_) {
         host = "unknown";
       }
+function renderZSEStandalone(result) {
+    if (!result.detected) return;
+
+    const container = document.querySelector(".results-left");
+    if (!container) return;
+
+    const block = document.createElement("section");
+    block.className = "zse-block";
+
+    block.innerHTML = `
+        <h3>Zero‑Sum Narrative Detected</h3>
+        ${result.matches.map(m => `
+            <div class="zse-term">
+                <strong>${m.term}</strong>
+                ${m.payload ? `
+                    <ul>
+                        <li>${m.payload.inversion}</li>
+                        <li>${m.payload.logic}</li>
+                        <li>${m.payload.camouflage}</li>
+                    </ul>
+                ` : ""}
+            </div>
+        `).join("")}
+    `;
+
+    container.prepend(block);
+}
 
       card.innerHTML = `
         <header class="card-head">
