@@ -50,11 +50,50 @@ body, html {
   border-top: 1px solid #ddd;
 }
 
-/* Sovra Source Card Layout */
 /* ===========================
-   SOVRA-CARD STYLES - START
-   Append everything below this line
+   MODULE PANEL (NEW)
    =========================== */
+
+.module-panel {
+  padding: 12px 20px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  display: grid;
+  gap: 10px;
+}
+
+.module-row {
+  display: grid;
+  gap: 12px;
+}
+
+.module-row.analytic {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.module-row.presentation {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.module {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+.module input {
+  cursor: pointer;
+  accent-color: #000;
+}
+
+/* ===========================
+   SOVRA-CARD STYLES
+   =========================== */
+
 :root{
   --card-bg:#ffffff;
   --card-border:#e6e9ee;
@@ -144,10 +183,26 @@ body, html {
   font-size:0.8rem;
   color:var(--muted);
 }
-.vector-scores .score{display:flex;flex-direction:column;gap:4px;min-width:110px}
-.vector-scores meter{width:100%;height:8px;border-radius:6px;appearance:none}
-.vector-scores meter::-webkit-meter-bar{background:#eef2f7;border-radius:6px}
-.vector-scores meter::-webkit-meter-optimum-value{background:#60a5fa;border-radius:6px}
+.vector-scores .score{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:110px;
+}
+.vector-scores meter{
+  width:100%;
+  height:8px;
+  border-radius:6px;
+  appearance:none;
+}
+.vector-scores meter::-webkit-meter-bar{
+  background:#eef2f7;
+  border-radius:6px;
+}
+.vector-scores meter::-webkit-meter-optimum-value{
+  background:#60a5fa;
+  border-radius:6px;
+}
 
 /* Footer */
 .card-foot{
@@ -156,82 +211,4 @@ body, html {
   align-items:center;
   gap:8px;
   font-size:0.85rem;
-  color:var(--muted);
-}
-.tamper-flag{
-  padding:6px 10px;
-  border-radius:999px;
-  font-weight:600;
-  color:#fff;
-  background:var(--tamper-ok);
-}
-.tamper-flag.bad{background:var(--tamper-bad)}
-
-/* Provenance */
-.provenance-panel{
-  margin-top:8px;
-  border-top:1px dashed var(--card-border);
-  padding-top:10px;
-  font-size:0.85rem;
-  background:linear-gradient(180deg, rgba(15,23,42,0.01), transparent);
-  border-radius:6px;
-}
-.expand-provenance{background:transparent;border:1px solid var(--card-border);padding:6px 8px;border-radius:6px;cursor:pointer}
-
-/* Responsive */
-@media (max-width:720px){
-  .sovra-card{padding:12px}
-  .vector-scores{flex-direction:column;gap:6px}
-}
-
-/* Minimal overrides to integrate with your existing selectors */
-.section-label{margin-top:1rem}
-.card-header{font-weight:600}
-.card-description{opacity:0.85}
-
-/* ===========================
-   SOVRA-CARD STYLES - END
-   =========================== */
-
-.section-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.6;
-  margin: 1.5rem 0 0.5rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 0.25rem;
-}
-
-
-.card-header {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 0.25rem;
-}
-
-.card-description {
-  font-size: 0.8rem;
-  opacity: 0.75;
-  line-height: 1.4;
-}
-.card-annotation {
-  margin-top: 0.5rem;
-  padding-left: 0.75rem;
-  border-left: 2px solid rgba(0, 0, 0, 0.25);
-  font-style: italic;
-  font-size: 0.75rem;
-  opacity: 0.85;
-}
-
-.card-meta {
-  font-size: 0.7rem;
-  opacity: 0.5;
-  margin-top: 0.4rem;
-}
-
-.card-link {
-  font-size: 0.7rem;
-  color: #7aa2ff;
-  text-decoration: none;
-}
+  color:var(--mut
