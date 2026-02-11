@@ -289,7 +289,7 @@ window.searchSovra = async function () {
     return;
   }
 if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
-  const zseResult = runZSEStandalone(queryText);
+  const zseResult = runZSEStandalone(query);
   renderZSEStandalone(zseResult);
 }
 
