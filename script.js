@@ -273,6 +273,34 @@ const provBtn = e.target.closest
     }
   }
 });
+function renderZSEStandalone(result) {
+  if (!result.detected) return;
+
+  const container = document.querySelector(".results-left");
+  if (!container) return;
+
+  const block = document.createElement("section");
+  block.className = "zse-block";
+
+  block.innerHTML = `
+    <h3>Zero‑Sum Narrative Detected</h3>
+    ${result.matches.map(m => `
+      <div class="zse-term">
+        <strong>${m.term}</strong>
+        ${m.payload ? `
+          <ul>
+            <li>${m.payload.inversion}</li>
+            <li>${m.payload.logic}</li>
+            <li>${m.payload.camouflage}</li>
+          </ul>
+        ` : ""}
+      </div>
+    `).join("")}
+  `;
+
+  container.prepend(block);
+}
+
 
 /* ============================================================
    6) Public search runtime (NO interpretive enforcement)
@@ -346,34 +374,7 @@ if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
       } catch (_) {
         host = "unknown";
       }
-function renderZSEStandalone(result) {
-    if (!result.detected) return;
-
-    const container = document.querySelector(".results-left");
-    if (!container) return;
-
-    const block = document.createElement("section");
-    block.className = "zse-block";
-
-    block.innerHTML = `
-        <h3>Zero‑Sum Narrative Detected</h3>
-        ${result.matches.map(m => `
-            <div class="zse-term">
-                <strong>${m.term}</strong>
-                ${m.payload ? `
-                    <ul>
-                        <li>${m.payload.inversion}</li>
-                        <li>${m.payload.logic}</li>
-                        <li>${m.payload.camouflage}</li>
-                    </ul>
-                ` : ""}
-            </div>
-        `).join("")}
-    `;
-
-    container.prepend(block);
-}
-
+       
       card.innerHTML = `
         <header class="card-head">
           <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
