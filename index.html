@@ -23,16 +23,48 @@
         aria-label="Search query"
       />
 
-      <label>
-        <input type="checkbox" id="toggleRaw" />
-        Compare with raw results
-      </label>
-<label>
-  <input type="checkbox" id="toggleVoice" />
-  Sovra Voice
-</label>
-
       <button id="search-btn" type="button">Search</button>
+    </section>
+
+    <!-- MODULE PANEL -->
+    <section class="module-panel" aria-label="Sovra Modules">
+
+      <!-- ANALYTIC ENGINES -->
+      <div class="module-row analytic">
+        <label class="module">
+          <input type="checkbox" id="modWelsingFuller" />
+          <span>Welsing–Fuller Engine</span>
+        </label>
+
+        <label class="module">
+          <input type="checkbox" id="modContraCollapse" />
+          <span>Contradiction / Collapse</span>
+        </label>
+
+        <label class="module">
+          <input type="checkbox" id="modZeroSum" />
+          <span>Zero‑Sum Engine</span>
+        </label>
+
+        <label class="module">
+          <input type="checkbox" id="modDriftMatrix" />
+          <span>Drift Matrix</span>
+        </label>
+      </div>
+
+      <!-- PRESENTATION CONTROLS -->
+      <div class="module-row presentation">
+        <label class="module">
+          <input type="checkbox" id="toggleRaw" />
+          <span>Raw Data</span>
+        </label>
+
+        <label class="module">
+          <input type="checkbox" id="toggleVoice" />
+          <span>Sovra Voice</span>
+        </label>
+      </div>
+
     </section>
 
     <main
@@ -51,10 +83,6 @@
 
   <!--
     SOVRA CARD TEMPLATE (REFERENCE ONLY — DO NOT RENDER)
-
-    <article class="sovra-card" role="article">
-      ...
-    </article>
   -->
 
   <script src="script.js"></script>
