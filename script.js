@@ -342,7 +342,6 @@ window.searchSovra = async function () {
 const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 
 const endpoint =
-const endpoint =
   `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
 
 const response = await fetch(endpoint);
