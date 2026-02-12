@@ -1,3 +1,28 @@
+const ZERO_SUM_TERMS = [
+  "take from", "steal", "replace", "erase", "dilute", "threaten",
+  "reverse discrimination", "they’re taking", "our jobs"
+];
+
+function detectZeroSum(inputText) {
+  const lower = inputText.toLowerCase();
+  const matches = ZERO_SUM_TERMS.filter(t => lower.includes(t));
+  return {
+    detected: matches.length > 0,
+    matches,
+    score: matches.length / ZERO_SUM_TERMS.length
+  };
+}
+
+function runZSEStandalone(inputText) {
+  const zs = detectZeroSum(inputText);
+  if (!zs.detected) return { detected: false };
+  return {
+    detected: true,
+    score: zs.score,
+    matches: zs.matches.map(term => ({ term }))
+  };
+}
+
 export default async function handler(req, res) {
   const query = String(req.query.q || "").trim();
   const zseOn = req.query.zse === "1";
