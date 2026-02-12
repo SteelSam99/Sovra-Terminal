@@ -78,6 +78,16 @@ export default async function handler(req, res) {
         "user-agent": "Sovra/1.0 (public-runtime)"
       }
     });
+const contentType = response.headers.get("content-type") || "";
+
+if (!contentType.includes("application/json")) {
+  const text = await response.text();
+  res.status(502).json({
+    error: "Upstream returned non-JSON",
+    preview: text.slice(0, 120)
+  });
+  return;
+}
 
     clearTimeout(timeout);
 
