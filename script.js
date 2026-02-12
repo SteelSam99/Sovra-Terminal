@@ -17,6 +17,12 @@ const SOVRA_GATES = Object.freeze({
   rawData: () => !!document.getElementById("toggleRaw")?.checked,
   voice: () => !!document.getElementById("toggleVoice")?.checked
 });
+const CONTEXT_FRAME_VISIBILITY = {
+  ZSE: true,
+  DRIFT: true,
+  CONTRA: true,
+  VOICE: true
+};
 const ZERO_SUM_TERMS = [
   "take from", "steal", "replace", "erase", "dilute", "threaten", "lose ground",
   "reverse discrimination", "they’re taking", "our jobs", "our schools", "our culture",
@@ -395,12 +401,14 @@ window.searchSovra = async function () {
 
         <section class="card-body">
           <div class="source-id">Source — ${escapeHtml(host)}</div>
-         ${Array.isArray(r.predicate) ? r.predicate.map(p => `
-  <div class="predicate-context" data-engine="${escapeAttr(p.engine)}">
-    <strong>${escapeHtml(p.engine)} Context</strong>
-    <p>${escapeHtml(p.explanation)}</p>
-  </div>
-`).join("") : ""}
+         ${Array.isArray(r.predicate) ? r.predicate
+  .filter(p => CONTEXT_FRAME_VISIBILITY[p.engine] !== false)
+  .map(p => `
+    <div class="predicate-context" data-engine="${escapeAttr(p.engine)}">
+      <strong>${escapeHtml(p.engine)} Context</strong>
+      <p>${escapeHtml(p.explanation)}</p>
+    </div>
+  `).join("") : ""}
 
           <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
