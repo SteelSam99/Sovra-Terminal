@@ -1,11 +1,25 @@
+// ============================================================
+// Sovra API Search Endpoint (Public, NFIE‑compliant)
+// ============================================================
+
 const ZERO_SUM_TERMS = [
-  "take from", "steal", "replace", "erase", "dilute", "threaten",
-  "reverse discrimination", "they’re taking", "our jobs"
+  "take from",
+  "steal",
+  "replace",
+  "erase",
+  "dilute",
+  "threaten",
+  "reverse discrimination",
+  "they are taking",
+  "they're taking",
+  "our jobs",
+  "our schools",
+  "our culture"
 ];
 
 function detectZeroSum(inputText) {
   const lower = inputText.toLowerCase();
-  const matches = ZERO_SUM_TERMS.filter(t => lower.includes(t));
+  const matches = ZERO_SUM_TERMS.filter(term => lower.includes(term));
   return {
     detected: matches.length > 0,
     matches,
@@ -36,54 +50,61 @@ export default async function handler(req, res) {
   }
 
   const endpoint =
-    `https://serpapi.com/search.json` +
-    `?q=${encodeURIComponent(query)}` +
-    `&engine=google` +
-    `&api_key=${apiKey}`;
+    `https://serpapi.com/search.json?q=${encodeURIComponent(query)}` +
+    `&engine=google&api_key=${apiKey}`;
 
+  const controller = new AbortController();
+  const timeoutMs = 8000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
- const controller = new AbortController();
-const timeoutMs = 8000;
-const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(endpoint, {
+      signal: controller.signal,
+      headers: {
+        "user-agent": "Sovra/1.0 (public-runtime)"
+      }
+    });
 
-try {
-  const response = await fetch(endpoint, {
-    signal: controller.signal,
-    headers: {
-      "user-agent": "Sovra/1.0 (public-runtime)"
-    }
-  });
+    clearTimeout(timeout);
 
-  clearTimeout(timeout);
+    const data = await response.json();
 
-  const data = await response.json();
+    const organic_results = Array.isArray(data.organic_results)
+      ? data.organic_results.map(r => ({
+          title: r.title || "",
+          link: r.link || "",
+          snippet: r.snippet || "",
+          confidence: 0.5,
+          relevance: 0.5,
+          sensitivity: 0.5,
+          mirrors: 0
+        }))
+      : [];
 
-  const organic_results = /* your existing mapping logic */;
+    const zse = zseOn ? runZSEStandalone(query) : null;
 
-  const zse = zseOn ? runZSEStandalone(query) : null;
-
-  res.status(200).json({
-    query_token,
-    organic_results,
-    zse
-  });
-
-} catch (error) {
-  clearTimeout(timeout);
-
-  if (error.name === "AbortError") {
     res.status(200).json({
       query_token,
-      organic_results: [],
-      zse: zseOn ? runZSEStandalone(query) : null,
-      timeout: true
+      organic_results,
+      zse
     });
-    return;
+
+  } catch (error) {
+    clearTimeout(timeout);
+
+    if (error.name === "AbortError") {
+      res.status(200).json({
+        query_token,
+        organic_results: [],
+        zse: zseOn ? runZSEStandalone(query) : null,
+        timeout: true
+      });
+      return;
+    }
+
+    res.status(500).json({
+      error: "Sovra proxy error: " + error.message
+    });
   }
-
-  res.status(500).json({
-    error: "Sovra proxy error: " + error.message
-  });
 }
-
 
