@@ -38,7 +38,11 @@ function runZSEStandalone(inputText) {
 }
 
 export default async function handler(req, res) {
-  const query = String(req.query.q || "").trim();
+ const query = String(req.query.q || "")
+  .normalize("NFKC")
+  .replace(/[“”]/g, '"')
+  .replace(/[‘’]/g, "'")
+  .trim();
   const query_token = Buffer.from(query).toString("base64").slice(0, 16);
   const zseOn = req.query.zse === "1";
   const raw = req.query.raw === "true";
