@@ -273,7 +273,6 @@ const provBtn = e.target.closest
     }
   }
 });
-renderZSEStandalone(data.zse || { detected: false });
 
 function renderZSEStandalone(result) {
   if (!result.detected) return;
@@ -319,10 +318,7 @@ window.searchSovra = async function () {
     results.innerText = "Sovra requires a query to proceed.";
     return;
   }
-if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
-  const zseResult = runZSEStandalone(query);
-  renderZSEStandalone(zseResult);
-}
+
 
   // Local, non-authoritative memory (for UI continuity only)
   sovraMemory.push({
@@ -342,13 +338,18 @@ if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
     ts: new Date().toISOString()
   });
 
- const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
+const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 
+const endpoint =
 const endpoint =
   `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
 
 const response = await fetch(endpoint);
 const data = await response.json();
+
+if (SOVRA_GATES.zeroSum() && data.zse) {
+  renderZSEStandalone(data.zse);
+}
 
     results.innerHTML = `<div class="section-label">Search results</div>`;
 
