@@ -395,12 +395,13 @@ window.searchSovra = async function () {
 
         <section class="card-body">
           <div class="source-id">Source — ${escapeHtml(host)}</div>
-          ${r.predicate?.explanation ? `
-  <div class="predicate-context">
-    <strong>Context</strong>
-    <p>${escapeHtml(r.predicate.explanation)}</p>
+         ${Array.isArray(r.predicate) ? r.predicate.map(p => `
+  <div class="predicate-context" data-engine="${escapeAttr(p.engine)}">
+    <strong>${escapeHtml(p.engine)} Context</strong>
+    <p>${escapeHtml(p.explanation)}</p>
   </div>
-` : ""}
+`).join("") : ""}
+
           <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
           <div class="vector-scores" aria-hidden="true">
