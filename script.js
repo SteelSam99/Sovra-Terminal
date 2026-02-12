@@ -339,17 +339,13 @@ if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
     ts: new Date().toISOString()
   });
 
-  const endpoint = `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}`;
+ const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 
-  try {
-    const response = await fetch(endpoint);
-    const data = await response.json();
+const endpoint =
+  `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
 
-    if (data.error) {
-      results.innerText = `Search error:\n${data.error}`;
-      SovraSyncTrigger.send({ kind: "SEARCH_ERROR", query, error: data.error });
-      return;
-    }
+const response = await fetch(endpoint);
+const data = await response.json();
 
     results.innerHTML = `<div class="section-label">Search results</div>`;
 
