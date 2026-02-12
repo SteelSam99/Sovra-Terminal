@@ -400,4 +400,88 @@ window.searchSovra = async function () {
           <div class="vector-scores" aria-hidden="true">
             <div class="score confidence">
               <label>Confidence</label>
-              <meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1">
+              <meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1"></meter>
+            </div>
+            <div class="score relevance">
+              <label>Relevance</label>
+              <meter value="${Number(r.relevance || 0).toFixed(2)}" min="0" max="1"></meter>
+            </div>
+            <div class="score sensitivity">
+              <label>Sensitivity</label>
+              <meter value="${Number(r.sensitivity || 0).toFixed(2)}" min="0" max="1"></meter>
+            </div>
+          </div>
+        </section>
+
+        <footer class="card-foot">
+          <div class="mirrors">
+            Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span>
+          </div>
+          <div class="tamper-flag" aria-live="polite" role="status">OK</div>
+          <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">
+            Provenance
+          </button>
+        </footer>
+
+        <div id="${provId}" class="provenance-panel" hidden>
+          <pre class="signed-manifest">${escapeHtml(
+            JSON.stringify({
+              query_token: data.query_token || "",
+              retrieval_predicate: r.predicate || "",
+              signature: r.signature || ""
+            })
+          )}</pre>
+          <details>
+            <summary>Retrieval predicate</summary>
+            <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
+          </details>
+          <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">
+            View Source
+          </a>
+        </div>
+      `;
+
+      if (SOVRA_GATES.voice()) {
+        NFIE.validateStateTransition("SovraVoice");
+        const excerpt = card.querySelector(".raw-excerpt");
+        if (excerpt) {
+          excerpt.textContent = applySovraVoice(excerpt.textContent);
+          card.classList.add("voice-enabled");
+        }
+      }
+
+      results.appendChild(card);
+    });
+
+    // Optional comparator (descriptive)
+    if (list.length >= 2) {
+      const comparison = compareNarratives(list[0], list[1]);
+      SovraSyncTrigger.send({ kind: "COMPARISON", query, comparison });
+    }
+
+    // Optional drift log (pure telemetry)
+    Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
+      domain: "retrieval",
+      source: "public_search"
+    });
+
+    SovraSyncTrigger.send({
+      kind: "SEARCH_OK",
+      query,
+      count: list.length
+    });
+
+  } catch (error) {
+    if (results) {
+      results.innerText = "Search error.";
+    }
+    console.error("Sovra fetch error:", error);
+    SovraSyncTrigger.send({
+      kind: "FETCH_ERROR",
+      query: String(error?.query || ""),
+      error: String(error)
+    });
+  }
+};
+
+console.log("searchSovra() loaded (NFIE public runtime).");
