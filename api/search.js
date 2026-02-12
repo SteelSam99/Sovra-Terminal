@@ -36,6 +36,16 @@ function runZSEStandalone(inputText) {
     matches: zs.matches.map(term => ({ term }))
   };
 }
+function generateZSEExplanation(zseResult) {
+  if (!zseResult?.detected) return null;
+
+  return {
+    engine: "ZSE",
+    framing: "zero-sum",
+    explanation:
+      "This material relies on a zero‑sum framing, treating rights or opportunities as finite resources. Such framing implies that gains for one group necessarily result in losses for another, a common narrative structure in scarcity‑based arguments."
+  };
+}
 
 export default async function handler(req, res) {
  const query = String(req.query.q || "")
@@ -99,6 +109,14 @@ if (zse?.detected) {
     predicate: [...(r.predicate || []), zsePredicate]
   }));
 }
+const zseContext = zseOn ? generateZSEExplanation(zseResult) : null;
+
+const organic_results = rawResults.map(r => ({
+  ...r,
+  predicate: zseContext
+    ? [...(r.predicate || []), zseContext]
+    : r.predicate
+}));
 
 
     res.status(200).json({
