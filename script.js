@@ -395,6 +395,12 @@ window.searchSovra = async function () {
 
         <section class="card-body">
           <div class="source-id">Source — ${escapeHtml(host)}</div>
+          ${r.predicate?.explanation ? `
+  <div class="predicate-context">
+    <strong>Context</strong>
+    <p>${escapeHtml(r.predicate.explanation)}</p>
+  </div>
+` : ""}
           <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
           <div class="vector-scores" aria-hidden="true">
