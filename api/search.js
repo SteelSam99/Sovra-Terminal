@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
   const query = String(req.query.q || "").trim();
+  const zseOn = req.query.zse === "1";
   const raw = req.query.raw === "true";
   const apiKey = process.env.SERPAPI_KEY;
 
@@ -17,7 +18,8 @@ export default async function handler(req, res) {
   const controller = new AbortController();
   const timeoutMs = 8000; // 8 seconds — safely under platform limits
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
+const zse = zseOn ? runZSEStandalone(query) : null;
+  
   try {
     const response = await fetch(endpoint, {
       signal: controller.signal,
@@ -42,11 +44,12 @@ export default async function handler(req, res) {
         }))
       : [];
 
-    res.status(200).json({
-      query_token: data.search_metadata?.id || "",
-      organic_results: organic,
-      raw: raw ? data : null
-    });
+res.status(200).json({
+  query_token,
+  organic_results,
+  zse
+});
+
   } catch (error) {
     const message =
       error.name === "AbortError"
