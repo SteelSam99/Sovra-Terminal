@@ -351,7 +351,15 @@ window.searchSovra = async function () {
       `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
 
     const response = await fetch(endpoint);
-    const data = await response.json();
+  const contentType = response.headers.get("content-type") || "";
+
+if (!contentType.includes("application/json")) {
+  const text = await response.text();
+  throw new Error("Upstream returned non-JSON: " + text.slice(0, 120));
+}
+
+const data = await response.json();
+
 
     // Render Zero‑Sum block once per query
     if (SOVRA_GATES.zeroSum() && data.zse) {
