@@ -36,9 +36,9 @@ function runZSEStandalone(inputText) {
     matches: zs.matches.map(term => ({ term }))
   };
 }
+
 function generateZSEExplanation(zseResult) {
   if (!zseResult?.detected) return null;
-
   return {
     engine: "ZSE",
     framing: "zero-sum",
@@ -48,52 +48,50 @@ function generateZSEExplanation(zseResult) {
 }
 
 export default async function handler(req, res) {
- const query = String(req.query.q || "")
-  .normalize("NFKC")
-  .replace(/[“”]/g, '"')
-  .replace(/[‘’]/g, "'")
-  .trim();
-  const query_token = Buffer.from(query).toString("base64").slice(0, 16);
-  const zseOn = req.query.zse === "1";
-  const raw = req.query.raw === "true";
-  const apiKey = process.env.SERPAPI_KEY;
+  const query = String(req.query.q || "")
+    .normalize("NFKC")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .trim();
 
   if (!query) {
     res.status(400).json({ error: "Missing query" });
     return;
   }
 
+  const query_token = Buffer.from(query).toString("base64").slice(0, 16);
+  const zseOn = req.query.zse === "1";
+  const apiKey = process.env.SERPAPI_KEY;
+
   const endpoint =
     `https://serpapi.com/search.json?q=${encodeURIComponent(query)}` +
     `&engine=google&api_key=${apiKey}`;
 
   const controller = new AbortController();
-  const timeoutMs = 8000;
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const response = await fetch(endpoint, {
       signal: controller.signal,
-      headers: {
-        "user-agent": "Sovra/1.0 (public-runtime)"
-      }
+      headers: { "user-agent": "Sovra/1.0 (public-runtime)" }
     });
-const contentType = response.headers.get("content-type") || "";
-
-if (!contentType.includes("application/json")) {
-  const text = await response.text();
-  res.status(502).json({
-    error: "Upstream returned non-JSON",
-    preview: text.slice(0, 120)
-  });
-  return;
-}
 
     clearTimeout(timeout);
 
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      const text = await response.text();
+      res.status(502).json({
+        error: "Upstream returned non-JSON",
+        preview: text.slice(0, 120)
+      });
+      return;
+    }
+
     const data = await response.json();
 
-    const organic_results = Array.isArray(data.organic_results)
+    // Normalize results
+    let organic_results = Array.isArray(data.organic_results)
       ? data.organic_results.map(r => ({
           title: r.title || "",
           link: r.link || "",
@@ -101,58 +99,22 @@ if (!contentType.includes("application/json")) {
           confidence: 0.5,
           relevance: 0.5,
           sensitivity: 0.5,
-          mirrors: 0
+          mirrors: 0,
+          predicate: []
         }))
       : [];
 
+    // Run ZSE once
     const zse = zseOn ? runZSEStandalone(query) : null;
-if (zse?.detected) {
-  const zsePredicate = {
-    engine: "ZSE",
-    framing: "zero-sum",
-    explanation:
-      "This framing historically encodes scarcity narratives used to justify exclusionary policy arguments."
-  };
+    const zseContext = zse?.detected ? generateZSEExplanation(zse) : null;
 
-// Normalize SerpAPI results
-let organic_results = Array.isArray(data.organic_results)
-  ? data.organic_results.map(r => ({
-      title: r.title || "",
-      link: r.link || "",
-      snippet: r.snippet || "",
-      confidence: 0.5,
-      relevance: 0.5,
-      sensitivity: 0.5,
-      mirrors: 0,
-      predicate: []
-    }))
-  : [];
-
-// Run ZSE once (analysis phase)
-const zse = zseOn ? runZSEStandalone(query) : null;
-const zseContext = zse?.detected ? generateZSEExplanation(zse) : null;
-
-// Attach ZSE context (assembly phase)
-if (zseContext) {
-  organic_results = organic_results.map(r => ({
-    ...r,
-    predicate: [...r.predicate, zseContext]
-  }));
-}
-
-// Final response (ONLY response)
-res.status(200).json({
-  query_token,
-  organic_results,
-  zse
-});
-
-res.status(200).json({
-  query_token,
-  organic_results,
-  zse
-});
-
+    // Attach ZSE context
+    if (zseContext) {
+      organic_results = organic_results.map(r => ({
+        ...r,
+        predicate: [...r.predicate, zseContext]
+      }));
+    }
 
     res.status(200).json({
       query_token,
@@ -178,4 +140,3 @@ res.status(200).json({
     });
   }
 }
-
