@@ -41,52 +41,49 @@ export default async function handler(req, res) {
     `&engine=google` +
     `&api_key=${apiKey}`;
 
-  const controller = new AbortController();
-  const timeoutMs = 8000; // 8 seconds — safely under platform limits
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-const zse = zseOn ? runZSEStandalone(query) : null;
-  
-  try {
-    const response = await fetch(endpoint, {
-      signal: controller.signal,
-      headers: {
-        "user-agent": "Sovra/1.0 (public-runtime)"
-      }
+
+ const controller = new AbortController();
+const timeoutMs = 8000;
+const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+try {
+  const response = await fetch(endpoint, {
+    signal: controller.signal,
+    headers: {
+      "user-agent": "Sovra/1.0 (public-runtime)"
+    }
+  });
+
+  clearTimeout(timeout);
+
+  const data = await response.json();
+
+  const organic_results = /* your existing mapping logic */;
+
+  const zse = zseOn ? runZSEStandalone(query) : null;
+
+  res.status(200).json({
+    query_token,
+    organic_results,
+    zse
+  });
+
+} catch (error) {
+  clearTimeout(timeout);
+
+  if (error.name === "AbortError") {
+    res.status(200).json({
+      query_token,
+      organic_results: [],
+      zse: zseOn ? runZSEStandalone(query) : null,
+      timeout: true
     });
-
-    const data = await response.json();
-
-    const organic = Array.isArray(data.organic_results)
-      ? data.organic_results.map((r) => ({
-          title: r.title || "",
-          link: r.link || "",
-          snippet: r.snippet || "",
-          confidence: 0,
-          relevance: 0,
-          sensitivity: 0,
-          mirrors: 0,
-          predicate: "serpapi:organic",
-          signature: r.position ? `pos-${r.position}` : ""
-        }))
-      : [];
-
-res.status(200).json({
-  query_token,
-  organic_results,
-  zse
-});
-
-  } catch (error) {
-    const message =
-      error.name === "AbortError"
-        ? "Upstream search exceeded time budget"
-        : error.message || "Unknown upstream error";
-
-    res.status(504).json({
-      error: "Sovra proxy error: " + message
-    });
-  } finally {
-    clearTimeout(timeout);
+    return;
   }
+
+  res.status(500).json({
+    error: "Sovra proxy error: " + error.message
+  });
 }
+
 
