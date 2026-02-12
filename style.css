@@ -169,11 +169,12 @@ body, html {
   padding:10px;
   margin:0;
   white-space:pre-wrap;
-  overflow:auto;
-  max-height:220px;
+  overflow:hidden;
+  max-height:360px;
   border:1px solid #f1f5f9;
   font-size:0.95rem;
 }
+
 
 /* Vector scores */
 .vector-scores{
