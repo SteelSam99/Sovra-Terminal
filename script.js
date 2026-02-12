@@ -500,3 +500,25 @@ window.searchSovra = async function () {
 };
 
 console.log("searchSovra() loaded (NFIE public runtime).");
+document.addEventListener("DOMContentLoaded", () => {
+  const contextFrameList = document.querySelector(".context-frame-list");
+  if (!contextFrameList) return;
+
+  Object.keys(CONTEXT_FRAME_VISIBILITY).forEach(engine => {
+    const label = document.createElement("label");
+    label.className = "context-frame-toggle";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = CONTEXT_FRAME_VISIBILITY[engine];
+
+    checkbox.addEventListener("change", () => {
+      CONTEXT_FRAME_VISIBILITY[engine] = checkbox.checked;
+      searchSovra(); // re-render via existing pipeline
+    });
+
+    label.appendChild(checkbox);
+    label.append(` ${engine}`);
+    contextFrameList.appendChild(label);
+  });
+});
