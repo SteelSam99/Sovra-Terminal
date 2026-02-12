@@ -374,7 +374,12 @@ if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
       } catch (_) {
         host = "unknown";
       }
-       
+       const excerptText =
+  r.full_text ||
+  r.rich_snippet ||
+  r.snippet ||
+  "";
+
       card.innerHTML = `
         <header class="card-head">
           <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
@@ -386,7 +391,7 @@ if (SOVRA_GATES.zeroSum() && !SOVRA_GATES.contraCollapse()) {
 
         <section class="card-body">
           <div class="source-id">Source — ${escapeHtml(host)}</div>
-          <pre class="raw-excerpt" tabindex="0">${escapeHtml(r.snippet)}</pre>
+          <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
           <div class="vector-scores" aria-hidden="true">
             <div class="score confidence"><label>Confidence</label><meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1"></meter></div>
