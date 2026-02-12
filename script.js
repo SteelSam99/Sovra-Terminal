@@ -308,48 +308,49 @@ function renderZSEStandalone(result) {
    6) Public search runtime (NO interpretive enforcement)
    ============================================================ */
 window.searchSovra = async function () {
-   Try {
-  const query = (document.getElementById("query")?.value || "").trim();
-  const compareRaw = document.getElementById("toggleRaw")?.checked || false;
   const results = document.querySelector(".results-left");
 
-  if (!results) return;
+  try {
+    const query = (document.getElementById("query")?.value || "").trim();
+    const compareRaw = document.getElementById("toggleRaw")?.checked || false;
 
-  if (!query) {
-    results.innerText = "Sovra requires a query to proceed.";
-    return;
-  }
+    if (!results) return;
 
+    if (!query) {
+      results.innerText = "Sovra requires a query to proceed.";
+      return;
+    }
 
-  // Local, non-authoritative memory (for UI continuity only)
-  sovraMemory.push({
-    query,
-    timestamp: new Date().toISOString(),
-    domains: [],
-    biasFlags: [],
-    powerTags: [],
-    syntaxFlags: []
-  });
+    // Local, non-authoritative memory (for UI continuity only)
+    sovraMemory.push({
+      query,
+      timestamp: new Date().toISOString(),
+      domains: [],
+      biasFlags: [],
+      powerTags: [],
+      syntaxFlags: []
+    });
 
-  // One-way telemetry (public → core)
-  SovraSyncTrigger.send({
-    kind: "QUERY",
-    query,
-    raw: compareRaw,
-    ts: new Date().toISOString()
-  });
+    // One-way telemetry (public → core)
+    SovraSyncTrigger.send({
+      kind: "QUERY",
+      query,
+      raw: compareRaw,
+      ts: new Date().toISOString()
+    });
 
-const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
+    const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 
-const endpoint =
-  `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
+    const endpoint =
+      `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
 
-const response = await fetch(endpoint);
-const data = await response.json();
+    const response = await fetch(endpoint);
+    const data = await response.json();
 
-if (SOVRA_GATES.zeroSum() && data.zse) {
-  renderZSEStandalone(data.zse);
-}
+    // Render Zero‑Sum block once per query
+    if (SOVRA_GATES.zeroSum() && data.zse) {
+      renderZSEStandalone(data.zse);
+    }
 
     results.innerHTML = `<div class="section-label">Search results</div>`;
 
@@ -374,18 +375,21 @@ if (SOVRA_GATES.zeroSum() && data.zse) {
       } catch (_) {
         host = "unknown";
       }
-       const excerptText =
-  r.full_text ||
-  r.rich_snippet ||
-  r.snippet ||
-  "";
+
+      const excerptText =
+        r.full_text ||
+        r.rich_snippet ||
+        r.snippet ||
+        "";
 
       card.innerHTML = `
         <header class="card-head">
           <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
           <div class="card-meta">
             <time class="card-ts" datetime="${new Date().toISOString()}">${new Date().toISOString()}</time>
-            <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${escapeAttr(hash)}">${escapeHtml(hash.slice(0, 6))}…</button>
+            <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${escapeAttr(hash)}">
+              ${escapeHtml(hash.slice(0, 6))}…
+            </button>
           </div>
         </header>
 
@@ -394,68 +398,6 @@ if (SOVRA_GATES.zeroSum() && data.zse) {
           <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
           <div class="vector-scores" aria-hidden="true">
-            <div class="score confidence"><label>Confidence</label><meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1"></meter></div>
-            <div class="score relevance"><label>Relevance</label><meter value="${Number(r.relevance || 0).toFixed(2)}" min="0" max="1"></meter></div>
-            <div class="score sensitivity"><label>Sensitivity</label><meter value="${Number(r.sensitivity || 0).toFixed(2)}" min="0" max="1"></meter></div>
-          </div>
-        </section>
-
-        <footer class="card-foot">
-          <div class="mirrors">Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span></div>
-          <div class="tamper-flag" aria-live="polite" role="status">OK</div>
-          <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">Provenance</button>
-        </footer>
-
-        <div id="${provId}" class="provenance-panel" hidden>
-          <pre class="signed-manifest">${escapeHtml(
-            JSON.stringify({
-              query_token: data.query_token || "",
-              retrieval_predicate: r.predicate || "",
-              signature: r.signature || ""
-            })
-          )}</pre>
-          <details>
-            <summary>Retrieval predicate</summary>
-            <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
-          </details>
-          <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">View Source</a>
-        </div>
-      `;
-if (SOVRA_GATES.voice()) {
-  NFIE.validateStateTransition("SovraVoice");
-
-  const excerpt = card.querySelector(".raw-excerpt");
-  if (excerpt) {
-    excerpt.textContent = applySovraVoice(excerpt.textContent);
-    card.classList.add("voice-enabled");
-  }
-}
-
-      results.appendChild(card);
-    });
-
-    // Optional comparator (descriptive)
-    if (list.length >= 2) {
-      const comparison = compareNarratives(list[0], list[1]);
-      SovraSyncTrigger.send({ kind: "COMPARISON", query, comparison });
-    }
-
-    // Optional drift log (pure telemetry)
-    Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
-      domain: "retrieval",
-      source: "public_search"
-    });
-
-    SovraSyncTrigger.send({
-      kind: "SEARCH_OK",
-      query,
-      count: list.length
-    });
-  } catch (error) {
-    results.innerText = "Search error.";
-    console.error("Sovra fetch error:", error);
-    SovraSyncTrigger.send({ kind: "FETCH_ERROR", query, error: String(error) });
-  }
-};
-
-console.log("searchSovra() loaded (NFIE public runtime).");
+            <div class="score confidence">
+              <label>Confidence</label>
+              <meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1">
