@@ -87,7 +87,7 @@ export default async function handler(req, res) {
 
     const zse = zseOn ? runZSEStandalone(query) : null;
 if (zse?.detected) {
-  const predicate = {
+  const zsePredicate = {
     engine: "ZSE",
     framing: "zero-sum",
     explanation:
@@ -96,9 +96,10 @@ if (zse?.detected) {
 
   organic_results = organic_results.map(r => ({
     ...r,
-    predicate
+    predicate: [...(r.predicate || []), zsePredicate]
   }));
 }
+
 
     res.status(200).json({
       query_token,
