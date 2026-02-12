@@ -86,6 +86,19 @@ export default async function handler(req, res) {
       : [];
 
     const zse = zseOn ? runZSEStandalone(query) : null;
+if (zse?.detected) {
+  const predicate = {
+    engine: "ZSE",
+    framing: "zero-sum",
+    explanation:
+      "This framing historically encodes scarcity narratives used to justify exclusionary policy arguments."
+  };
+
+  organic_results = organic_results.map(r => ({
+    ...r,
+    predicate
+  }));
+}
 
     res.status(200).json({
       query_token,
