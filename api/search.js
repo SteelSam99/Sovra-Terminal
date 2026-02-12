@@ -104,19 +104,44 @@ if (zse?.detected) {
       "This framing historically encodes scarcity narratives used to justify exclusionary policy arguments."
   };
 
+// Normalize SerpAPI results
+let organic_results = Array.isArray(data.organic_results)
+  ? data.organic_results.map(r => ({
+      title: r.title || "",
+      link: r.link || "",
+      snippet: r.snippet || "",
+      confidence: 0.5,
+      relevance: 0.5,
+      sensitivity: 0.5,
+      mirrors: 0,
+      predicate: []
+    }))
+  : [];
+
+// Run ZSE once (analysis phase)
+const zse = zseOn ? runZSEStandalone(query) : null;
+const zseContext = zse?.detected ? generateZSEExplanation(zse) : null;
+
+// Attach ZSE context (assembly phase)
+if (zseContext) {
   organic_results = organic_results.map(r => ({
     ...r,
-    predicate: [...(r.predicate || []), zsePredicate]
+    predicate: [...r.predicate, zseContext]
   }));
 }
-const zseContext = zseOn ? generateZSEExplanation(zseResult) : null;
 
-const organic_results = rawResults.map(r => ({
-  ...r,
-  predicate: zseContext
-    ? [...(r.predicate || []), zseContext]
-    : r.predicate
-}));
+// Final response (ONLY response)
+res.status(200).json({
+  query_token,
+  organic_results,
+  zse
+});
+
+res.status(200).json({
+  query_token,
+  organic_results,
+  zse
+});
 
 
     res.status(200).json({
