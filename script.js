@@ -308,6 +308,7 @@ function renderZSEStandalone(result) {
    6) Public search runtime (NO interpretive enforcement)
    ============================================================ */
 window.searchSovra = async function () {
+   Try {
   const query = (document.getElementById("query")?.value || "").trim();
   const compareRaw = document.getElementById("toggleRaw")?.checked || false;
   const results = document.querySelector(".results-left");
