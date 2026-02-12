@@ -281,6 +281,7 @@ function renderZSEStandalone(result) {
 
   const block = document.createElement("section");
   block.className = "zse-block";
+renderZSEStandalone(data.zse || { detected: false });
 
   block.innerHTML = `
     <h3>Zero‑Sum Narrative Detected</h3>
