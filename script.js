@@ -273,6 +273,8 @@ const provBtn = e.target.closest
     }
   }
 });
+renderZSEStandalone(data.zse || { detected: false });
+
 function renderZSEStandalone(result) {
   if (!result.detected) return;
 
@@ -281,7 +283,7 @@ function renderZSEStandalone(result) {
 
   const block = document.createElement("section");
   block.className = "zse-block";
-renderZSEStandalone(data.zse || { detected: false });
+
 
   block.innerHTML = `
     <h3>Zero‑Sum Narrative Detected</h3>
