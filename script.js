@@ -308,6 +308,82 @@ function renderZSEStandalone(result) {
 
   container.prepend(block);
 }
+/* ============================================================
+   Visibility Diagnostics Unit (VDU)
+   VAP + PCA + TUUR — Public Runtime (NFIE-safe)
+   ============================================================ */
+
+const VDU = (function () {
+
+  function inferStructuralClasses(results) {
+    const found = new Set();
+
+    results.forEach(r => {
+      const text = `${r.title || ""} ${r.snippet || ""}`.toLowerCase();
+
+      if (text.includes("system") || text.includes("structure")) found.add("systemic");
+      if (text.includes("history") || text.includes("historical")) found.add("historical");
+      if (text.includes("law") || text.includes("legal") || text.includes("court")) found.add("legal");
+      if (text.includes("econom") || text.includes("market")) found.add("economic");
+      if (text.includes("mechanism") || text.includes("process")) found.add("mechanistic");
+    });
+
+    return Array.from(found);
+  }
+
+  function computePCA(expected, surfaced) {
+    const missing = expected.filter(e => !surfaced.includes(e));
+    const score = expected.length
+      ? missing.length / expected.length
+      : 0;
+
+    return {
+      expected,
+      surfaced,
+      missing,
+      score
+    };
+  }
+
+  function render(pca) {
+    if (!pca.missing.length) return null;
+
+    const block = document.createElement("section");
+    block.className = "vdu-block";
+
+    block.innerHTML = `
+      <h3>Visibility Diagnostic</h3>
+      <p>
+        Several structurally relevant explanations did not appear in the surfaced results.
+      </p>
+      <p>
+        Perceptual Complement Analysis indicates a ${
+          pca.score > 0.66 ? "high" :
+          pca.score > 0.33 ? "moderate" : "low"
+        } omission pattern at this resolution.
+      </p>
+      <p>
+        This observation is consistent with visibility attenuation, a stability‑preserving behavior
+        where encounter probability can be reduced without suppression.
+      </p>
+      <p class="vdu-context">
+        Such patterns are commonly associated with homeostatic coherence preservation in complex systems.
+      </p>
+    `;
+
+    return block;
+  }
+
+  return {
+    run(results) {
+      const expected = EXPECTED_STRUCTURAL_CLASSES;
+      const surfaced = inferStructuralClasses(results);
+      const pca = computePCA(expected, surfaced);
+      return render(pca);
+    }
+  };
+
+})();
 
 
 /* ============================================================
