@@ -309,6 +309,17 @@ function renderZSEStandalone(result) {
   container.prepend(block);
 }
 /* ============================================================
+   Structural expectation baseline (DESCRIPTIVE ONLY)
+   ============================================================ */
+const EXPECTED_STRUCTURAL_CLASSES = Object.freeze([
+  "systemic",
+  "historical",
+  "legal",
+  "economic",
+  "mechanistic"
+]);
+
+/* ============================================================
    Visibility Diagnostics Unit (VDU)
    VAP + PCA + TUUR — Public Runtime (NFIE-safe)
    ============================================================ */
