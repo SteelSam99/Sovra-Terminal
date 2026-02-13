@@ -396,6 +396,57 @@ const VDU = (function () {
 
 })();
 
+/* ============================================================
+   Welsing–Fuller Query Rewrite (METHOD-LEVEL, IMMUTABLE)
+   ============================================================ */
+
+function applyWFEQueryRewrite(originalQuery) {
+  // Core query remains intact
+  const core = originalQuery;
+
+  // Functional index expansion (library drawer widening)
+  const functionalScopes = [
+    "power systems",
+    "dominance maintenance",
+    "structural control",
+    "resource allocation",
+    "population management"
+  ];
+
+  // Cross-index traversal (misfiled cards)
+  const crossDomains = [
+    "law",
+    "economics",
+    "education",
+    "criminal justice",
+    "housing policy",
+    "language policy"
+  ];
+
+  // Language normalization (dominant-code bypass)
+  const functionalEquivalents = [
+    "structural racism",
+    "systemic inequality",
+    "institutional power",
+    "racial hierarchy",
+    "policy outcomes"
+  ];
+
+  return {
+    rewrittenQuery: [
+      core,
+      ...functionalScopes,
+      ...crossDomains,
+      ...functionalEquivalents
+    ].join(" | "),
+    meta: {
+      method: "Welsing–Fuller",
+      scope: "expanded",
+      depth: "full-drawer",
+      languageMode: "functional"
+    }
+  };
+}
 
 /* ============================================================
    6) Public search runtime (NO interpretive enforcement)
@@ -404,15 +455,24 @@ window.searchSovra = async function () {
   const results = document.querySelector(".results-left");
 
   try {
-    const query = (document.getElementById("query")?.value || "").trim();
-    const compareRaw = document.getElementById("toggleRaw")?.checked || false;
+ let query = (document.getElementById("query")?.value || "").trim();
+const compareRaw = document.getElementById("toggleRaw")?.checked || false;
 
-    if (!results) return;
+if (!results) return;
 
-    if (!query) {
-      results.innerText = "Sovra requires a query to proceed.";
-      return;
-    }
+if (!query) {
+  results.innerText = "Sovra requires a query to proceed.";
+  return;
+}
+
+let wfeMeta = null;
+
+if (SOVRA_GATES.welsingFuller()) {
+  const rewritten = applyWFEQueryRewrite(query);
+  query = rewritten.rewrittenQuery;
+  wfeMeta = rewritten.meta;
+}
+
 
     // Local, non-authoritative memory (for UI continuity only)
     sovraMemory.push({
