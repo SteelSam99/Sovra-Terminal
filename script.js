@@ -494,8 +494,11 @@ if (SOVRA_GATES.welsingFuller()) {
 
     const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 
-    const endpoint =
-      `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}`;
+const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
+
+const endpoint =
+  `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}&wfe=${wfeOn}`;
+
 
     const response = await fetch(endpoint);
   const contentType = response.headers.get("content-type") || "";
