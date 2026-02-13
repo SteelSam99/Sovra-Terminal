@@ -553,6 +553,10 @@ if (vduBlock) results.appendChild(vduBlock);
 
       results.appendChild(card);
     });
+const provPanel = document.querySelector(".provenance-panel");
+if (provPanel && vduBlock) {
+  provPanel.prepend(vduBlock);
+}
 
     // Optional comparator (descriptive)
     if (list.length >= 2) {
