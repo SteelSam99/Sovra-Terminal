@@ -450,6 +450,8 @@ const data = await response.json();
       SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
       return;
     }
+const vduBlock = VDU.run(list);
+if (vduBlock) results.appendChild(vduBlock);
 
     list.forEach((r, i) => {
       const card = document.createElement("article");
