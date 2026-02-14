@@ -76,6 +76,17 @@ function runZSEStandalone(inputText) {
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
+function updateSemanticScores({ collapse, contradiction, zeroSum }) {
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = String(value);
+  };
+
+  set("score-collapse", collapse);
+  set("score-contradiction", contradiction);
+  set("score-zero-sum", zeroSum);
+}
 
 function emitCDLMScores(scores) {
   if (!SOVRA_GATES.contraCollapse()) return;
