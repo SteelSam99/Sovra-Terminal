@@ -93,6 +93,86 @@ function emitCDLMScores(scores) {
   });
 }
 
+/* ============================================================
+   CDLM SCANNER STUBS (PRE-STAGED, READ-ONLY)
+   ============================================================ */
+
+const CDLM_SCANNERS = Object.freeze({
+  BranchingPattern: scanBranchingPattern,
+  ConnectionDensity: scanConnectionDensity,
+  RoutingTopology: scanRoutingTopology,
+  FlowBehavior: scanFlowBehavior,
+  OutputSymptom: scanOutputSymptom,
+  DefensiveReaction: scanDefensiveReaction,
+  MemeReplication: scanMemeReplication,
+  CulturalEvolutionPressure: scanCulturalEvolutionPressure,
+  NetworkContagionDynamics: scanNetworkContagionDynamics
+});
+function scanBranchingPattern(_text, _map) {
+  return { count: 0 };
+}
+
+function scanConnectionDensity(_text, _map) {
+  return { count: 0 };
+}
+
+function scanRoutingTopology(_text, _map) {
+  return { count: 0 };
+}
+
+function scanFlowBehavior(_text, _map) {
+  return { count: 0 };
+}
+
+function scanOutputSymptom(_text, _map) {
+  return { count: 0 };
+}
+
+function scanDefensiveReaction(_text, _map) {
+  return { count: 0 };
+}
+
+function scanMemeReplication(_text, _map) {
+  return { count: 0 };
+}
+
+function scanCulturalEvolutionPressure(_text, _map) {
+  return { count: 0 };
+}
+
+function scanNetworkContagionDynamics(_text, _map) {
+  return { count: 0 };
+}
+
+
+/* ============================================================
+   CDLM GROUP ENTRY (PRE-STAGED, READ-ONLY)
+   ============================================================ */
+
+function runCDLMGroup(inputText, caller = "core_diagnostic_map") {
+  // Hard gate: CDLM never runs unless explicitly called
+  if (!caller) return null;
+
+  // NOTE: This function does NOT:
+  // - modify queries
+  // - modify ranking
+  // - modify UI
+  // - emit interpretations
+  // It only packages diagnostics.
+
+  const domainHits = {}; // placeholder until scanners are wired
+  const activeDomains = Object.keys(domainHits);
+
+  const contradiction = activeDomains.length;
+  const zeroSum = 0;
+
+  return {
+    domains: activeDomains,
+    contradiction,
+    zeroSum
+  };
+}
+
 
 /* ============================================================
    0) Public memory (local, non-authoritative)
