@@ -147,31 +147,31 @@ function scanNetworkContagionDynamics(_text, _map) {
 
 /* ============================================================
    CDLM GROUP ENTRY (PRE-STAGED, READ-ONLY)
+   - Collects scanner observations only
+   - No aggregation, no scoring, no UI, no side effects
    ============================================================ */
 
-function runCDLMGroup(inputText, caller = "core_diagnostic_map") {
-  // Hard gate: CDLM never runs unless explicitly called
+function runCDLMGroup(inputText, map9x9, caller = "core_diagnostic_map") {
   if (!caller) return null;
 
-  // NOTE: This function does NOT:
-  // - modify queries
-  // - modify ranking
-  // - modify UI
-  // - emit interpretations
-  // It only packages diagnostics.
+  const text = String(inputText || "");
+  const map = map9x9 || null;
 
-  const domainHits = {}; // placeholder until scanners are wired
-  const activeDomains = Object.keys(domainHits);
+  const observations = {};
+  for (const [colName, scannerFn] of Object.entries(CDLM_SCANNERS)) {
+    try {
+      observations[colName] = scannerFn(text, map);
+    } catch (_) {
+      observations[colName] = { count: 0 };
+    }
+  }
 
-  const contradiction = activeDomains.length;
-  const zeroSum = 0;
-
-  return {
-    domains: activeDomains,
-    contradiction,
-    zeroSum
-  };
+  return Object.freeze({
+    caller,
+    observations
+  });
 }
+
 
 
 /* ============================================================
