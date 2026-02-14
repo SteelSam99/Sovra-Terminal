@@ -253,6 +253,41 @@ function traverseCDLMGrid(text, caller = "core_diagnostic_map") {
     grid: Object.freeze(results)
   });
 }
+/* ============================================================
+   CDLM ROW-AWARE TRAVERSAL (READ-ONLY)
+   - Walks 9×9 coordinates
+   - No aggregation, no scoring, no UI
+   ============================================================ */
+
+function traverseCDLMGrid(text, caller = "core_diagnostic_map") {
+  const map = CDLM_MAP_9x9;
+  const results = [];
+
+  for (let r = 0; r < map.rows.length; r++) {
+    const rowName = map.rows[r];
+
+    for (let c = 0; c < map.cols.length; c++) {
+      const colName = map.cols[c];
+      const scanner = CDLM_SCANNERS[colName];
+
+      let observation = { count: 0 };
+      try {
+        observation = scanner(text, map);
+      } catch (_) {}
+
+      results.push({
+        row: rowName,
+        col: colName,
+        observation
+      });
+    }
+  }
+
+  return Object.freeze({
+    caller,
+    grid: Object.freeze(results)
+  });
+}
 
 /* ============================================================
    0) Public memory (local, non-authoritative)
