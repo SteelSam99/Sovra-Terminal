@@ -819,22 +819,6 @@ if (vduBlock) results.appendChild(vduBlock);
 
           <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
-          <div class="vector-scores" aria-hidden="true">
-            <div class="score confidence">
-              <label>Confidence</label>
-              <meter value="${Number(r.confidence || 0).toFixed(2)}" min="0" max="1"></meter>
-            </div>
-            <div class="score relevance">
-              <label>Relevance</label>
-              <meter value="${Number(r.relevance || 0).toFixed(2)}" min="0" max="1"></meter>
-            </div>
-            <div class="score sensitivity">
-              <label>Sensitivity</label>
-              <meter value="${Number(r.sensitivity || 0).toFixed(2)}" min="0" max="1"></meter>
-            </div>
-          </div>
-        </section>
-
         <footer class="card-foot">
           <div class="mirrors">
             Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span>
