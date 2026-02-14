@@ -87,7 +87,6 @@ function toggleSemanticIndicators(show) {
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
-console.log("[CDLM → UI WRITE]", scores);
 
 function updateSemanticScores({ collapse, contradiction, zeroSum }) {
   const set = (id, value) => {
