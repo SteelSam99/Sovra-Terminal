@@ -103,6 +103,55 @@ export default async function handler(req, res) {
           predicate: []
         }))
       : [];
+// ============================================================
+// CORE DIAGNOSTIC PIPELINE (SERVER-SIDE ONLY)
+// ============================================================
+
+let cdlmTelemetry = null;
+
+try {
+  // 1) Domain parsing
+  const domainHits = CDLM.parseInput(query, "core_diagnostic_map");
+  const activeDomains = Object.keys(domainHits);
+
+  // 2) Contradiction scoring
+  const contradictionScore = CPM.scoreContradiction(activeDomains, "core_diagnostic_map");
+
+  // 3) Zero-sum escalation (authoritative)
+  const zseCore = CDLM.runZSEifNeeded(
+    query,
+    contradictionScore,
+    "core_diagnostic_map"
+  );
+
+  // 4) Phase detection (optional, future-facing)
+  const phase = PWSTracker.detectPhase(
+    { implementation: contradictionScore > 4 },
+    "core_diagnostic_map"
+  );
+
+  // 5) Structural dominance score (SDM)
+  const sdmScore = SDMCore.calculateScore(
+    {
+      foundational_alignment: contradictionScore / 10,
+      narrative_control: zseCore?.score || 0,
+      entropy_flow: activeDomains.length / 9
+    },
+    "core_diagnostic_map"
+  );
+
+  // 6) Telemetry projection (bounded, descriptive)
+  cdlmTelemetry = {
+    collapse: Math.min(10, contradictionScore),
+    contradiction: Math.min(10, contradictionScore),
+    zeroSum: zseCore?.detected ? Math.min(3, Math.ceil(zseCore.score * 3)) : 0,
+    phase,
+    sdm: sdmScore
+  };
+
+} catch (err) {
+  console.error("[CDLM CORE ERROR]", err.message);
+}
 
     // Run ZSE once
     const zse = zseOn ? runZSEStandalone(query) : null;
