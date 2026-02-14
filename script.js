@@ -82,11 +82,13 @@ function toggleSemanticIndicators(show) {
   panel.setAttribute("aria-hidden", String(!show));
 }
 
-console.log("[CDLM → UI WRITE]", scores);
+
 
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
+console.log("[CDLM → UI WRITE]", scores);
+
 function updateSemanticScores({ collapse, contradiction, zeroSum }) {
   const set = (id, value) => {
     const el = document.getElementById(id);
