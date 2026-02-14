@@ -92,6 +92,44 @@ function emitCDLMScores(scores) {
     zeroSum: Math.max(1, Math.min(3, Math.round(scores.zeroSum)))
   });
 }
+/* ============================================================
+   CDLM 9×9 CANONICAL MAP (NFIE non-force, inert topology)
+   ============================================================ */
+
+const CDLM_MAP_9x9 = Object.freeze({
+  version: "0.1",
+  shape: Object.freeze({ rows: 9, cols: 9 }),
+
+  rows: Object.freeze([
+    "Economics",
+    "Education",
+    "Entertainment",
+    "Labor",
+    "Law",
+    "Politics",
+    "Religion",
+    "Sex",
+    "War"
+  ]),
+
+  cols: Object.freeze([
+    "BranchingPattern",
+    "ConnectionDensity",
+    "RoutingTopology",
+    "FlowBehavior",
+    "OutputSymptom",
+    "DefensiveReaction",
+    "MemeReplication",
+    "CulturalEvolutionPressure",
+    "NetworkContagionDynamics"
+  ]),
+
+  grid: Object.freeze(
+    Array.from({ length: 9 }, () =>
+      Object.freeze(Array.from({ length: 9 }, () => Object.freeze({})))
+    )
+  )
+});
 
 /* ============================================================
    CDLM SCANNER STUBS (PRE-STAGED, READ-ONLY)
