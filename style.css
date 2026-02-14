@@ -89,6 +89,41 @@ body, html {
   cursor: pointer;
   accent-color: #000;
 }
+/* ===========================
+   SEMANTIC BEHAVIOR INDICATORS
+   =========================== */
+
+.semantic-indicators {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.semantic-indicators.hidden {
+  display: none;
+}
+
+.indicator {
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  background: #fff;
+}
+
+.indicator-label {
+  display: block;
+  opacity: 0.85;
+}
+
+.indicator-value {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9rem;
+}
+.indicator {
+  font-family: monospace;
+}
 
 /* ===========================
    SOVRA-CARD STYLES
