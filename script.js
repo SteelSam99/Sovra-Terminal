@@ -29,6 +29,9 @@ const ZERO_SUM_TERMS = [
   "zero-sum", "finite", "limited", "scarce", "only one", "either/or", "us vs them"
 ];
 
+  panel.classList.toggle("hidden", !show);
+}
+
 function detectZeroSum(inputText) {
   const lowerInput = inputText.toLowerCase();
   const matches = ZERO_SUM_TERMS.filter(term => lowerInput.includes(term));
@@ -73,6 +76,14 @@ function runZSEStandalone(inputText) {
     matches: enriched
   };
 }
+
+function toggleSemanticIndicators(show) {
+  const panel = document.getElementById("semantic-indicators");
+  if (!panel) return;
+
+  panel.classList.toggle("hidden", !show);
+}
+
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
@@ -89,7 +100,12 @@ function updateSemanticScores({ collapse, contradiction, zeroSum }) {
 }
 
 function emitCDLMScores(scores) {
-  if (!SOVRA_GATES.contraCollapse()) return;
+  if (!SOVRA_GATES.contraCollapse()) {
+    toggleSemanticIndicators(false);
+    return;
+  }
+
+  toggleSemanticIndicators(true);
 
   if (
     typeof scores?.collapse !== "number" ||
@@ -103,6 +119,7 @@ function emitCDLMScores(scores) {
     zeroSum: Math.max(1, Math.min(3, Math.round(scores.zeroSum)))
   });
 }
+
 /* ============================================================
    CDLM 9×9 CANONICAL MAP (NFIE non-force, inert topology)
    ============================================================ */
