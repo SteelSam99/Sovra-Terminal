@@ -119,6 +119,7 @@ function emitCDLMScores(scores) {
     zeroSum: Math.max(1, Math.min(3, Math.round(scores.zeroSum)))
   });
 }
+console.log("[CDLM → UI WRITE]", scores);
 
 /* ============================================================
    CDLM 9×9 CANONICAL MAP (NFIE non-force, inert topology)
