@@ -79,7 +79,9 @@ function toggleSemanticIndicators(show) {
   if (!panel) return;
 
   panel.classList.toggle("hidden", !show);
+  panel.setAttribute("aria-hidden", String(!show));
 }
+
 
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
