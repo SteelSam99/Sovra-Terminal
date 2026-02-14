@@ -73,6 +73,25 @@ function runZSEStandalone(inputText) {
     matches: enriched
   };
 }
+/* ============================================================
+   CDLM UI Sink (DESCRIPTIVE ONLY)
+   ============================================================ */
+
+function emitCDLMScores(scores) {
+  if (!SOVRA_GATES.contraCollapse()) return;
+
+  if (
+    typeof scores?.collapse !== "number" ||
+    typeof scores?.contradiction !== "number" ||
+    typeof scores?.zeroSum !== "number"
+  ) return;
+
+  updateSemanticScores({
+    collapse: Math.max(1, Math.min(10, Math.round(scores.collapse))),
+    contradiction: Math.max(1, Math.min(10, Math.round(scores.contradiction))),
+    zeroSum: Math.max(1, Math.min(3, Math.round(scores.zeroSum)))
+  });
+}
 
 
 /* ============================================================
@@ -510,6 +529,14 @@ if (!contentType.includes("application/json")) {
 
 const data = await response.json();
 
+     // CDLM telemetry (if provided by upstream)
+if (data.cdlm) {
+  emitCDLMScores({
+    collapse: data.cdlm.collapse,
+    contradiction: data.cdlm.contradiction,
+    zeroSum: data.cdlm.zeroSum
+  });
+}
 
     // Render Zero‑Sum block once per query
     if (SOVRA_GATES.zeroSum() && data.zse) {
