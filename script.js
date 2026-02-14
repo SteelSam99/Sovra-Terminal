@@ -29,9 +29,6 @@ const ZERO_SUM_TERMS = [
   "zero-sum", "finite", "limited", "scarce", "only one", "either/or", "us vs them"
 ];
 
-  panel.classList.toggle("hidden", !show);
-}
-
 function detectZeroSum(inputText) {
   const lowerInput = inputText.toLowerCase();
   const matches = ZERO_SUM_TERMS.filter(term => lowerInput.includes(term));
