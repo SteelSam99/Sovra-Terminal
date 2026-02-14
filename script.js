@@ -87,7 +87,6 @@ function toggleSemanticIndicators(show) {
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
-
 function updateSemanticScores({ collapse, contradiction, zeroSum }) {
   const set = (id, value) => {
     const el = document.getElementById(id);
