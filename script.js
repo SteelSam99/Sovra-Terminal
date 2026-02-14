@@ -210,6 +210,13 @@ function runCDLMGroup(inputText, map9x9, caller = "core_diagnostic_map") {
   });
 }
 
+/* ============================================================
+   CDLM FIRST TRAVERSAL (READ-ONLY, MANUAL INVOCATION)
+   ============================================================ */
+
+function traverseCDLM(text, caller = "core_diagnostic_map") {
+  return runCDLMGroup(text, CDLM_MAP_9x9, caller);
+}
 
 
 /* ============================================================
