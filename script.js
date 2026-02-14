@@ -97,6 +97,7 @@ function updateSemanticScores({ collapse, contradiction, zeroSum }) {
   set("score-contradiction", contradiction);
   set("score-zero-sum", zeroSum);
 }
+console.log("[CDLM → UI WRITE]", scores);
 
 function emitCDLMScores(scores) {
   if (!SOVRA_GATES.contraCollapse()) {
