@@ -183,6 +183,11 @@ function emitCDLMScores(scores) {
     return;
   }
 
+  window.dispatchEvent(
+    new CustomEvent("cdlm:scores", { detail: scores })
+  );
+}
+
 
 /* ============================================================
    CDLM 9×9 CANONICAL MAP (NFIE non-force, inert topology)
@@ -816,14 +821,21 @@ if (!contentType.includes("application/json")) {
 
 const data = await response.json();
 
-     // CDLM telemetry (if provided by upstream)
-if (data.cdlm) {
-  emitCDLMScores({
-    collapse: data.cdlm.collapse,
-    contradiction: data.cdlm.contradiction,
-    zeroSum: data.cdlm.zeroSum
-  });
-}
+const diagnostics = {
+  zse: data.zse || null,
+  trifold: TrifoldMirrorProtocol.evaluateClaim(query).diagnostics,
+  enginesFired: {
+    zse: SOVRA_GATES.zeroSum(),
+    contra: SOVRA_GATES.contraCollapse(),
+    drift: SOVRA_GATES.driftMatrix(),
+    welsing: SOVRA_GATES.welsingFuller(),
+    voice: SOVRA_GATES.voice()
+  }
+};
+
+const scores = synthesizeCDLMScores(diagnostics);
+emitCDLMScores(scores);
+
 
     // Render Zero‑Sum block once per query
     if (SOVRA_GATES.zeroSum() && data.zse) {
