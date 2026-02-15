@@ -830,6 +830,7 @@ const data = await response.json();
 
     const list = Array.isArray(data.organic_results) ? data.organic_results : [];
     if (!list.length) {
+       toggleSemanticIndicators(false);
       results.innerHTML += `<div class="empty">No results found.</div>`;
       SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
       return;
