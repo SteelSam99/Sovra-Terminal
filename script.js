@@ -6,6 +6,54 @@
    ============================================================ */
 
 "use strict";
+// Trifold Mirror Protocol — Sovra Diagnostic Overlay
+// Version: 1.3 | Includes Contradiction Artifact Flag
+
+const TrifoldMirrorProtocol = {
+  evaluateClaim: function(claim) {
+    const rigidity = this.checkRigidity(claim);
+    const constraint = this.checkConstraint(claim);
+    const inspiration = this.checkInspiration(claim);
+
+    const contradictionScore = [rigidity, constraint, inspiration].filter(Boolean).length;
+
+    const isContradictionArtifact = contradictionScore >= 2.5;
+
+    return {
+      diagnostics: {
+        rigidity,
+        constraint,
+        inspiration
+      },
+      metrics: {
+        contradictionScore,
+        isContradictionArtifact
+      }
+    };
+  },
+
+  checkRigidity: function(claim) {
+    return /always|never|unchanging|eternal|absolute/.test(claim.toLowerCase());
+  },
+
+  checkConstraint: function(claim) {
+    return /must|cannot|only|forbidden|no exceptions/.test(claim.toLowerCase());
+  },
+
+  checkInspiration: function(claim) {
+    return /no new|final word|unchallengeable|closed/.test(claim.toLowerCase());
+  }
+};
+
+// Example usage:
+const claim = "This is the eternal truth and must never be questioned.";
+const result = TrifoldMirrorProtocol.evaluateClaim(claim);
+console.log("Trifold Mirror Diagnostic:", result.diagnostics);
+console.log("Contradiction Score:", result.metrics.contradictionScore);
+console.log("Contradiction Artifact Flag:", result.metrics.isContradictionArtifact);
+
+
+
 /* ================================================================
 SOVRA GATE SURFACE (Public, inertial, read-only)
 ================================================================ */
