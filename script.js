@@ -149,10 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-  set("score-collapse", collapse);
-  set("score-contradiction", contradiction);
-  set("score-zero-sum", zeroSum);
-}
 function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
   // Zero‑Sum: 0–3
   const zsMatches = zse?.matches?.length || 0;
