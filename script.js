@@ -146,6 +146,33 @@ function updateSemanticScores({ collapse, contradiction, zeroSum }) {
   set("score-contradiction", contradiction);
   set("score-zero-sum", zeroSum);
 }
+function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
+  // Zero‑Sum: 0–3
+  const zsMatches = zse?.matches?.length || 0;
+  const zeroSum =
+    zsMatches >= 6 ? 3 :
+    zsMatches >= 3 ? 2 :
+    zsMatches >= 1 ? 1 : 0;
+
+  // Contradiction: 0–10 (Trifold signals)
+  const tfCount = [trifold?.rigidity, trifold?.constraint, trifold?.inspiration]
+    .filter(Boolean).length;
+
+  const contradiction =
+    tfCount === 3 ? 10 :
+    tfCount === 2 ? 7 :
+    tfCount === 1 ? 4 : 0;
+
+  // Collapse: stacking pressure
+  const engineCount = Object.values(enginesFired || {}).filter(Boolean).length;
+
+  const collapse = Math.min(
+    10,
+    engineCount + Math.round(contradiction / 3) + zeroSum
+  );
+
+  return { collapse, contradiction, zeroSum };
+}
 
 function emitCDLMScores(scores) {
   if (!SOVRA_GATES.contraCollapse()) {
