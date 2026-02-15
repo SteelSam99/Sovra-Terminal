@@ -821,22 +821,6 @@ if (!contentType.includes("application/json")) {
 
 const data = await response.json();
 
-const diagnostics = {
-  zse: data.zse || null,
-  trifold: TrifoldMirrorProtocol.evaluateClaim(query).diagnostics,
-  enginesFired: {
-    zse: SOVRA_GATES.zeroSum(),
-    contra: SOVRA_GATES.contraCollapse(),
-    drift: SOVRA_GATES.driftMatrix(),
-    welsing: SOVRA_GATES.welsingFuller(),
-    voice: SOVRA_GATES.voice()
-  }
-};
-
-const scores = synthesizeCDLMScores(diagnostics);
-emitCDLMScores(scores);
-
-
     // Render Zero‑Sum block once per query
     if (SOVRA_GATES.zeroSum() && data.zse) {
       renderZSEStandalone(data.zse);
@@ -850,6 +834,25 @@ emitCDLMScores(scores);
       SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
       return;
     }
+     const narrativeText = list
+  .map(r => `${r.title || ""} ${r.snippet || ""} ${r.full_text || ""}`)
+  .join("\n");
+
+const diagnostics = {
+  zse: runZSEStandalone(narrativeText),
+  trifold: TrifoldMirrorProtocol.evaluateClaim(narrativeText).diagnostics,
+  enginesFired: {
+    zse: SOVRA_GATES.zeroSum(),
+    contra: SOVRA_GATES.contraCollapse(),
+    drift: SOVRA_GATES.driftMatrix(),
+    welsing: SOVRA_GATES.welsingFuller(),
+    voice: SOVRA_GATES.voice()
+  }
+};
+
+const scores = synthesizeCDLMScores(diagnostics);
+emitCDLMScores(scores);
+
 const vduBlock = VDU.run(list);
 if (vduBlock) results.appendChild(vduBlock);
 
