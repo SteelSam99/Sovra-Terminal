@@ -139,9 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("cdlm:scores", (ev) => {
     const s = ev.detail;
 
-    setText("score-collapse", s.collapse);
-    setText("score-contradiction", s.contradiction);
-    setText("score-zero-sum", s.zeroSum);
+    document.getElementById("score-collapse").textContent = s.collapse;
+    document.getElementById("score-contradiction").textContent = s.contradiction;
+    document.getElementById("score-zero-sum").textContent = s.zeroSum;
 
     document
       .getElementById("semantic-indicators")
