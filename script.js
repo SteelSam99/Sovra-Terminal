@@ -135,12 +135,19 @@ function toggleSemanticIndicators(show) {
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
-function updateSemanticScores({ collapse, contradiction, zeroSum }) {
-  const set = (id, value) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = String(value);
-  };
+document.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("cdlm:scores", (ev) => {
+    const s = ev.detail;
+
+    setText("score-collapse", s.collapse);
+    setText("score-contradiction", s.contradiction);
+    setText("score-zero-sum", s.zeroSum);
+
+    document
+      .getElementById("semantic-indicators")
+      ?.classList.remove("hidden");
+  });
+});
 
   set("score-collapse", collapse);
   set("score-contradiction", contradiction);
@@ -180,20 +187,6 @@ function emitCDLMScores(scores) {
     return;
   }
 
-  toggleSemanticIndicators(true);
-
-  if (
-    typeof scores?.collapse !== "number" ||
-    typeof scores?.contradiction !== "number" ||
-    typeof scores?.zeroSum !== "number"
-  ) return;
-
-  updateSemanticScores({
-    collapse: Math.max(1, Math.min(10, Math.round(scores.collapse))),
-    contradiction: Math.max(1, Math.min(10, Math.round(scores.contradiction))),
-    zeroSum: Math.max(1, Math.min(3, Math.round(scores.zeroSum)))
-  });
-}
 
 /* ============================================================
    CDLM 9×9 CANONICAL MAP (NFIE non-force, inert topology)
