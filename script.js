@@ -669,6 +669,50 @@ function accumulateGridObservations(gridResult, passId) {
     CDLM_GRID_ACCUMULATOR[pid][key] = cell;
   });
 }
+/* ============================================================
+   CDLM GRID STATE READER (READ-ONLY, NON-FORCE)
+   - Summarizes accumulated observations
+   - No thresholds, no flags, no interpretation
+   ============================================================ */
+
+function readCDLMGridState(passId) {
+  const pid = passId || "default";
+  const grid = CDLM_GRID_ACCUMULATOR[pid];
+
+  if (!grid) {
+    return Object.freeze({
+      passId: pid,
+      totalCells: 0,
+      activeCells: 0,
+      repeatedCells: 0,
+      maxHits: 0,
+      lastActivity: null
+    });
+  }
+
+  let activeCells = 0;
+  let repeatedCells = 0;
+  let maxHits = 0;
+  let lastActivity = 0;
+
+  Object.values(grid).forEach(cell => {
+    if (cell.hits > 0) {
+      activeCells++;
+      if (cell.hits > 1) repeatedCells++;
+      if (cell.hits > maxHits) maxHits = cell.hits;
+      if (cell.lastSeen > lastActivity) lastActivity = cell.lastSeen;
+    }
+  });
+
+  return Object.freeze({
+    passId: pid,
+    totalCells: Object.keys(grid).length,
+    activeCells,
+    repeatedCells,
+    maxHits,
+    lastActivity: lastActivity || null
+  });
+}
 
 /* ============================================================
    Structural expectation baseline (DESCRIPTIVE ONLY)
