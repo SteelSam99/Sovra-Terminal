@@ -306,6 +306,22 @@ function runCDLMGroup(inputText, map9x9, caller = "core_diagnostic_map") {
     observations
   });
 }
+/* ============================================================
+   CDLM TRAVERSAL EMITTER (NON-FORCE, PARALLEL OBSERVATION)
+   - Emits a read-only traversal record per result object
+   - Does NOT modify the object
+   ============================================================ */
+
+function emitTraversalEvent(result, passId) {
+  return Object.freeze({
+    kind: "TRAVERSAL",
+    passId,
+    resultId: result.hash || result.link,
+    source: result.link || "unknown",
+    text: `${result.title || ""} ${result.snippet || ""} ${result.full_text || ""}`,
+    t: Date.now()
+  });
+}
 
 /* ============================================================
    CDLM FIRST TRAVERSAL (READ-ONLY, MANUAL INVOCATION)
