@@ -636,6 +636,41 @@ function renderZSEStandalone(result) {
   container.prepend(block);
 }
 /* ============================================================
+   CDLM GRID ACCUMULATOR (READ-ONLY, NON-FORCE)
+   ============================================================ */
+
+const CDLM_GRID_ACCUMULATOR = Object.create(null);
+
+/* ============================================================
+   CDLM GRID ACCUMULATION (TEMPORAL MEMORY)
+   ============================================================ */
+
+function accumulateGridObservations(gridResult, passId) {
+  if (!gridResult || !Array.isArray(gridResult.grid)) return;
+
+  const pid = passId || "default";
+
+  CDLM_GRID_ACCUMULATOR[pid] = CDLM_GRID_ACCUMULATOR[pid] || {};
+
+  gridResult.grid.forEach(({ row, col, observation }) => {
+    const key = `${row}:${col}`;
+    const cell = CDLM_GRID_ACCUMULATOR[pid][key] || {
+      hits: 0,
+      lastSeen: 0,
+      signals: []
+    };
+
+    if (observation && observation.count > 0) {
+      cell.hits += observation.count;
+      cell.lastSeen = Date.now();
+      cell.signals.push(observation);
+    }
+
+    CDLM_GRID_ACCUMULATOR[pid][key] = cell;
+  });
+}
+
+/* ============================================================
    Structural expectation baseline (DESCRIPTIVE ONLY)
    ============================================================ */
 const EXPECTED_STRUCTURAL_CLASSES = Object.freeze([
@@ -879,6 +914,7 @@ const traversal = emitTraversalEvent(r, data.query_token || "pass-0");
 
 // Forward + lateral observation (read-only)
 const gridObservations = traverseCDLMGrid(traversal.text, "public_runtime");
+accumulateGridObservations(gridObservations, traversal.passId);
 
 // One-way telemetry (optional, NFIE-safe)
 SovraSyncTrigger.send({
