@@ -874,7 +874,19 @@ const vduBlock = VDU.run(list);
 if (vduBlock) results.appendChild(vduBlock);
 
     list.forEach((r, i) => {
-      const card = document.createElement("article");
+      // --- CDLM traversal (non-force, per-object) ---
+const traversal = emitTraversalEvent(r, data.query_token || "pass-0");
+
+// Forward + lateral observation (read-only)
+const gridObservations = traverseCDLMGrid(traversal.text, "public_runtime");
+
+// One-way telemetry (optional, NFIE-safe)
+SovraSyncTrigger.send({
+  kind: "CDLM_TRAVERSAL",
+  traversal,
+  grid: gridObservations
+});
+       const card = document.createElement("article");
       card.className = "sovra-card";
 
       const provId = `prov-${i + 1}`;
