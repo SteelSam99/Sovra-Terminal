@@ -600,8 +600,8 @@ function compareDocuments() {
 }
 
 window.compareDocuments = compareDocuments;
-document.getElementById("toggleVoice").addEventListener("change", () => {
-  NFIE.registerUserAction("toggleVoice");
+document.getElementById("toggleSovraSpeaks").addEventListener("change", () => {
+  NFIE.registerUserAction("toggleSovraSpeaks");
 });
 
 /* ============================================================
