@@ -52,6 +52,31 @@ console.log("Trifold Mirror Diagnostic:", result.diagnostics);
 console.log("Contradiction Score:", result.metrics.contradictionScore);
 console.log("Contradiction Artifact Flag:", result.metrics.isContradictionArtifact);
 
+const contextToggle = document.getElementById("contextControlToggle");
+const contextPanel = document.getElementById("contextControlPanel");
+const closeContextPanel = document.getElementById("closeContextPanel");
+
+contextToggle.addEventListener("click", () => {
+  contextPanel.classList.remove("hidden");
+});
+
+closeContextPanel.addEventListener("click", () => {
+  contextPanel.classList.add("hidden");
+
+  // Commit point — read selected contexts here
+  const contextState = {
+    rawData: document.getElementById("rawData").checked,
+    collapseContra: document.getElementById("collapseContra").checked,
+    zeroSum: document.getElementById("zeroSum").checked,
+    welsingFuller: document.getElementById("welsingFuller").checked,
+    driftCore: document.getElementById("driftCore").checked,
+    sovraSpeaks: document.getElementById("sovraSpeaks").checked
+  };
+
+  console.log("Context Control State:", contextState);
+
+  // Hook this object into your scanner activation pipeline
+});
 
 
 /* ================================================================
