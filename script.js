@@ -183,8 +183,7 @@ const CGEC = Object.freeze({
       default:
         return false;
     }
-  }
-});
+  },
 
   resolution(moduleName) {
     switch (moduleName) {
@@ -197,7 +196,7 @@ const CGEC = Object.freeze({
     }
   },
 
-  persistent(moduleName) {
+  persistent() {
     return false;
   },
 
@@ -210,6 +209,7 @@ const CGEC = Object.freeze({
     }
   }
 });
+
 
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
