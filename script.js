@@ -988,9 +988,9 @@ if (SOVRA_GATES.welsingFuller()) {
       ts: new Date().toISOString()
     });
 
-    const zeroSumOn = SOVRA_GATES.Zero‑Sum() ? "1" : "0";
+    const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 
-const wfeOn = SOVRA_GATES.Welsing‑FullerJr() ? "1" : "0";
+const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
 
 const collapseContraOn = Sovra_Gates.collapseContra() ? "1" : "0";
 
