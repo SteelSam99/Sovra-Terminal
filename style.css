@@ -164,65 +164,25 @@ html, body {
 }
 
 /* ============================================================
-   DIAGNOSTIC SURFACE (NEW)
+   DIAGNOSTIC SCORING PANEL — FIXED & HEADER-SAFE
    ============================================================ */
 
 .diagnostic-panel {
-  position: absolute;
-  top: 96px; /* aligns under Search button */
+  position: fixed;
+  top: 96px;              /* clears banner + sticky search bar */
   right: 24px;
+  z-index: 900;           /* below search bar, above results */
+
   width: 300px;
   background: #fafafa;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 10px 12px;
+
   font-size: 13px;
   color: #111;
 }
 
-.diag-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-}
-
-.diag-row + .diag-row {
-  border-top: 1px solid #e5e7eb;
-}
-
-.diag-icon {
-  width: 18px;
-  height: 18px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  flex-shrink: 0;
-}
-
-/* ICON ASSIGNMENTS */
-.zse-icon {
-  background-image: url("/icons/zse.svg");
-}
-
-.collapse-icon {
-  background-image: url("/icons/collapse.svg");
-}
-
-.contradiction-icon {
-  background-image: url("/icons/contradiction.svg");
-}
-
-.diag-label {
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.diag-desc {
-  margin-left: auto;
-  font-size: 11px;
-  color: #6b7280;
-  text-align: right;
-}
 
 /* ============================================================
    SOVRA CARD SYSTEM
