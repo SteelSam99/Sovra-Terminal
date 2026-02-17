@@ -71,23 +71,11 @@ html, body {
    CONTEXT CONTROL PANEL — GRID CANONICAL
    ============================================================ */
 
-#contextControlToggle {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  z-index: 1000;
-}
-
 .context-panel {
   position: fixed;
   top: 52px;
   left: 12px;
   z-index: 999;
-
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: repeat(3, auto);
-  gap: 8px 12px;
 
   padding: 12px;
   border: 1px solid #444;
@@ -98,6 +86,24 @@ html, body {
   line-height: 1.4;
 }
 
+/* THIS is the grid — not the panel */
+.context-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: repeat(3, auto);
+  gap: 8px 14px;
+}
+
+/* Individual items */
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.context-label {
+  white-space: nowrap;
+}
 
 /* ============================================================
    DIAGNOSTIC SURFACE (NEW)
