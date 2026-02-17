@@ -988,14 +988,18 @@ if (SOVRA_GATES.welsingFuller()) {
       ts: new Date().toISOString()
     });
 
-    const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
-
+const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
+const collapseContraOn = SOVRA_GATES.contraCollapse() ? "1" : "0";
 
-const collapseContraOn = Sovra_Gates.collapseContra() ? "1" : "0";
+const endpoint =
+  `/api/search` +
+  `?q=${encodeURIComponent(query)}` +
+  `&raw=${compareRaw}` +
+  `&zse=${zeroSumOn}` +
+  `&wfe=${wfeOn}` +
+  `&contra=${collapseContraOn}`;
 
-     const endpoint =
-  `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}&wfe=${wfeOn}&Collapse/Contra=${CollapseContraon}`;
 
 
     const response = await fetch(endpoint);
