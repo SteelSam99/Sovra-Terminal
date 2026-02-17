@@ -1348,5 +1348,9 @@ if (contextFrameList) {
     contextFrameList.appendChild(label);
   });
 }
+} catch (err) {
+  console.error("searchSovra error:", err);
+}
+};
 
 
