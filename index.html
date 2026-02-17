@@ -27,31 +27,58 @@
       <button id="search-btn" type="button">Search</button>
     </section>
 
-    <!-- MODULE PANEL -->
-    <section class="module-panel" aria-label="Sovra Modules">
+<!-- Context Control Panel Trigger -->
+<button id="contextControlToggle">Context Control Panel</button>
 
-      <!-- ANALYTIC ENGINES -->
-      <div class="module-row analytic">
-        <label class="module">
-          <input type="checkbox" id="modWelsingFuller" />
-          <span>Welsing–Fuller Engine</span>
-        </label>
+<!-- Context Control Panel -->
+<div id="contextControlPanel" class="context-panel hidden">
 
-        <label class="module">
-          <input type="checkbox" id="modContraCollapse" />
-          <span>Contradiction / Collapse</span>
-        </label>
+  <div class="context-grid">
 
-        <label class="module">
-          <input type="checkbox" id="modZeroSum" />
-          <span>Zero‑Sum Engine</span>
-        </label>
+    <!-- Column 1 -->
+    <div class="context-item">
+      <span class="context-label">Raw Data</span>
+      <input type="checkbox" id="rawData">
+    </div>
 
-        <label class="module">
-          <input type="checkbox" id="modDriftMatrix" />
-          <span>Drift Matrix</span>
-        </label>
-      </div>
+    <div class="context-item tooltip-host">
+      <span class="context-label">Collapse / Contra</span>
+      <input type="checkbox" id="collapseContra">
+      <div class="tooltip">An internal consistency context.</div>
+    </div>
+
+    <div class="context-item tooltip-host">
+      <span class="context-label">Zero-Sum</span>
+      <input type="checkbox" id="zeroSum">
+      <div class="tooltip">A context for mutually exclusive outcomes.</div>
+    </div>
+
+    <!-- Column 2 -->
+    <div class="context-item tooltip-host">
+      <span class="context-label">Welsing-Fuller, Jr.</span>
+      <input type="checkbox" id="welsingFuller">
+      <div class="tooltip">A structured reasoning context.</div>
+    </div>
+
+    <div class="context-item tooltip-host">
+      <span class="context-label">Drift Core</span>
+      <input type="checkbox" id="driftCore">
+      <div class="tooltip">A context for observing change over time.</div>
+    </div>
+
+    <div class="context-item tooltip-host">
+      <span class="context-label">Sovra Speaks</span>
+      <input type="checkbox" id="sovraSpeaks">
+      <div class="tooltip">A narrative presentation context.</div>
+    </div>
+
+  </div>
+
+  <button id="closeContextPanel">Close Menu</button>
+</div>
+
+
+
 <div id="semantic-indicators" class="semantic-indicators hidden">
 
   <div class="indicator">
@@ -79,18 +106,7 @@
 
 
 
-      <!-- PRESENTATION CONTROLS -->
-      <div class="module-row presentation">
-        <label class="module">
-          <input type="checkbox" id="toggleRaw" />
-          <span>Raw Data</span>
-        </label>
-
-        <label class="module">
-          <input type="checkbox" id="toggleVoice" />
-          <span>Sovra Voice</span>
-        </label>
-      </div>
+      
 <div id="context-frame-options" class="context-frame-options">
   <strong>Context Frame Options</strong>
   <div class="context-frame-list"></div>
