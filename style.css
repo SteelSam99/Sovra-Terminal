@@ -34,32 +34,40 @@ html, body {
    SEARCH BAR
    ============================================================ */
 
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
+.search-box{
   position: sticky;
   top: 0;
+  z-index: 1000;
+
   background: #fff;
   padding: 12px 20px;
   border-bottom: 1px solid #ccc;
-  z-index: 1000;
+
+  /* near full-page width */
+  width: min(96vw, 1400px);
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.search-anchor {
+.search-anchor{
   position: relative;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.search-box input[type="text"] {
+.search-box input[type="text"]{
   flex: 1;
   min-width: 0;
   padding: 8px;
   font-size: 16px;
 }
 
-.search-box button {
+.search-box button{
   padding: 8px 16px;
   font-size: 16px;
   cursor: pointer;
