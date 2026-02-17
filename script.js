@@ -1023,10 +1023,7 @@ const endpoint =
   `&zse=${zeroSumOn}` +
   `&wfe=${wfeOn}` +
   `&contra=${collapseContraOn}`;
-
-
-
-
+     
     const response = await fetch(endpoint);
   const contentType = response.headers.get("content-type") || "";
 
@@ -1126,7 +1123,7 @@ const diagnostics = {
   trifold: TrifoldMirrorProtocol.evaluateClaim(narrativeText).diagnostics,
   enginesFired: {
     zse: SOVRA_GATES.zeroSum(),
-    contra: SOVRA_GATES.collapseContra(),
+    contra: SOVRA_GATES.contraCollapse(),
     drift: SOVRA_GATES.driftCore(),
     welsing: SOVRA_GATES.welsingFuller(),
     voice: SOVRA_GATES.sovraSpeaks()
