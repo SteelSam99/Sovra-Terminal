@@ -988,12 +988,14 @@ if (SOVRA_GATES.welsingFuller()) {
       ts: new Date().toISOString()
     });
 
-    const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
+    const zeroSumOn = SOVRA_GATES.Zero‑Sum() ? "1" : "0";
 
-const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
+const wfeOn = SOVRA_GATES.Welsing‑FullerJr() ? "1" : "0";
 
-const endpoint =
-  `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}&wfe=${wfeOn}`;
+const collapseContraOn = Sovra_Gates.collapseContra() ? "1" : "0";
+
+     const endpoint =
+  `/api/search?q=${encodeURIComponent(query)}&raw=${compareRaw}&zse=${zeroSumOn}&wfe=${wfeOn}&Collapse/Contra=${CollapseContraon}`;
 
 
     const response = await fetch(endpoint);
@@ -1095,10 +1097,10 @@ const diagnostics = {
   trifold: TrifoldMirrorProtocol.evaluateClaim(narrativeText).diagnostics,
   enginesFired: {
     zse: SOVRA_GATES.zeroSum(),
-    contra: SOVRA_GATES.contraCollapse(),
-    drift: SOVRA_GATES.driftMatrix(),
+    contra: SOVRA_GATES.collapseContra(),
+    drift: SOVRA_GATES.driftCore(),
     welsing: SOVRA_GATES.welsingFuller(),
-    voice: SOVRA_GATES.voice()
+    voice: SOVRA_GATES.sovraSpeaks()
   }
 };
 
