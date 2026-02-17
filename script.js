@@ -990,7 +990,7 @@ if (SOVRA_GATES.welsingFuller()) {
 
 const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
-const collapseContraOn = SOVRA_GATES.contraCollapse() ? "1" : "0";
+const collapseContraOn = SOVRA_GATES.collapseContra() ? "1" : "0";
 
 const endpoint =
   `/api/search` +
