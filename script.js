@@ -1040,7 +1040,7 @@ const data = await response.json();
 /* --------------------------------
    Temporal Drift Timeline (LEFT COLUMN)
    -------------------------------- */
-if (SOVRA_GATES.driftMatrix() && window.Sovra?.DriftScanner?.create) {
+if (SOVRA_GATES.driftCore() && window.Sovra?.DriftScanner?.create) {
   try {
     const scanner = window.Sovra.DriftScanner.create({
       trifoldProtocol: TrifoldMirrorProtocol,
