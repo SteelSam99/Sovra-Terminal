@@ -1298,9 +1298,37 @@ if (provPanel && vduBlock) {
 };
 
 console.log("searchSovra() loaded (NFIE public runtime).");
+
 document.addEventListener("DOMContentLoaded", () => {
+
+  /* ===============================
+     SEARCH BINDINGS (ALWAYS RUN)
+     =============================== */
+
+  const searchButton = document.getElementById("search-btn");
+  const queryInput = document.getElementById("query");
+
+  if (searchButton) {
+    searchButton.addEventListener("click", () => {
+      window.searchSovra?.();
+    });
+  }
+
+  if (queryInput) {
+    queryInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        window.searchSovra?.();
+      }
+    });
+  }
+
+  /* ===============================
+     CONTEXT CONTROL PANEL (OPTIONAL)
+     =============================== */
+
   const contextFrameList = document.querySelector(".context-frame-list");
-  if (!contextFrameList) return;
+  if (!contextFrameList) return; // safe now — search is already wired
 
   Object.keys(CONTEXT_FRAME_VISIBILITY).forEach(engine => {
     const label = document.createElement("label");
@@ -1312,11 +1340,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     checkbox.addEventListener("change", () => {
       CONTEXT_FRAME_VISIBILITY[engine] = checkbox.checked;
-      searchSovra(); // re-render via existing pipeline
+      window.searchSovra?.(); // re-render via existing pipeline
     });
 
     label.appendChild(checkbox);
     label.append(` ${engine}`);
     contextFrameList.appendChild(label);
   });
+
 });
