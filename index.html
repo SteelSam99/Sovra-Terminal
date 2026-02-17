@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sovra-FCL-MHCE-v2.1 :: Foxtrot-Chimera-Lambda</title>
+  <title>Sovra-FCL-MHCE-v2.2 :: Foxtrot-Chimera-Lambda</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <div class="container">
+
     <header class="banner">
       <h1>Sovra-FCL-MHCE-v2.2 :: Foxtrot-Chimera-Lambda</h1>
       <h2>Sovereign‑F.I.D.A.R.C.H. R.S. Search Engine</h2>
@@ -23,96 +24,58 @@
         size="60"
         aria-label="Search query"
       />
-
       <button id="search-btn" type="button">Search</button>
     </section>
 
-<!-- Context Control Panel Trigger -->
-<button id="contextControlToggle">Context Control Panel</button>
+    <!-- Context Control Panel Trigger -->
+    <button id="contextControlToggle">Context Control Panel</button>
 
-<!-- Context Control Panel -->
-<div id="contextControlPanel" class="context-panel hidden">
+    <!-- Context Control Panel -->
+    <div id="contextControlPanel" class="context-panel hidden">
 
-  <div class="context-grid">
+      <div class="context-grid">
 
-    <!-- Column 1 -->
-    <div class="context-item">
-      <span class="context-label">Raw Data</span>
-      <input type="checkbox" id="rawData">
+        <!-- Column 1 -->
+        <div class="context-item">
+          <span class="context-label">Raw Data</span>
+          <input type="checkbox" id="rawData">
+        </div>
+
+        <div class="context-item tooltip-host">
+          <span class="context-label">Collapse / Contra</span>
+          <input type="checkbox" id="collapseContra">
+          <div class="tooltip">An internal consistency context.</div>
+        </div>
+
+        <div class="context-item tooltip-host">
+          <span class="context-label">Zero‑Sum</span>
+          <input type="checkbox" id="zeroSum">
+          <div class="tooltip">A context for mutually exclusive outcomes.</div>
+        </div>
+
+        <!-- Column 2 -->
+        <div class="context-item tooltip-host">
+          <span class="context-label">Welsing‑Fuller, Jr.</span>
+          <input type="checkbox" id="welsingFuller">
+          <div class="tooltip">A structured reasoning context.</div>
+        </div>
+
+        <div class="context-item tooltip-host">
+          <span class="context-label">Drift Core</span>
+          <input type="checkbox" id="driftCore">
+          <div class="tooltip">A context for observing change over time.</div>
+        </div>
+
+        <div class="context-item tooltip-host">
+          <span class="context-label">Sovra Speaks</span>
+          <input type="checkbox" id="sovraSpeaks">
+          <div class="tooltip">A narrative presentation context.</div>
+        </div>
+
+      </div>
+
+      <button id="closeContextPanel">Close Menu</button>
     </div>
-
-    <div class="context-item tooltip-host">
-      <span class="context-label">Collapse / Contra</span>
-      <input type="checkbox" id="collapseContra">
-      <div class="tooltip">An internal consistency context.</div>
-    </div>
-
-    <div class="context-item tooltip-host">
-      <span class="context-label">Zero-Sum</span>
-      <input type="checkbox" id="zeroSum">
-      <div class="tooltip">A context for mutually exclusive outcomes.</div>
-    </div>
-
-    <!-- Column 2 -->
-    <div class="context-item tooltip-host">
-      <span class="context-label">Welsing-Fuller, Jr.</span>
-      <input type="checkbox" id="welsingFuller">
-      <div class="tooltip">A structured reasoning context.</div>
-    </div>
-
-    <div class="context-item tooltip-host">
-      <span class="context-label">Drift Core</span>
-      <input type="checkbox" id="driftCore">
-      <div class="tooltip">A context for observing change over time.</div>
-    </div>
-
-    <div class="context-item tooltip-host">
-      <span class="context-label">Sovra Speaks</span>
-      <input type="checkbox" id="sovraSpeaks">
-      <div class="tooltip">A narrative presentation context.</div>
-    </div>
-
-  </div>
-
-  <button id="closeContextPanel">Close Menu</button>
-</div>
-
-
-
-<div id="semantic-indicators" class="semantic-indicators hidden">
-
-  <div class="indicator">
-    <span class="indicator-label">🧭 Collapse Score</span>
-    <span class="indicator-value">
-      <span id="score-collapse">–</span> / 10
-    </span>
-  </div>
-
-  <div class="indicator">
-    <span class="indicator-label">🔀 Contradiction Score</span>
-    <span class="indicator-value">
-      <span id="score-contradiction">–</span> / 10
-    </span>
-  </div>
-
-  <div class="indicator">
-    <span class="indicator-label">⚖️ Zero‑Sum Score</span>
-    <span class="indicator-value">
-      <span id="score-zero-sum">–</span> / 3
-    </span>
-  </div>
-
-</div>
-
-
-
-      
-<div id="context-frame-options" class="context-frame-options">
-  <strong>Context Frame Options</strong>
-  <div class="context-frame-list"></div>
-</div>
-      
-    </section>
 
     <main
       id="results"
@@ -126,14 +89,13 @@
     <footer>
       <pre>🔮 Sovra awaits your invocation…</pre>
     </footer>
+
   </div>
 
-  <!--
-    SOVRA CARD TEMPLATE (REFERENCE ONLY — DO NOT RENDER)
-  -->
-
+  <!-- Sovra runtime -->
   <script src="script.js"></script>
 
+  <!-- Search invocation handler -->
   <script>
     (function () {
       const searchButton = document.getElementById("search-btn");
@@ -155,5 +117,6 @@
       });
     })();
   </script>
+
 </body>
 </html>
