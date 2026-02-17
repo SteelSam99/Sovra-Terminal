@@ -68,7 +68,7 @@ html, body {
 }
 
 /* ============================================================
-   CONTEXT CONTROL PANEL
+   CONTEXT CONTROL PANEL (RESTORED POSTURE)
    ============================================================ */
 
 #contextControlToggle {
@@ -80,15 +80,20 @@ html, body {
 
 .context-panel {
   position: fixed;
-  top: 48px;
+  top: 52px;              /* restores visual separation */
   left: 12px;
   z-index: 999;
+  margin-top: 8px;        /* breathing room */
   padding: 12px;
   border: 1px solid #444;
   background: #111;
   color: #eee;
-  width: fit-content;
+  width: max-content;
+  max-width: 260px;
+  font-size: 13px;
+  line-height: 1.4;
 }
+
 
 /* ============================================================
    DIAGNOSTIC SURFACE (NEW)
