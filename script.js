@@ -175,7 +175,7 @@ const CGEC = Object.freeze({
   allow(moduleName) {
     switch (moduleName) {
       case "DRIFT_TIMELINE":
-        return SOVRA_GATES.driftMatrix();
+        return SOVRA_GATES.driftCore();
       case "CDLM_SUMMARY":
         return SOVRA_GATES.contraCollapse();
       case "ZERO_SUM":
@@ -183,7 +183,9 @@ const CGEC = Object.freeze({
       default:
         return false;
     }
-  },
+  }
+});
+
 
   resolution(moduleName) {
     switch (moduleName) {
@@ -962,12 +964,13 @@ function applyWFEQueryRewrite(originalQuery) {
    ============================================================ */
 console.log("GATE SNAPSHOT", {
   zse: SOVRA_GATES.zeroSum(),
-  contra: SOVRA_GATES.collapseContra(),
+  contra: SOVRA_GATES.contraCollapse(),
   drift: SOVRA_GATES.driftCore(),
   welsing: SOVRA_GATES.welsingFuller(),
   raw: SOVRA_GATES.rawData(),
   speaks: SOVRA_GATES.sovraSpeaks()
 });
+
 
 window.searchSovra = async function () {
   const results = document.querySelector(".results-left");
@@ -1012,7 +1015,7 @@ if (SOVRA_GATES.welsingFuller()) {
 
 const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
 const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
-const collapseContraOn = SOVRA_GATES.collapseContra() ? "1" : "0";
+const collapseContraOn = SOVRA_GATES.contraCollapse() ? "1" : "0";
 
 const endpoint =
   `/api/search` +
@@ -1021,6 +1024,7 @@ const endpoint =
   `&zse=${zeroSumOn}` +
   `&wfe=${wfeOn}` +
   `&contra=${collapseContraOn}`;
+
 
 
 
