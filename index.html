@@ -32,15 +32,21 @@
 
     <!-- Context Control Panel -->
     <div id="contextControlPanel" class="context-panel hidden">
-
       <div class="context-grid">
 
-        <!-- Column 1 -->
+        <!-- Row 1 -->
         <div class="context-item">
           <span class="context-label">Raw Data</span>
           <input type="checkbox" id="rawData">
         </div>
 
+        <div class="context-item tooltip-host">
+          <span class="context-label">Welsing‑Fuller, Jr.</span>
+          <input type="checkbox" id="welsingFuller">
+          <div class="tooltip">A structured reasoning context.</div>
+        </div>
+
+        <!-- Row 2 -->
         <div class="context-item tooltip-host">
           <span class="context-label">Collapse / Contra</span>
           <input type="checkbox" id="collapseContra">
@@ -48,22 +54,16 @@
         </div>
 
         <div class="context-item tooltip-host">
-          <span class="context-label">Zero‑Sum</span>
-          <input type="checkbox" id="zeroSum">
-          <div class="tooltip">A context for mutually exclusive outcomes.</div>
-        </div>
-
-        <!-- Column 2 -->
-        <div class="context-item tooltip-host">
-          <span class="context-label">Welsing‑Fuller, Jr.</span>
-          <input type="checkbox" id="welsingFuller">
-          <div class="tooltip">A structured reasoning context.</div>
-        </div>
-
-        <div class="context-item tooltip-host">
           <span class="context-label">Drift Core</span>
           <input type="checkbox" id="driftCore">
           <div class="tooltip">A context for observing change over time.</div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="context-item tooltip-host">
+          <span class="context-label">Zero‑Sum</span>
+          <input type="checkbox" id="zeroSum">
+          <div class="tooltip">A context for mutually exclusive outcomes.</div>
         </div>
 
         <div class="context-item tooltip-host">
@@ -77,11 +77,7 @@
       <button id="closeContextPanel">Close Menu</button>
     </div>
 
-    <main
-      id="results"
-      class="results-container"
-      aria-live="polite"
-    >
+    <main id="results" class="results-container" aria-live="polite">
       <div class="results-left"></div>
       <div class="results-right"></div>
     </main>
@@ -92,10 +88,8 @@
 
   </div>
 
-  <!-- Sovra runtime -->
   <script src="script.js"></script>
 
-  <!-- Search invocation handler -->
   <script>
     (function () {
       const searchButton = document.getElementById("search-btn");
@@ -108,7 +102,6 @@
       }
 
       searchButton.addEventListener("click", invokeSearch);
-
       queryInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
