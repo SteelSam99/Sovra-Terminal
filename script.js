@@ -85,72 +85,6 @@ closeContextPanel.addEventListener("click", () => {
     driftCore: document.getElementById("driftCore").checked,
     sovraSpeaks: document.getElementById("sovraSpeaks").checked
   };
-/* ============================================================
-   Context‑Gated Exposure Controller (CGEC)
-   - Governs what may surface, at what resolution
-   - No data mutation, no enforcement, no export
-   ============================================================ */
-
-const CGEC = Object.freeze({
-  allow(moduleName) {
-    switch (moduleName) {
-      case "DRIFT_TIMELINE":
-        return SOVRA_GATES.driftMatrix();
-
-      case "CDLM_SUMMARY":
-        return SOVRA_GATES.contraCollapse();
-
-      case "ZERO_SUM":
-        return SOVRA_GATES.zeroSum();
-
-      case "CALIBRATION":
-        return false;
-
-      default:
-        return false;
-    }
-  },
-
-  resolution(moduleName) {
-    switch (moduleName) {
-      case "CDLM_SUMMARY":
-        return "LOW";        // 1/10, 1/10, 1/3
-
-      case "DRIFT_TIMELINE":
-        return "ERA";        // era‑level only
-
-      default:
-        return "NONE";
-    }
-  },
-
-  persistent(moduleName) {
-    switch (moduleName) {
-      case "DRIFT_TIMELINE":
-        return false;        // ephemeral per query
-
-      default:
-        return false;
-    }
-  }
-});
-decayMs(moduleName) {
-  switch (moduleName) {
-    case "DRIFT_TIMELINE":
-      return {
-        visible: 16000,
-        fade: 4000
-      };
-    default:
-      return null;
-  }
-}
-
-  console.log("Context Control State:", contextState);
-
-  // Hook this object into your scanner activation pipeline
-});
-
 
 /* ================================================================
 SOVRA GATE SURFACE (Public, inertial, read-only)
@@ -219,6 +153,65 @@ function runZSEStandalone(inputText) {
     matches: enriched
   };
 }
+/* ============================================================
+   Context‑Gated Exposure Controller (CGEC)
+   - Governs what may surface, at what resolution
+   - No data mutation, no enforcement, no export
+   ============================================================ */
+
+const CGEC = Object.freeze({
+  allow(moduleName) {
+    switch (moduleName) {
+      case "DRIFT_TIMELINE":
+        return SOVRA_GATES.driftMatrix();
+      case "CDLM_SUMMARY":
+        return SOVRA_GATES.contraCollapse();
+      case "ZERO_SUM":
+        return SOVRA_GATES.zeroSum();
+      default:
+        return false;
+    }
+  },
+
+  resolution(moduleName) {
+    switch (moduleName) {
+      case "CDLM_SUMMARY":
+        return "LOW";
+      case "DRIFT_TIMELINE":
+        return "ERA";
+      default:
+        return "NONE";
+    }
+  },
+
+  persistent(moduleName) {
+    return false;
+  },
+
+  decayMs(moduleName) {
+    switch (moduleName) {
+      case "DRIFT_TIMELINE":
+        return { visible: 16000, fade: 4000 };
+      default:
+        return null;
+    }
+  }
+});
+function applyTemporalDecay(element, timing) {
+  if (!element || !timing) return;
+
+  const { visible, fade } = timing;
+
+  setTimeout(() => {
+    element.style.transition = `opacity ${fade}ms ease`;
+    element.style.opacity = "0";
+
+    setTimeout(() => {
+      element.remove();
+    }, fade);
+  }, visible);
+}
+
 
 function toggleSemanticIndicators(show) {
   const panel = document.getElementById("semantic-indicators");
@@ -227,8 +220,6 @@ function toggleSemanticIndicators(show) {
   panel.classList.toggle("hidden", !show);
   panel.setAttribute("aria-hidden", String(!show));
 }
-
-
 
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
