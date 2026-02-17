@@ -1340,7 +1340,7 @@ if (contextFrameList) {
 
     checkbox.addEventListener("change", () => {
       CONTEXT_FRAME_VISIBILITY[engine] = checkbox.checked;
-      window.searchSovra?.();
+      window.searchSovra?.(); // re-render via existing pipeline
     });
 
     label.appendChild(checkbox);
@@ -1348,4 +1348,5 @@ if (contextFrameList) {
     contextFrameList.appendChild(label);
   });
 }
+
 
