@@ -69,22 +69,37 @@ const contextToggle = document.getElementById("contextControlToggle");
 const contextPanel = document.getElementById("contextControlPanel");
 const closeContextPanel = document.getElementById("closeContextPanel");
 
-contextToggle.addEventListener("click", () => {
-  contextPanel.classList.remove("hidden");
+document.addEventListener("DOMContentLoaded", () => {
+
+  const contextToggle = document.getElementById("contextControlToggle");
+  const contextPanel = document.getElementById("contextControlPanel");
+  const closeContextPanel = document.getElementById("closeContextPanel");
+
+  if (contextToggle && contextPanel) {
+    contextToggle.addEventListener("click", () => {
+      contextPanel.classList.remove("hidden");
+    });
+  }
+
+  if (closeContextPanel && contextPanel) {
+    closeContextPanel.addEventListener("click", () => {
+      contextPanel.classList.add("hidden");
+
+      const contextState = {
+        rawData: document.getElementById("rawData")?.checked ?? false,
+        collapseContra: document.getElementById("collapseContra")?.checked ?? false,
+        zeroSum: document.getElementById("zeroSum")?.checked ?? false,
+        welsingFuller: document.getElementById("welsingFuller")?.checked ?? false,
+        driftCore: document.getElementById("driftCore")?.checked ?? false,
+        sovraSpeaks: document.getElementById("sovraSpeaks")?.checked ?? false
+      };
+
+      // optional: persist or log contextState here
+    });
+  }
+
 });
 
-closeContextPanel.addEventListener("click", () => {
-  contextPanel.classList.add("hidden");
-
-  const contextState = {
-    rawData: document.getElementById("rawData").checked,
-    collapseContra: document.getElementById("collapseContra").checked,
-    zeroSum: document.getElementById("zeroSum").checked,
-    welsingFuller: document.getElementById("welsingFuller").checked,
-    driftCore: document.getElementById("driftCore").checked,
-    sovraSpeaks: document.getElementById("sovraSpeaks").checked
-  };
-});
 
 /* ================================================================
    SOVRA GATE SURFACE (Public, inertial, read-only)
