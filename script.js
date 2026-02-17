@@ -600,8 +600,14 @@ function compareDocuments() {
 }
 
 window.compareDocuments = compareDocuments;
-document.getElementById("toggleSovraSpeaks").addEventListener("change", () => {
-  NFIE.registerUserAction("toggleSovraSpeaks");
+
+document.addEventListener("DOMContentLoaded", () => {
+  const toggle = document.getElementById("toggleVoice");
+  if (!toggle) return;
+
+  toggle.addEventListener("change", () => {
+    NFIE.registerUserAction("toggleVoice");
+  });
 });
 
 /* ============================================================
