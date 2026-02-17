@@ -960,6 +960,15 @@ function applyWFEQueryRewrite(originalQuery) {
 /* ============================================================
    6) Public search runtime (NO interpretive enforcement)
    ============================================================ */
+console.log("GATE SNAPSHOT", {
+  zse: SOVRA_GATES.zeroSum(),
+  contra: SOVRA_GATES.collapseContra(),
+  drift: SOVRA_GATES.driftCore(),
+  welsing: SOVRA_GATES.welsingFuller(),
+  raw: SOVRA_GATES.rawData(),
+  speaks: SOVRA_GATES.sovraSpeaks()
+});
+
 window.searchSovra = async function () {
   const results = document.querySelector(".results-left");
 
