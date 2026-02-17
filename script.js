@@ -76,7 +76,6 @@ contextToggle.addEventListener("click", () => {
 closeContextPanel.addEventListener("click", () => {
   contextPanel.classList.add("hidden");
 
-  // Commit point — read selected contexts here
   const contextState = {
     rawData: document.getElementById("rawData").checked,
     collapseContra: document.getElementById("collapseContra").checked,
@@ -85,6 +84,7 @@ closeContextPanel.addEventListener("click", () => {
     driftCore: document.getElementById("driftCore").checked,
     sovraSpeaks: document.getElementById("sovraSpeaks").checked
   };
+});
 
 /* ================================================================
 SOVRA GATE SURFACE (Public, inertial, read-only)
