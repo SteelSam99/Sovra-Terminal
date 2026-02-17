@@ -85,6 +85,55 @@ closeContextPanel.addEventListener("click", () => {
     driftCore: document.getElementById("driftCore").checked,
     sovraSpeaks: document.getElementById("sovraSpeaks").checked
   };
+/* ============================================================
+   Context‑Gated Exposure Controller (CGEC)
+   - Governs what may surface, at what resolution
+   - No data mutation, no enforcement, no export
+   ============================================================ */
+
+const CGEC = Object.freeze({
+  allow(moduleName) {
+    switch (moduleName) {
+      case "DRIFT_TIMELINE":
+        return SOVRA_GATES.driftMatrix();
+
+      case "CDLM_SUMMARY":
+        return SOVRA_GATES.contraCollapse();
+
+      case "ZERO_SUM":
+        return SOVRA_GATES.zeroSum();
+
+      case "CALIBRATION":
+        return false;
+
+      default:
+        return false;
+    }
+  },
+
+  resolution(moduleName) {
+    switch (moduleName) {
+      case "CDLM_SUMMARY":
+        return "LOW";        // 1/10, 1/10, 1/3
+
+      case "DRIFT_TIMELINE":
+        return "ERA";        // era‑level only
+
+      default:
+        return "NONE";
+    }
+  },
+
+  persistent(moduleName) {
+    switch (moduleName) {
+      case "DRIFT_TIMELINE":
+        return false;        // ephemeral per query
+
+      default:
+        return false;
+    }
+  }
+});
 
   console.log("Context Control State:", contextState);
 
