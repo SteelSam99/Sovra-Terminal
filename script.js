@@ -186,7 +186,6 @@ const CGEC = Object.freeze({
   }
 });
 
-
   resolution(moduleName) {
     switch (moduleName) {
       case "CDLM_SUMMARY":
