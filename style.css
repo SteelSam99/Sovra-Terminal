@@ -164,16 +164,18 @@ html, body {
 }
 
 /* ============================================================
-   DIAGNOSTIC SCORING PANEL — FIXED & HEADER-SAFE
+   DIAGNOSTIC SCORING PANEL — STACKED UNDER SEARCH BAR
    ============================================================ */
 
 .diagnostic-panel {
-  position: fixed;
-  top: 96px;              /* clears banner + sticky search bar */
-  right: 24px;
-  z-index: 900;           /* below search bar, above results */
+  position: absolute;
+  top: 100%;              /* directly below search bar */
+  left: 50%;
+  transform: translateX(-50%);
 
+  margin-top: 12px;
   width: 300px;
+
   background: #fafafa;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -181,6 +183,7 @@ html, body {
 
   font-size: 13px;
   color: #111;
+  z-index: 10;
 }
 
 
