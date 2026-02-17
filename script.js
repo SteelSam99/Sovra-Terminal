@@ -64,11 +64,6 @@ window.Sovra.PublicTextFetcher = Object.freeze({
   config: Object.freeze({})
 });
 
-
-const contextToggle = document.getElementById("contextControlToggle");
-const contextPanel = document.getElementById("contextControlPanel");
-const closeContextPanel = document.getElementById("closeContextPanel");
-
 document.addEventListener("DOMContentLoaded", () => {
 
   const contextToggle = document.getElementById("contextControlToggle");
