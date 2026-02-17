@@ -1222,8 +1222,8 @@ SovraSyncTrigger.send({
         </div>
       `;
 
-      if (SOVRA_GATES.voice()) {
-        NFIE.validateStateTransition("SovraVoice");
+      if (SOVRA_GATES.sovraSpeaks()) {
+        NFIE.validateStateTransition("SovraSpeaks");
         const excerpt = card.querySelector(".raw-excerpt");
         if (excerpt) {
           excerpt.textContent = applySovraVoice(excerpt.textContent);
