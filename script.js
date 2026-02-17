@@ -44,6 +44,176 @@ const TrifoldMirrorProtocol = {
     return /no new|final word|unchallengeable|closed/.test(claim.toLowerCase());
   }
 };
+/* ============================================================
+   PublicTextFetcher (NFIE-compliant, legality-first)
+   Purpose:
+     - Fetch publicly accessible text
+     - Enforce robots / paywall / login constraints
+     - Extract reader-mode body text
+     - Emit bounded context windows only
+   ============================================================ */
+
+"use strict";
+
+/* ------------------------------
+   Config
+   ------------------------------ */
+
+const PUBLIC_TEXT_FETCHER_CONFIG = Object.freeze({
+  maxBytes: 1_200_000,        // hard cap on response size
+  timeoutMs: 8000,
+  windowChars: 900,           // primary context window
+  midWindowChars: 600,        // optional mid-body window
+  userAgent: "Sovra/1.0 (PublicTextFetcher)"
+});
+
+/* ------------------------------
+   Eligibility checks
+   ------------------------------ */
+
+function isHttpUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
+function looksPaywalled(html) {
+  const t = html.toLowerCase();
+  return (
+    t.includes("subscribe") ||
+    t.includes("sign in to continue") ||
+    t.includes("paywall") ||
+    t.includes("metered") ||
+    t.includes("login required")
+  );
+}
+
+function contentTypeIsText(res) {
+  const ct = res.headers.get("content-type") || "";
+  return ct.includes("text/html") || ct.includes("text/plain");
+}
+
+/* ------------------------------
+   Reader-mode extraction
+   ------------------------------ */
+
+function extractReadableText(html) {
+  // Very conservative reader-mode extraction
+  // Strip scripts, styles, nav, footer, ads
+  const stripped = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+    .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+
+  // Remove tags, collapse whitespace
+  return stripped
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/* ------------------------------
+   Windowing (bounded)
+   ------------------------------ */
+
+function sliceWindows(text, cfg) {
+  if (!text) return [];
+
+  const out = [];
+  const len = text.length;
+
+  // Head window
+  out.push(text.slice(0, cfg.windowChars));
+
+  // Optional mid-body window (if long enough)
+  if (len > cfg.windowChars + cfg.midWindowChars + 200) {
+    const midStart = Math.floor(len / 2) - Math.floor(cfg.midWindowChars / 2);
+    out.push(text.slice(midStart, midStart + cfg.midWindowChars));
+  }
+
+  return out.map(s => s.trim()).filter(Boolean);
+}
+
+/* ------------------------------
+   Fetcher
+   ------------------------------ */
+
+async function fetchPublicText(url, cfg = PUBLIC_TEXT_FETCHER_CONFIG) {
+  if (!isHttpUrl(url)) {
+    return Object.freeze({ ok: false, error: "INVALID_URL" });
+  }
+
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), cfg.timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": cfg.userAgent }
+    });
+
+    if (!res.ok) {
+      return Object.freeze({ ok: false, error: "HTTP_" + res.status });
+    }
+
+    if (!contentTypeIsText(res)) {
+      return Object.freeze({ ok: false, error: "NON_TEXT_CONTENT" });
+    }
+
+    const reader = res.body.getReader();
+    let received = 0;
+    let chunks = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (received > cfg.maxBytes) {
+        return Object.freeze({ ok: false, error: "CONTENT_TOO_LARGE" });
+      }
+      chunks.push(value);
+    }
+
+    const html = new TextDecoder("utf-8").decode(
+      new Uint8Array(chunks.flatMap(c => Array.from(c)))
+    );
+
+    if (looksPaywalled(html)) {
+      return Object.freeze({ ok: false, error: "PAYWALL_OR_LOGIN_DETECTED" });
+    }
+
+    const readable = extractReadableText(html);
+    const windows = sliceWindows(readable, cfg);
+
+    return Object.freeze({
+      ok: true,
+      url,
+      host: (() => { try { return new URL(url).hostname; } catch (_) { return ""; } })(),
+      windows: Object.freeze(windows)
+    });
+
+  } catch (e) {
+    return Object.freeze({ ok: false, error: "FETCH_FAILED" });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/* ------------------------------
+   Public API
+   ------------------------------ */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.PublicTextFetcher = window.Sovra.PublicTextFetcher || Object.freeze({
+  fetch: fetchPublicText,
+  config: PUBLIC_TEXT_FETCHER_CONFIG
+});
 
 // Example usage:
 const claim = "This is the eternal truth and must never be questioned.";
