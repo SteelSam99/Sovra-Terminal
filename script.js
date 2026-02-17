@@ -236,9 +236,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("score-contradiction").textContent = s.contradiction;
     document.getElementById("score-zero-sum").textContent = s.zeroSum;
 
-    document
-      .getElementById("semantic-indicators")
-      ?.classList.remove("hidden");
+ document
+  .getElementById("diagnostic-panel")
+  ?.classList.remove("hidden");
+
   });
 });
 
