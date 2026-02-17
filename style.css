@@ -34,8 +34,9 @@ html, body {
    SEARCH BAR
    ============================================================ */
 
-.search-box {
-  position: sticky;
+.search-anchor {
+  position: relative;
+}
   top: 0;
   background: #fff;
   padding: 12px 20px;
