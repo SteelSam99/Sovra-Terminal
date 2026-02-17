@@ -51,6 +51,18 @@ const result = TrifoldMirrorProtocol.evaluateClaim(claim);
 console.log("Trifold Mirror Diagnostic:", result.diagnostics);
 console.log("Contradiction Score:", result.metrics.contradictionScore);
 console.log("Contradiction Artifact Flag:", result.metrics.isContradictionArtifact);
+/* ============================================================
+   PublicTextFetcher (STUB — inactive)
+   Installed but not enabled to preserve platform trust boundary.
+   ============================================================ */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.PublicTextFetcher = Object.freeze({
+  fetch() {
+    throw new Error("PublicTextFetcher is installed but not enabled.");
+  },
+  config: Object.freeze({})
+});
 
 const contextToggle = document.getElementById("contextControlToggle");
 const contextPanel = document.getElementById("contextControlPanel");
