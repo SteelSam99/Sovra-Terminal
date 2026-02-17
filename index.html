@@ -106,26 +106,6 @@
 
   <script src="script.js"></script>
 
-  <script>
-    (function () {
-      const searchButton = document.getElementById("search-btn");
-      const queryInput = document.getElementById("query");
-
-      function invokeSearch() {
-        if (typeof window.searchSovra === "function") {
-          window.searchSovra();
-        }
-      }
-
-      searchButton.addEventListener("click", invokeSearch);
-      queryInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          invokeSearch();
-        }
-      });
-    })();
-  </script>
 
 </body>
 </html>
