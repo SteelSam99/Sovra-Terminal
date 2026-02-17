@@ -962,7 +962,7 @@ function applyWFEQueryRewrite(originalQuery) {
    ============================================================ */
 console.log("GATE SNAPSHOT", {
   zse: SOVRA_GATES.zeroSum(),
-  contra: SOVRA_GATES.collapseContra(),
+  contra: SOVRA_GATES.contraCollapse(),
   drift: SOVRA_GATES.driftCore(),
   welsing: SOVRA_GATES.welsingFuller(),
   raw: SOVRA_GATES.rawData(),
