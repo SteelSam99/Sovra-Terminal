@@ -158,7 +158,6 @@ function runZSEStandalone(inputText) {
    - Governs what may surface, at what resolution
    - No data mutation, no enforcement, no export
    ============================================================ */
-
 const CGEC = Object.freeze({
   allow(moduleName) {
     switch (moduleName) {
@@ -199,14 +198,6 @@ const CGEC = Object.freeze({
 });
 
 
-
-function toggleSemanticIndicators(show) {
-  const panel = document.getElementById("semantic-indicators");
-  if (!panel) return;
-
-  panel.classList.toggle("hidden", !show);
-  panel.setAttribute("aria-hidden", String(!show));
-}
 
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
