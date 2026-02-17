@@ -371,6 +371,10 @@ function runCDLMGroup(inputText, map9x9, caller = "core_diagnostic_map") {
     observations
   });
 }
+function createCDLMPassId() {
+  return `pass_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
 /* ============================================================
    CDLM TRAVERSAL EMITTER (NON-FORCE, PARALLEL OBSERVATION)
    - Emits a read-only traversal record per result object
@@ -783,6 +787,18 @@ function readCDLMGridState(passId) {
     maxHits,
     lastActivity: lastActivity || null
   });
+}
+function readCDLMWindow(passId, sinceTs) {
+  const grid = CDLM_GRID_ACCUMULATOR[passId];
+  if (!grid) return [];
+
+  return Object.entries(grid)
+    .filter(([, cell]) => cell.lastSeen >= sinceTs)
+    .map(([key, cell]) => ({
+      cell: key,
+      hits: cell.hits,
+      lastSeen: cell.lastSeen
+    }));
 }
 
 /* ============================================================
