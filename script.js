@@ -197,20 +197,7 @@ const CGEC = Object.freeze({
     }
   }
 });
-function applyTemporalDecay(element, timing) {
-  if (!element || !timing) return;
 
-  const { visible, fade } = timing;
-
-  setTimeout(() => {
-    element.style.transition = `opacity ${fade}ms ease`;
-    element.style.opacity = "0";
-
-    setTimeout(() => {
-      element.remove();
-    }, fade);
-  }, visible);
-}
 
 
 function toggleSemanticIndicators(show) {
