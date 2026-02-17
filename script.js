@@ -954,12 +954,78 @@ if (!contentType.includes("application/json")) {
 
 const data = await response.json();
 
-    // Render Zero‑Sum block once per query
-    if (SOVRA_GATES.zeroSum() && data.zse) {
-      renderZSEStandalone(data.zse);
-    }
+/* --------------------------------
+   Temporal Drift Timeline (LEFT COLUMN)
+   -------------------------------- */
+if (SOVRA_GATES.driftMatrix() && window.Sovra?.DriftScanner?.create) {
+  try {
+    const scanner = window.Sovra.DriftScanner.create({
+      trifoldProtocol: TrifoldMirrorProtocol,
+      recursionDelayMs: 220,
+      maxDocs: 24,
+      emitEventName: "drift:timeline"
+    });
 
-    results.innerHTML = `<div class="section-label">Search results</div>`;
+    const driftPayload = await scanner.scan({
+      query,
+      domain: "UNSPECIFIED",
+      anchorTerms: []
+    });
+
+    renderDriftTimeline(driftPayload);
+  } catch (_) {
+    // Silent fail — public runtime must not surface scanner errors
+  }
+}
+
+// Render Zero‑Sum block once per query
+if (SOVRA_GATES.zeroSum() && data.zse) {
+  renderZSEStandalone(data.zse);
+}
+function renderDriftTimeline(payload) {
+  if (!payload || !payload.ok || payload.kind !== "DRIFT_TIMELINE") return;
+
+  const container = document.querySelector(".results-left");
+  if (!container) return;
+
+  const block = document.createElement("section");
+  block.className = "drift-block";
+
+  const rows = (payload.timeline || [])
+    .filter(t => (t.docCount || 0) > 0)
+    .map(t => {
+      const span = t.yearSpan ? `${t.yearSpan.min}–${t.yearSpan.max}` : "—";
+      const top = (t.topCooccurringTerms || [])
+        .slice(0, 5)
+        .map(x => x.term)
+        .join(", ");
+
+      return `
+        <div class="drift-era">
+          <strong>${t.eraLabel}</strong> (${span}) — docs: ${t.docCount}
+          <div class="drift-terms">
+            ${top ? `Top terms: ${escapeHtml(top)}` : ""}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  block.innerHTML = `
+    <h3>Temporal Drift Timeline</h3>
+    <div class="drift-meta">
+      Domain: ${escapeHtml(payload.domain)} | Query: ${escapeHtml(payload.query)}
+    </div>
+    <div class="drift-eras">
+      ${rows || "<div class='empty'>No dated artifacts surfaced.</div>"}
+    </div>
+  `;
+
+  container.prepend(block);
+}
+
+results.innerHTML = `<div class="section-label">Search results</div>`;
+
 
     const list = Array.isArray(data.organic_results) ? data.organic_results : [];
     if (!list.length) {
