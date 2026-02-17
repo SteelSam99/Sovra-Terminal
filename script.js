@@ -87,16 +87,29 @@ closeContextPanel.addEventListener("click", () => {
 });
 
 /* ================================================================
-SOVRA GATE SURFACE (Public, inertial, read-only)
-================================================================ */
+   SOVRA GATE SURFACE (Public, inertial, read-only)
+   ================================================================ */
+
 const SOVRA_GATES = Object.freeze({
-  welsingFuller: () => !!document.getElementById("modWelsingFuller")?.checked,
-  contraCollapse: () => !!document.getElementById("modContraCollapse")?.checked,
-  zeroSum: () => !!document.getElementById("modZeroSum")?.checked,
-  driftMatrix: () => !!document.getElementById("modDriftMatrix")?.checked,
-  rawData: () => !!document.getElementById("toggleRaw")?.checked,
-  voice: () => !!document.getElementById("toggleVoice")?.checked
+  zeroSum: () =>
+    !!document.getElementById("modZeroSum")?.checked,
+
+  contraCollapse: () =>
+    !!document.getElementById("modContraCollapse")?.checked,
+
+  driftCore: () =>
+    !!document.getElementById("modDriftCore")?.checked,
+
+  welsingFuller: () =>
+    !!document.getElementById("modWelsingFuller")?.checked,
+
+  rawData: () =>
+    !!document.getElementById("toggleRaw")?.checked,
+
+  sovraSpeaks: () =>
+    !!document.getElementById("toggleSovraSpeaks")?.checked
 });
+
 const CONTEXT_FRAME_VISIBILITY = {
   ZSE: true,
   DRIFT: true,
