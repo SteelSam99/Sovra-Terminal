@@ -241,6 +241,9 @@ function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
 
   return { collapse, contradiction, zeroSum };
 }
+function toggleSemanticIndicators(_) {
+  // UI stub — no-op
+}
 
 function emitCDLMScores(scores) {
   if (!SOVRA_GATES.contraCollapse()) {
