@@ -102,16 +102,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const SOVRA_GATES = Object.freeze({
   zeroSum: () =>
-    !!document.getElementById("modZeroSum")?.checked,
+  !!document.getElementById("zeroSum")?.checked,
 
-  contraCollapse: () =>
-    !!document.getElementById("modCollapseContra")?.checked,
 
-  driftCore: () =>
-    !!document.getElementById("modDriftCore")?.checked,
+contraCollapse: () =>
+  !!document.getElementById("collapseContra")?.checked,
 
-  welsingFuller: () =>
-    !!document.getElementById("modWelsingFuller")?.checked,
+
+driftCore: () =>
+  !!document.getElementById("driftCore")?.checked,
+
+
+welsingFuller: () =>
+  !!document.getElementById("welsingFuller")?.checked,
+
 
   rawData: () =>
     !!document.getElementById("toggleRaw")?.checked,
