@@ -95,7 +95,7 @@ const SOVRA_GATES = Object.freeze({
     !!document.getElementById("modZeroSum")?.checked,
 
   contraCollapse: () =>
-    !!document.getElementById("modContraCollapse")?.checked,
+    !!document.getElementById("modCollapseContra")?.checked,
 
   driftCore: () =>
     !!document.getElementById("modDriftCore")?.checked,
@@ -962,7 +962,7 @@ function applyWFEQueryRewrite(originalQuery) {
    ============================================================ */
 console.log("GATE SNAPSHOT", {
   zse: SOVRA_GATES.zeroSum(),
-  contra: SOVRA_GATES.contraCollapse(),
+  contra: SOVRA_GATES.collapseContra(),
   drift: SOVRA_GATES.driftCore(),
   welsing: SOVRA_GATES.welsingFuller(),
   raw: SOVRA_GATES.rawData(),
