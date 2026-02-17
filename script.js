@@ -134,6 +134,17 @@ const CGEC = Object.freeze({
     }
   }
 });
+decayMs(moduleName) {
+  switch (moduleName) {
+    case "DRIFT_TIMELINE":
+      return {
+        visible: 16000,
+        fade: 4000
+      };
+    default:
+      return null;
+  }
+}
 
   console.log("Context Control State:", contextState);
 
