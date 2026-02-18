@@ -6,6 +6,48 @@
    ============================================================ */
 
 "use strict";
+"use strict";
+
+window.Sovra = window.Sovra || {};
+
+/* ============================================================
+   DRIFT GATE (Authoritative, single source of truth)
+   ============================================================ */
+
+window.Sovra.DriftGate = window.Sovra.DriftGate || Object.freeze({
+  getEnabled: () => {
+    const ids = ["ctx-drift", "DRIFT", "drift", "drift-checkbox", "toggle-drift"];
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && typeof el.checked === "boolean") return !!el.checked;
+    }
+    return false;
+  }
+});
+
+/* ============================================================
+   Trifold Mirror Protocol — Sovra Diagnostic Overlay
+   ============================================================ */
+
+const TrifoldMirrorProtocol = {
+  evaluateClaim: function (claim) {
+    const rigidity = this.checkRigidity(claim);
+    const constraint = this.checkConstraint(claim);
+    const inspiration = this.checkInspiration(claim);
+
+    const contradictionScore =
+      [rigidity, constraint, inspiration].filter(Boolean).length;
+
+    const isContradictionArtifact = contradictionScore >= 2.5;
+
+    return {
+      diagnostics: { rigidity, constraint, inspiration },
+      metrics: { contradictionScore, isContradictionArtifact }
+    };
+  },
+  ...
+};
+
 // Trifold Mirror Protocol — Sovra Diagnostic Overlay
 // Version: 1.3 | Includes Contradiction Artifact Flag
 
@@ -190,8 +232,6 @@ function runZSEStandalone(inputText) {
    Output:
      - Emits descriptive-only payloads for GUI synthesis (no prewritten narratives)
    ============================================================ */
-
-"use strict";
 
 /* =========================
    0) Gate: DRIFT checkbox
@@ -485,8 +525,6 @@ window.Sovra.wrapScannerWithDriftGate = function wrapScannerWithDriftGate(scanne
    Non-goals:
      - No scoring, no thresholds, no flags, no enforcement, no predictions
    ============================================================ */
-
-"use strict";
 
 /* =========================
    0) Gate: DRIFT checkbox
