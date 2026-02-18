@@ -184,25 +184,21 @@ html, body {
 /* ============================================================
    DIAGNOSTIC SCORING PANEL — STACKED UNDER SEARCH BAR
    ============================================================ */
-
 .diagnostic-panel {
-  position: absolute;
-  top: 100%;              /* directly below search bar */
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
 
-  margin-top: 12px;
-  width: 300px;
+  margin: 12px auto;
+  width: min(96vw, 1400px);
 
   background: #fafafa;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-top: 1px solid #d1d5db;
+  border-bottom: 1px solid #d1d5db;
   padding: 10px 12px;
 
   font-size: 13px;
   color: #111;
-  z-index: 10;
 }
+
 
 
 /* ============================================================
