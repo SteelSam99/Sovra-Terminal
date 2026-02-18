@@ -52,6 +52,7 @@ const TrifoldMirrorProtocol = {
       }
     };
   },
+   
 
   checkRigidity: function(claim) {
     return /always|never|unchanging|eternal|absolute/.test(claim.toLowerCase());
@@ -65,6 +66,8 @@ const TrifoldMirrorProtocol = {
     return /no new|final word|unchallengeable|closed/.test(claim.toLowerCase());
   }
 };
+window.TrifoldMirrorProtocol =
+  window.TrifoldMirrorProtocol || TrifoldMirrorProtocol;
 
 // Example usage:
 const claim = "This is the eternal truth and must never be questioned.";
