@@ -27,24 +27,6 @@ window.Sovra.DriftGate = window.Sovra.DriftGate || Object.freeze({
    Trifold Mirror Protocol — Sovra Diagnostic Overlay
    ============================================================ */
 
-const TrifoldMirrorProtocol = {
-  evaluateClaim: function (claim) {
-    const rigidity = this.checkRigidity(claim);
-    const constraint = this.checkConstraint(claim);
-    const inspiration = this.checkInspiration(claim);
-
-    const contradictionScore =
-      [rigidity, constraint, inspiration].filter(Boolean).length;
-
-    const isContradictionArtifact = contradictionScore >= 2.5;
-
-    return {
-      diagnostics: { rigidity, constraint, inspiration },
-      metrics: { contradictionScore, isContradictionArtifact }
-    };
-  },
-};
-
 // Trifold Mirror Protocol — Sovra Diagnostic Overlay
 // Version: 1.3 | Includes Contradiction Artifact Flag
 
