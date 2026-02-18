@@ -810,6 +810,176 @@ window.Sovra.ChimeraExplainerCore = window.Sovra.ChimeraExplainerCore || Object.
 // // const calcPayload = { ok:true, collapseScore:3, contradictionScore:0, zeroSumScore:0 }; // optional
 // // const explainPayload = await explainer.explain({ query, domain, driftTimelinePayload: driftPayload, calculatorPayload: calcPayload });
 // // console.log(explainPayload);
+/* ============================================================
+   Chimera Patch: Lambda Speciation (descriptive linguistic lens)
+   Version: 0.1
+   Purpose:
+     - Add a non-normative descriptor for language speciation
+     - Detect “role continuity + surface divergence” across eras/domains
+   Constraints:
+     - Descriptive only (no why, no intent, no prescriptions)
+     - No thresholds that trigger actions
+     - Runs ONLY when DRIFT checkbox is enabled
+   ============================================================ */
+
+"use strict";
+
+/* =========================
+   0) Gate: DRIFT checkbox
+   ========================= */
+
+function defaultGetDriftEnabled() {
+  const ids = ["ctx-drift", "DRIFT", "drift", "drift-checkbox", "toggle-drift"];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && typeof el.checked === "boolean") return !!el.checked;
+  }
+  return false;
+}
+
+function requireDriftEnabled(getDriftEnabled) {
+  return !!(getDriftEnabled && getDriftEnabled());
+}
+
+/* =========================
+   1) Lambda Speciation Lens
+   ========================= */
+
+const LAMBDA_SPECIATION = Object.freeze({
+  id: "LAMBDA_SPECIATION_LENS",
+  label: "Lambda speciation",
+  definition:
+    "A descriptive pattern where a stable communicative role persists while surface expressions diverge across time and/or domains, often coinciding with coordination demands (e.g., migration, trade, governance, institutionalization).",
+  nonGoals: Object.freeze([
+    "No causal claims",
+    "No intent inference",
+    "No moral judgments",
+    "No enforcement or triggers"
+  ])
+});
+
+/* =========================
+   2) Helpers
+   ========================= */
+
+function uniq(arr) {
+  return Array.from(new Set(arr || []));
+}
+
+function jaccard(a, b) {
+  const A = new Set(a || []);
+  const B = new Set(b || []);
+  if (!A.size && !B.size) return 0;
+  let inter = 0;
+  for (const x of A) if (B.has(x)) inter++;
+  const union = A.size + B.size - inter;
+  return union ? inter / union : 0;
+}
+
+/* =========================
+   3) Lambda detection (descriptive)
+   Input expectation:
+     - rolePaths: output from Chimera role-path builder
+       [{ role, entries: [{ eraId, eraLabel, domain, anchors, trifold, source }] }]
+   Output:
+     - “speciation observations” the GUI can render
+   ========================= */
+
+function detectLambdaSpeciation({ rolePaths = [] } = {}) {
+  const observations = [];
+
+  for (const rp of rolePaths || []) {
+    const role = rp?.role;
+    const entries = Array.isArray(rp?.entries) ? rp.entries : [];
+    if (!role || entries.length < 2) continue;
+
+    // Compare adjacent eras for “surface divergence” while role remains constant
+    for (let i = 1; i < entries.length; i++) {
+      const prev = entries[i - 1];
+      const cur = entries[i];
+
+      const prevAnchors = uniq(prev?.anchors || []);
+      const curAnchors = uniq(cur?.anchors || []);
+      const overlap = jaccard(prevAnchors, curAnchors);
+
+      // Descriptive-only: we do NOT threshold into actions; we just report overlap as a measure.
+      observations.push(Object.freeze({
+        kind: "LAMBDA_SPECIATION_OBSERVATION",
+        role,
+        from: Object.freeze({ eraId: prev.eraId, eraLabel: prev.eraLabel, domain: prev.domain }),
+        to: Object.freeze({ eraId: cur.eraId, eraLabel: cur.eraLabel, domain: cur.domain }),
+        surfaceOverlap: overlap, // 0..1 descriptive similarity of anchor terms
+        surfaceShift: Object.freeze({
+          fromAnchors: Object.freeze(prevAnchors.slice(0, 10)),
+          toAnchors: Object.freeze(curAnchors.slice(0, 10))
+        }),
+        note:
+          "Same role observed across slices; surface expressions vary. This is a descriptive continuity/divergence trace (no cause asserted)."
+      }));
+    }
+  }
+
+  return Object.freeze(observations);
+}
+
+/* =========================
+   4) Chimera integration hook
+   - Drop-in: call this after you build role paths
+   ========================= */
+
+function createLambdaSpeciationModule({
+  getDriftEnabled = defaultGetDriftEnabled,
+  emitEventName = "drift:lambda"
+} = {}) {
+  function analyze({ rolePaths = [], query = "", domain = "UNSPECIFIED" } = {}) {
+    if (!requireDriftEnabled(getDriftEnabled)) {
+      return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
+    }
+
+    const observations = detectLambdaSpeciation({ rolePaths });
+
+    const payload = Object.freeze({
+      ok: true,
+      kind: "LAMBDA_SPECIATION_PAYLOAD",
+      lens: LAMBDA_SPECIATION,
+      query: String(query || ""),
+      domain: String(domain || "UNSPECIFIED"),
+      observations
+    });
+
+    try {
+      window.dispatchEvent(new CustomEvent(emitEventName, { detail: payload }));
+    } catch (_) {}
+
+    return payload;
+  }
+
+  return Object.freeze({ analyze, lens: LAMBDA_SPECIATION });
+}
+
+/* =========================
+   5) Global attach (manual integration)
+   ========================= */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.LambdaSpeciation = window.Sovra.LambdaSpeciation || Object.freeze({
+  create: createLambdaSpeciationModule
+});
+
+/* =========================
+   6) Example wiring (commented)
+   ========================= */
+
+// After Chimera builds rolePaths (from drift timeline samples):
+// const rolePaths = buildDivergencePaths({ timeline, samples, domain, trifoldProtocol });
+//
+// const lambda = Sovra.LambdaSpeciation.create({
+//   getDriftEnabled: () => document.getElementById("DRIFT")?.checked === true,
+//   emitEventName: "drift:lambda"
+// });
+//
+// const lambdaPayload = lambda.analyze({ rolePaths, query, domain });
+// console.log(lambdaPayload);
 
 /* ============================================================
    Context‑Gated Exposure Controller (CGEC)
