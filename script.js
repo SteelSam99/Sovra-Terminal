@@ -472,6 +472,344 @@ window.Sovra.wrapScannerWithDriftGate = function wrapScannerWithDriftGate(scanne
 //
 // // Attach to your query pipeline (example):
 // // driftCore.analyzeText({ text: queryText, domain: "Law", meta: { systemIndicators: {} } });
+/* ============================================================
+   Chimera Explainer Core (NFIE-compliant, lens-only, user-gated)
+   Version: 0.1
+   Purpose:
+     - Explain HOW expressions relate (structural alignment), not WHY
+     - Trace divergence paths (same role, new surface; cross-domain migration)
+     - Generate context-aware explanation payloads (no prewritten narratives)
+   Activation:
+     - ONLY runs when user enables DRIFT checkbox
+     - Intended to run AFTER Drift Scanner + Calculator (optional)
+   Non-goals:
+     - No scoring, no thresholds, no flags, no enforcement, no predictions
+   ============================================================ */
+
+"use strict";
+
+/* =========================
+   0) Gate: DRIFT checkbox
+   ========================= */
+
+function defaultGetDriftEnabled() {
+  const ids = ["ctx-drift", "DRIFT", "drift", "drift-checkbox", "toggle-drift"];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && typeof el.checked === "boolean") return !!el.checked;
+  }
+  return false;
+}
+
+function requireDriftEnabled(getDriftEnabled) {
+  return !!(getDriftEnabled && getDriftEnabled());
+}
+
+/* =========================
+   1) Chimera structural vocabulary (lens-only)
+   ========================= */
+
+const CHIMERA_LENS = Object.freeze({
+  id: "CHIMERA_EXPLAINER_CORE",
+  elements: Object.freeze({
+    pillars: "Authority encoding / pattern anchoring",
+    walls: "Group identity / narrative constraint",
+    beams: "Disruption logic / counter-pattern leverage",
+    ceiling: "Perceptual limits / framing horizon",
+    floor: "Historical memory / inherited context",
+    trifold: "Rigidity / constraint / closure labeling",
+    porch: "Output interface (speech/silence/action)—DESCRIPTIVE ONLY"
+  }),
+
+  // Minimal role set—expand later without changing the contract
+  roles: Object.freeze([
+    "SOCIAL_ADDRESS",
+    "AUTHORITY_COMPLIANCE",
+    "LEGITIMACY_CLAIM",
+    "EXCLUSION_BOUNDARY",
+    "PROCEDURAL_NORMALIZATION",
+    "MORAL_JUSTIFICATION",
+    "IDENTITY_LABELING"
+  ])
+});
+
+/* =========================
+   2) Lightweight text utilities
+   ========================= */
+
+function safeLower(s) {
+  return String(s || "").toLowerCase();
+}
+
+function tokenize(text) {
+  return safeLower(text)
+    .replace(/[^a-z0-9\s\-’']/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function uniq(arr) {
+  return Array.from(new Set(arr || []));
+}
+
+function topTerms(texts, n = 10) {
+  const stop = new Set([
+    "the","and","of","to","in","a","for","is","on","that","with","as","by","or","be","are","from","at","an","this","it"
+  ]);
+  const m = new Map();
+  for (const t of texts || []) {
+    for (const tok of tokenize(t)) {
+      if (tok.length < 3 || stop.has(tok)) continue;
+      m.set(tok, (m.get(tok) || 0) + 1);
+    }
+  }
+  return Array.from(m.entries())
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([term,count]) => ({ term, count }));
+}
+
+/* =========================
+   3) Optional Trifold protocol hook (labeling only)
+   ========================= */
+
+function trifoldLabel(trifoldProtocol, text) {
+  if (!trifoldProtocol || typeof trifoldProtocol.evaluateClaim !== "function") {
+    return { rigidity: false, constraint: false, inspiration: false };
+  }
+  try {
+    const r = trifoldProtocol.evaluateClaim(String(text || ""));
+    return r?.diagnostics || { rigidity: false, constraint: false, inspiration: false };
+  } catch (_) {
+    return { rigidity: false, constraint: false, inspiration: false };
+  }
+}
+
+/* =========================
+   4) Role assignment (heuristic, descriptive-only)
+   - No “meaning”, no intent—just structural role hints
+   - You can swap this later for a better classifier
+   ========================= */
+
+const ROLE_HINTS = Object.freeze([
+  { role: "SOCIAL_ADDRESS", hints: ["bud","buddy","dude","bro","pal","mate","homie"] },
+  { role: "AUTHORITY_COMPLIANCE", hints: ["obey","obedience","submit","follow the rules","law-abiding","comply","compliance","order"] },
+  { role: "LEGITIMACY_CLAIM", hints: ["rule of law","freedom","equality","rights","justice","civilized","civilizing"] },
+  { role: "PROCEDURAL_NORMALIZATION", hints: ["procedure","administrative","jurisdiction","policy","regulation","standard","compliance"] },
+  { role: "MORAL_JUSTIFICATION", hints: ["divine","mission","destiny","moral","virtue","sin","sacred"] },
+  { role: "IDENTITY_LABELING", hints: ["minority","majority","citizen","native","indigenous","immigrant","race","ethnicity"] },
+  { role: "EXCLUSION_BOUNDARY", hints: ["illegal","criminal","outsider","alien","unfit","undeserving","ban","exclude"] }
+]);
+
+function assignRoles(text) {
+  const t = safeLower(text);
+  const roles = [];
+  for (const r of ROLE_HINTS) {
+    for (const h of r.hints) {
+      if (t.includes(String(h).toLowerCase())) {
+        roles.push(r.role);
+        break;
+      }
+    }
+  }
+  return uniq(roles);
+}
+
+/* =========================
+   5) Divergence path builder
+   - Input: timeline slices + samples (from Drift Scanner)
+   - Output: role-aligned “paths” across time (descriptive)
+   ========================= */
+
+function buildDivergencePaths({ timeline = [], samples = [], domain = "UNSPECIFIED", trifoldProtocol = null } = {}) {
+  // Group samples by era, then by role
+  const byEra = new Map();
+  for (const s of samples || []) {
+    const eraId = s?.eraId || "unknown";
+    if (!byEra.has(eraId)) byEra.set(eraId, []);
+    byEra.get(eraId).push(s);
+  }
+
+  const paths = new Map(); // role -> [{eraId, eraLabel, phrases[]}]
+  const eraLabelOf = new Map((timeline || []).map(t => [t.eraId, t.eraLabel]));
+
+  for (const [eraId, items] of byEra.entries()) {
+    const eraLabel = eraLabelOf.get(eraId) || eraId;
+
+    for (const it of items) {
+      const ctx = String(it?.context || "");
+      const roles = assignRoles(ctx);
+      const tri = trifoldLabel(trifoldProtocol, ctx);
+
+      // Extract a few “surface phrases” as anchors (cheap: top terms)
+      const anchors = topTerms([ctx], 6).map(x => x.term);
+
+      for (const role of roles) {
+        if (!paths.has(role)) paths.set(role, []);
+        paths.get(role).push(Object.freeze({
+          eraId,
+          eraLabel,
+          domain,
+          anchors: Object.freeze(anchors),
+          trifold: Object.freeze(tri),
+          source: Object.freeze({
+            year: it?.year || null,
+            host: it?.host || "",
+            title: it?.title || "",
+            link: it?.link || ""
+          })
+        }));
+      }
+    }
+  }
+
+  // Sort each role path by era order as provided by timeline
+  const eraOrder = new Map((timeline || []).map((t, i) => [t.eraId, i]));
+  const out = [];
+
+  for (const [role, entries] of paths.entries()) {
+    const sorted = entries.slice().sort((a, b) => (eraOrder.get(a.eraId) ?? 999) - (eraOrder.get(b.eraId) ?? 999));
+    out.push(Object.freeze({ role, entries: Object.freeze(sorted) }));
+  }
+
+  return Object.freeze(out);
+}
+
+/* =========================
+   6) Explanation synthesis (no templates, but structured assembly)
+   - Produces “explanation atoms” the GUI can render
+   ========================= */
+
+function synthesizeExplanationAtoms({ query, domain, driftTimelinePayload, calculatorPayload = null, trifoldProtocol = null } = {}) {
+  const tl = driftTimelinePayload?.timeline || [];
+  const samples = driftTimelinePayload?.samples || [];
+  const paths = buildDivergencePaths({ timeline: tl, samples, domain, trifoldProtocol });
+
+  const atoms = [];
+
+  // Atom: scope + constraint statement (NFIE)
+  atoms.push(Object.freeze({
+    kind: "SCOPE",
+    text: `This explanation describes observed language relationships over time within the ${domain} context, without asserting causes or intent.`
+  }));
+
+  // Atom: present-tense pressure modifiers (optional)
+  if (calculatorPayload?.ok) {
+    const c = calculatorPayload;
+    atoms.push(Object.freeze({
+      kind: "PRESSURE_CONTEXT",
+      text: `Current query structure signals—collapse: ${c.collapseScore ?? "?"}, contradiction: ${c.contradictionScore ?? "?"}, zero-sum: ${c.zeroSumScore ?? "?"}.`
+    }));
+  }
+
+  // Atom: role paths (descriptive)
+  for (const p of paths) {
+    const role = p.role;
+    const entries = p.entries || [];
+    if (!entries.length) continue;
+
+    const eras = uniq(entries.map(e => e.eraLabel));
+    const anchorTerms = uniq(entries.flatMap(e => e.anchors)).slice(0, 10);
+
+    atoms.push(Object.freeze({
+      kind: "ROLE_PATH",
+      role,
+      eras: Object.freeze(eras),
+      anchors: Object.freeze(anchorTerms),
+      text: `Observed continuity in role ${role}: surface language shifts across ${eras.join(" → ")} while occupying a similar structural position.`
+    }));
+  }
+
+  // Atom: provenance samples (for user inspection)
+  atoms.push(Object.freeze({
+    kind: "PROVENANCE_SAMPLES",
+    samples: Object.freeze(
+      (samples || []).slice(0, 6).map(s => Object.freeze({
+        year: s.year,
+        eraId: s.eraId,
+        host: s.host,
+        title: s.title,
+        link: s.link
+      }))
+    )
+  }));
+
+  return Object.freeze(atoms);
+}
+
+/* =========================
+   7) Public module API (user-gated)
+   ========================= */
+
+function createChimeraExplainerCore({
+  getDriftEnabled = defaultGetDriftEnabled,
+  emitEventName = "drift:explain",
+  trifoldProtocol = null
+} = {}) {
+  async function explain({
+    query,
+    domain = "UNSPECIFIED",
+    driftTimelinePayload,
+    calculatorPayload = null
+  } = {}) {
+    if (!requireDriftEnabled(getDriftEnabled)) {
+      return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
+    }
+    if (!driftTimelinePayload || driftTimelinePayload.ok !== true) {
+      return Object.freeze({ ok: false, error: "MISSING_DRIFT_TIMELINE" });
+    }
+
+    const atoms = synthesizeExplanationAtoms({
+      query: String(query || ""),
+      domain: String(domain || "UNSPECIFIED"),
+      driftTimelinePayload,
+      calculatorPayload,
+      trifoldProtocol
+    });
+
+    const payload = Object.freeze({
+      ok: true,
+      kind: "CHIMERA_EXPLANATION",
+      lens: CHIMERA_LENS,
+      query: String(query || ""),
+      domain: String(domain || "UNSPECIFIED"),
+      atoms
+    });
+
+    try {
+      window.dispatchEvent(new CustomEvent(emitEventName, { detail: payload }));
+    } catch (_) {}
+
+    return payload;
+  }
+
+  return Object.freeze({ explain, lens: CHIMERA_LENS });
+}
+
+/* =========================
+   8) Global attach (manual integration)
+   ========================= */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.ChimeraExplainerCore = window.Sovra.ChimeraExplainerCore || Object.freeze({
+  create: createChimeraExplainerCore
+});
+
+/* =========================
+   9) Example wiring (commented)
+   ========================= */
+
+// const explainer = Sovra.ChimeraExplainerCore.create({
+//   getDriftEnabled: () => document.getElementById("DRIFT")?.checked === true,
+//   emitEventName: "drift:explain",
+//   trifoldProtocol: window.TrifoldMirrorProtocol || null
+// });
+//
+// // After Drift Scanner returns payload:
+// // const driftPayload = await scanner.scan({ query, domain, anchorTerms });
+// // const calcPayload = { ok:true, collapseScore:3, contradictionScore:0, zeroSumScore:0 }; // optional
+// // const explainPayload = await explainer.explain({ query, domain, driftTimelinePayload: driftPayload, calculatorPayload: calcPayload });
+// // console.log(explainPayload);
 
 /* ============================================================
    Context‑Gated Exposure Controller (CGEC)
