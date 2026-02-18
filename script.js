@@ -387,7 +387,7 @@ function createUnifiedDriftCore({
   }
 
   function analyzeText({ text = "", domain = "UNSPECIFIED", meta = {} } = {}) {
-    if (!requireDriftEnabled(getDriftEnabled)) {
+        if (!window.Sovra.DriftGate.getEnabled()) {
       return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
     }
 
