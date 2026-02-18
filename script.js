@@ -181,6 +181,299 @@ function runZSEStandalone(inputText) {
   };
 }
 /* ============================================================
+   Unified Drift Core Engine (NFIE-compliant, user-gated)
+   Built from:
+     - DoD Drift Engine (monitor terms + contradiction signals; NO triggers)
+     - Drift Core Engine (MutationDrift diagnostics; NO vector scoring/containment)
+   Activation:
+     - ONLY runs when user enables DRIFT checkbox (configurable getter)
+   Output:
+     - Emits descriptive-only payloads for GUI synthesis (no prewritten narratives)
+   ============================================================ */
+
+"use strict";
+
+/* =========================
+   0) Gate: DRIFT checkbox
+   ========================= */
+
+function defaultGetDriftEnabled() {
+  // Try common IDs—override via config for exact wiring.
+  const ids = ["ctx-drift", "DRIFT", "drift", "drift-checkbox", "toggle-drift"];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && typeof el.checked === "boolean") return !!el.checked;
+  }
+  return false;
+}
+
+function requireDriftEnabled(getDriftEnabled) {
+  const ok = !!(getDriftEnabled && getDriftEnabled());
+  return ok;
+}
+
+/* =========================
+   1) DoD Drift Lens (NFIE)
+   - No thresholds
+   - No triggers
+   - No module activation
+   ========================= */
+
+const DoD_DriftLens = Object.freeze({
+  id: "DOD_DRIFT_001",
+  scope: "legal, educational, institutional systems",
+  active: true,
+
+  monitor: Object.freeze({
+    inputs: Object.freeze([
+      "case_law.references",
+      "policy_documents",
+      "curriculum_standards",
+      "institutional_statements",
+      "media_legitimacy_claims"
+    ]),
+    scan_terms: Object.freeze([
+      "Doctrine of Discovery",
+      "Johnson v. M’Intosh",
+      "terra nullius",
+      "plenary power",
+      "federal trust responsibility",
+      "domestic dependent nation",
+      "Christian dominion",
+      "civilizing mission",
+      "manifest destiny"
+    ]),
+    contradiction_signals: Object.freeze([
+      Object.freeze({ claim: "equality", behavior: "denial of Indigenous land title or sovereignty" }),
+      Object.freeze({ claim: "religious freedom", behavior: "legal privileging of Christian doctrine in land or sovereignty claims" }),
+      Object.freeze({ claim: "rule of law", behavior: "use of colonial-era precedents to deny Indigenous rights" })
+    ])
+  }),
+
+  // NFIE: descriptive-only extraction helpers
+  extractSignals(text) {
+    const t = String(text || "");
+    const hits = [];
+
+    for (const term of this.monitor.scan_terms) {
+      if (t.toLowerCase().includes(term.toLowerCase())) hits.push({ type: "TERM", value: term });
+    }
+
+    // Very light, non-deterministic “claim/behavior” co-presence check
+    for (const s of this.monitor.contradiction_signals) {
+      const claimHit = t.toLowerCase().includes(String(s.claim).toLowerCase());
+      const behaviorHit = t.toLowerCase().includes(String(s.behavior).toLowerCase());
+      if (claimHit || behaviorHit) {
+        hits.push({
+          type: "SIGNAL",
+          claim: s.claim,
+          behavior: s.behavior,
+          present: { claim: claimHit, behavior: behaviorHit }
+        });
+      }
+    }
+
+    return hits;
+  }
+});
+
+/* =========================
+   2) MutationDrift Diagnostics (NFIE)
+   - Keep math + entropy tools
+   - Remove vector scoring / containment
+   ========================= */
+
+const MutationDrift = Object.freeze({
+  id: "module-mutation_drift",
+  authorizedCallers: new Set(["unified_drift_core", "core_diagnostic_map"]),
+
+  // Viral Load Formula (kept as math utility; not used to assert causality)
+  R: (Bv, Cv, P, I, T) => (Bv + Cv) * P * I * T,
+
+  // Narrative Entropy (Shannon)
+  Hn: function (narrativeSet, caller = "unified_drift_core") {
+    if (!this.authorizedCallers.has(caller)) {
+      throw new Error(`MutationDrift Access Denied: Unauthorized caller '${caller}'`);
+    }
+    const arr = Array.isArray(narrativeSet) ? narrativeSet : [];
+    const total = arr.reduce((a, b) => a + b, 0);
+    if (!total) return 0;
+    return -arr
+      .map(p => p / total)
+      .reduce((sum, p) => sum + (p * Math.log2(p)), 0);
+  },
+
+  // Ideological Drift Index (kept as neutral averaging utility)
+  IDI: function (rhetoric, policy, polling, caller = "unified_drift_core") {
+    if (!this.authorizedCallers.has(caller)) {
+      throw new Error(`MutationDrift Access Denied: Unauthorized caller '${caller}'`);
+    }
+    return (Number(rhetoric) + Number(policy) + Number(polling)) / 3;
+  },
+
+  // Symbolic Saturation Load (neutral multiplicative utility)
+  Sigma: function (mediaFreq, valence, segmentation, caller = "unified_drift_core") {
+    if (!this.authorizedCallers.has(caller)) {
+      throw new Error(`MutationDrift Access Denied: Unauthorized caller '${caller}'`);
+    }
+    return Number(mediaFreq) * Number(valence) * Number(segmentation);
+  },
+
+  // Emotional Thermocline (ratio utility)
+  Theta: function (traumaDepth, emotionalAccess, caller = "unified_drift_core") {
+    if (!this.authorizedCallers.has(caller)) {
+      throw new Error(`MutationDrift Access Denied: Unauthorized caller '${caller}'`);
+    }
+    const denom = Number(emotionalAccess);
+    if (!denom) return 0;
+    return Number(traumaDepth) / denom;
+  }
+});
+
+/* =========================
+   3) PWS Phase Tracker (kept)
+   ========================= */
+
+function detectPWSPhase(systemIndicators) {
+  const phaseOrder = ["inception", "implementation", "enforcement", "domination", "maintenance"];
+  const s = systemIndicators || {};
+  for (const phase of phaseOrder) {
+    if (s[phase]) return phase;
+  }
+  return "undetermined";
+}
+
+/* =========================
+   4) Unified Drift Core
+   - User-gated
+   - Event-driven
+   - Descriptive-only payloads
+   ========================= */
+
+function createUnifiedDriftCore({
+  getDriftEnabled = defaultGetDriftEnabled,
+  emitEventName = "drift:core",
+  trifoldProtocol = null // optional: if you already have it on window
+} = {}) {
+  function trifoldLabel(text) {
+    if (!trifoldProtocol || typeof trifoldProtocol.evaluateClaim !== "function") {
+      return { rigidity: false, constraint: false, inspiration: false };
+    }
+    try {
+      const r = trifoldProtocol.evaluateClaim(String(text || ""));
+      return r?.diagnostics || { rigidity: false, constraint: false, inspiration: false };
+    } catch (_) {
+      return { rigidity: false, constraint: false, inspiration: false };
+    }
+  }
+
+  function analyzeText({ text = "", domain = "UNSPECIFIED", meta = {} } = {}) {
+    if (!requireDriftEnabled(getDriftEnabled)) {
+      return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
+    }
+
+    const t = String(text || "");
+    const dod = DoD_DriftLens.extractSignals(t);
+    const tri = trifoldLabel(t);
+
+    // Descriptive “density” (no thresholds, no triggers)
+    const termHits = dod.filter(x => x.type === "TERM").length;
+    const signalHits = dod.filter(x => x.type === "SIGNAL").length;
+    const totalHits = termHits + signalHits;
+
+    const payload = Object.freeze({
+      ok: true,
+      kind: "UNIFIED_DRIFT_CORE_PAYLOAD",
+      domain: String(domain || "UNSPECIFIED"),
+      meta: Object.freeze({ ...meta }),
+
+      // DoD lens output (domain-specific, descriptive)
+      dod: Object.freeze({
+        id: DoD_DriftLens.id,
+        scope: DoD_DriftLens.scope,
+        termHits,
+        signalHits,
+        totalHits,
+        hits: Object.freeze(dod)
+      }),
+
+      // Trifold label (if available)
+      trifold: Object.freeze(tri),
+
+      // Diagnostics utilities exposed (no automatic use)
+      diagnostics: Object.freeze({
+        pwsPhase: detectPWSPhase(meta?.systemIndicators || {}),
+        // Provide callable names only; GUI/Explainer decides whether to use
+        available: Object.freeze(["Hn", "IDI", "Sigma", "Theta"])
+      })
+    });
+
+    try {
+      window.dispatchEvent(new CustomEvent(emitEventName, { detail: payload }));
+    } catch (_) {}
+
+    return payload;
+  }
+
+  function exportAPI() {
+    return Object.freeze({
+      analyzeText,
+      detectPWSPhase,
+      MutationDrift,
+      DoD_DriftLens
+    });
+  }
+
+  return Object.freeze({ analyzeText, export: exportAPI });
+}
+
+/* =========================
+   5) Global attach (manual integration)
+   ========================= */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.UnifiedDriftCore = window.Sovra.UnifiedDriftCore || Object.freeze({
+  create: createUnifiedDriftCore
+});
+
+/* =========================
+   6) Optional: Patch your Drift Scanner gate (drop-in)
+   - Call this after you load the scanner code I gave you earlier.
+   ========================= */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.DriftGate = window.Sovra.DriftGate || Object.freeze({
+  getEnabled: defaultGetDriftEnabled
+});
+
+// If you want: wrap an existing scanner instance so it hard-gates on DRIFT.
+window.Sovra.wrapScannerWithDriftGate = function wrapScannerWithDriftGate(scanner, getDriftEnabled = defaultGetDriftEnabled) {
+  if (!scanner || typeof scanner.scan !== "function") return scanner;
+  return Object.freeze({
+    ...scanner,
+    scan: async (args) => {
+      if (!requireDriftEnabled(getDriftEnabled)) {
+        return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
+      }
+      return scanner.scan(args);
+    }
+  });
+};
+
+/* =========================
+   7) Example wiring (commented)
+   ========================= */
+
+// const driftCore = Sovra.UnifiedDriftCore.create({
+//   getDriftEnabled: () => document.getElementById("DRIFT")?.checked === true,
+//   emitEventName: "drift:core",
+//   trifoldProtocol: window.TrifoldMirrorProtocol || null
+// });
+//
+// // Attach to your query pipeline (example):
+// // driftCore.analyzeText({ text: queryText, domain: "Law", meta: { systemIndicators: {} } });
+
+/* ============================================================
    Context‑Gated Exposure Controller (CGEC)
    - Governs what may surface, at what resolution
    - No data mutation, no enforcement, no export
