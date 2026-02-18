@@ -940,18 +940,27 @@ function detectLambdaSpeciation({ rolePaths = [] } = {}) {
 
       // Descriptive-only: we do NOT threshold into actions; we just report overlap as a measure.
       observations.push(Object.freeze({
-        kind: "LAMBDA_SPECIATION_OBSERVATION",
-        role,
-        from: Object.freeze({ eraId: prev.eraId, eraLabel: prev.eraLabel, domain: prev.domain }),
-        to: Object.freeze({ eraId: cur.eraId, eraLabel: cur.eraLabel, domain: cur.domain }),
-        surfaceOverlap: overlap, // 0..1 descriptive similarity of anchor terms
-        surfaceShift: Object.freeze({
-          fromAnchors: Object.freeze(prevAnchors.slice(0, 10)),
-          toAnchors: Object.freeze(curAnchors.slice(0, 10))
-        }),
-        note:
-          "Same role observed across slices; surface expressions vary. This is a descriptive continuity/divergence trace (no cause asserted)."
-      }));
+  kind: "LAMBDA_SPECIATION_OBSERVATION",
+  role,
+  from: Object.freeze({
+    eraId: prev.eraId,
+    eraLabel: prev.eraLabel,
+    domain: prev.domain
+  }),
+  to: Object.freeze({
+    eraId: cur.eraId,
+    eraLabel: cur.eraLabel,
+    domain: cur.domain
+  }),
+  surfaceOverlap: overlap,
+  surfaceShift: Object.freeze({
+    fromAnchors: Object.freeze(prevAnchors.slice(0, 10)),
+    toAnchors: Object.freeze(curAnchors.slice(0, 10))
+  }),
+  note:
+    "Same role observed across slices; surface expressions vary. This is a descriptive continuity/divergence trace (no cause asserted)."
+}));
+
     }
   }
 
