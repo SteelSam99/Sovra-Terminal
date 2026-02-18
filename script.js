@@ -43,7 +43,6 @@ const TrifoldMirrorProtocol = {
       metrics: { contradictionScore, isContradictionArtifact }
     };
   },
-  ...
 };
 
 // Trifold Mirror Protocol — Sovra Diagnostic Overlay
