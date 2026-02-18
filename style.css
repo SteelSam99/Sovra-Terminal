@@ -187,17 +187,18 @@ html, body {
 .diagnostic-panel {
   position: relative;
 
-  margin: 12px auto;
-  width: min(96vw, 1400px);
+  width: 320px;                 /* instrument width */
+  margin: 8px 0 12px auto;      /* push to the right */
 
   background: #fafafa;
-  border-top: 1px solid #d1d5db;
-  border-bottom: 1px solid #d1d5db;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   padding: 10px 12px;
 
   font-size: 13px;
   color: #111;
 }
+
 
 
 
