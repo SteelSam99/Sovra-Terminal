@@ -2174,7 +2174,7 @@ if (vduBlock) results.appendChild(vduBlock);
 const traversal = emitTraversalEvent(r, data.query_token || "pass-0");
 
 // Forward + lateral observation (read-only)
-const gridObservations = traverseCDLMGrid(traversal.text, "public_runtime");
+const gridObservations = traverseCDLM(traversal.text, "public_runtime");
 accumulateGridObservations(gridObservations, traversal.passId);
 
 // One-way telemetry (optional, NFIE-safe)
