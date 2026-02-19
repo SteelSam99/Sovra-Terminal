@@ -119,6 +119,37 @@
 
       <button id="closeContextPanel">Close Menu</button>
     </div>
+<!-- =========================================================
+     SOVRA CORE CONNECTORS
+     Purpose: Structural attachment points only
+     ========================================================= -->
+
+<!-- =========================================================
+     SOVRA ANALYSIS CONNECTORS
+     Purpose: Structural attachment points only
+     ========================================================= -->
+
+<!-- Data Source State Indicator (calibration / active) -->
+<div id="sovra-data-state" data-mode="calibration"></div>
+
+<!-- Analysis Output Surface -->
+<section id="sovra-analysis-output" aria-live="polite">
+  <pre id="analysis-zse"></pre>
+  <pre id="analysis-cdlm"></pre>
+  <pre id="analysis-delta"></pre>
+  <pre id="analysis-field"></pre>
+</section>
+
+<!-- Raw Text Surface (Read-Only) -->
+<section id="sovra-raw-text" hidden>
+  <pre id="raw-text-output"></pre>
+</section>
+
+<!-- Capability Flags (Non-Interactive, Render-Only) -->
+<div id="sovra-capabilities"
+     data-text-fetch="stub"
+     data-analysis="ready">
+</div>
 
     <main id="results" class="results-container" aria-live="polite">
       <div class="results-left"></div>
