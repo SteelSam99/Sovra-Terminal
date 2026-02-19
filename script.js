@@ -552,6 +552,33 @@ const CHIMERA_LENS = Object.freeze({
     "IDENTITY_LABELING"
   ])
 });
+function measureArtDensity(text) {
+  const tokens = tokenize(text);
+  const n = tokens.length || 1;
+  const t = safeLower(text);
+
+  const LEX = {
+    absolutist: ["always","never","absolute","eternal","undeniable", "supremacy", "supreme", "dominion"],
+    imperative: ["must","cannot","only","forbidden","no exceptions", "doctrine", "imperative"],
+    cadence: ["therefore","thus","hence","clearly","in fact", "comply", "obey"],
+    moral: ["virtue","sin","sacred","corrupt","degenerate", "sinner", "unforgiven"]
+  };
+
+  let totalHits = 0;
+  const channels = {};
+
+  for (const [k, arr] of Object.entries(LEX)) {
+    const hits = arr.filter(w => t.includes(w)).length;
+    channels[k] = hits;
+    totalHits += hits;
+  }
+
+  return Object.freeze({
+    totalHits,
+    densityPer1k: (totalHits / n) * 1000,
+    channels: Object.freeze(channels)
+  });
+}
 
 /* =========================
    2) Lightweight text utilities
@@ -660,28 +687,30 @@ function buildDivergencePaths({ timeline = [], samples = [], domain = "UNSPECIFI
       const ctx = String(it?.context || "");
       const roles = assignRoles(ctx);
       const tri = trifoldLabel(trifoldProtocol, ctx);
+      const artDensity = measureArtDensity(ctx);
 
       // Extract a few “surface phrases” as anchors (cheap: top terms)
       const anchors = topTerms([ctx], 6).map(x => x.term);
 
       for (const role of roles) {
-        if (!paths.has(role)) paths.set(role, []);
-        paths.get(role).push(Object.freeze({
-          eraId,
-          eraLabel,
-          domain,
-          anchors: Object.freeze(anchors),
-          trifold: Object.freeze(tri),
-          source: Object.freeze({
-            year: it?.year || null,
-            host: it?.host || "",
-            title: it?.title || "",
-            link: it?.link || ""
-          })
-        }));
-      }
-    }
-  }
+  if (!paths.has(role)) paths.set(role, []);
+
+  paths.get(role).push(Object.freeze({
+    eraId,
+    eraLabel,
+    domain,
+    anchors: Object.freeze(anchors),
+    trifold: Object.freeze(tri),
+    artDensity: Object.freeze(artDensity),
+    source: Object.freeze({
+      year: it?.year || null,
+      host: it?.host || "",
+      title: it?.title || "",
+      link: it?.link || ""
+    })
+  }));
+}
+
 
   // Sort each role path by era order as provided by timeline
   const eraOrder = new Map((timeline || []).map((t, i) => [t.eraId, i]));
