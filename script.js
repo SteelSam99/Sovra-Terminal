@@ -681,34 +681,35 @@ function buildDivergencePaths({ timeline = [], samples = [], domain = "UNSPECIFI
   const eraLabelOf = new Map((timeline || []).map(t => [t.eraId, t.eraLabel]));
 
   for (const [eraId, items] of byEra.entries()) {
-    const eraLabel = eraLabelOf.get(eraId) || eraId;
+  const eraLabel = eraLabelOf.get(eraId) || eraId;
 
-    for (const it of items) {
-      const ctx = String(it?.context || "");
-      const roles = assignRoles(ctx);
-      const tri = trifoldLabel(trifoldProtocol, ctx);
-      const artDensity = measureArtDensity(ctx);
+  for (const it of items) {
+    const ctx = String(it?.context || "");
+    const roles = assignRoles(ctx);
+    const tri = trifoldLabel(trifoldProtocol, ctx);
+    const artDensity = measureArtDensity(ctx);
 
-      // Extract a few “surface phrases” as anchors (cheap: top terms)
-      const anchors = topTerms([ctx], 6).map(x => x.term);
+    const anchors = topTerms([ctx], 6).map(x => x.term);
 
-      for (const role of roles) {
-  if (!paths.has(role)) paths.set(role, []);
+    for (const role of roles) {
+      if (!paths.has(role)) paths.set(role, []);
 
-  paths.get(role).push(Object.freeze({
-    eraId,
-    eraLabel,
-    domain,
-    anchors: Object.freeze(anchors),
-    trifold: Object.freeze(tri),
-    artDensity: Object.freeze(artDensity),
-    source: Object.freeze({
-      year: it?.year || null,
-      host: it?.host || "",
-      title: it?.title || "",
-      link: it?.link || ""
-    })
-  }));
+      paths.get(role).push(Object.freeze({
+        eraId,
+        eraLabel,
+        domain,
+        anchors: Object.freeze(anchors),
+        trifold: Object.freeze(tri),
+        artDensity: Object.freeze(artDensity),
+        source: Object.freeze({
+          year: it?.year || null,
+          host: it?.host || "",
+          title: it?.title || "",
+          link: it?.link || ""
+        })
+      }));
+    }
+  }
 }
 
 
@@ -1704,7 +1705,7 @@ const VDU = (function () {
       if (text.includes("system") || text.includes("structure")) found.add("systemic");
       if (text.includes("history") || text.includes("historical")) found.add("historical");
       if (text.includes("law") || text.includes("legal") || text.includes("court")) found.add("legal");
-      if (text.includes("econom") || text.includes("market")) found.add("economic");
+      if (text.includes("economy") || text.includes("market")) found.add("economic");
       if (text.includes("mechanism") || text.includes("process")) found.add("mechanistic");
     });
 
