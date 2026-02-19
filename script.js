@@ -1296,7 +1296,7 @@ function traverseCDLM(text, caller = "core_diagnostic_map") {
    - No aggregation, no scoring, no UI
    ============================================================ */
 
-function traverseCDLMGrid(text, caller = "core_diagnostic_map") {
+function traverseCDLM9x9(text, caller = "core_diagnostic_map") {
   const map = CDLM_MAP_9x9;
   const results = [];
 
@@ -1325,6 +1325,7 @@ function traverseCDLMGrid(text, caller = "core_diagnostic_map") {
     grid: Object.freeze(results)
   });
 }
+
 
 /* ============================================================
    0) Public memory (local, non-authoritative)
