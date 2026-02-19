@@ -76,17 +76,190 @@ console.log("Trifold Mirror Diagnostic:", result.diagnostics);
 console.log("Contradiction Score:", result.metrics.contradictionScore);
 console.log("Contradiction Artifact Flag:", result.metrics.isContradictionArtifact);
 /* ============================================================
-   PublicTextFetcher (STUB — inactive)
-   Installed but not enabled to preserve platform trust boundary.
+   SOVRA QUAD-CORE CSR — WARP-CORE READY PATCH (script.js)
+   Drop-in block: replace your current PublicTextFetcher STUB
+   and add the Quad-Core + auto-bind connector surface.
    ============================================================ */
+"use strict";
 
+/* ============================================================
+   SOVRA SIGNAL BUS (public, inert, one-way notifications)
+   ============================================================ */
 window.Sovra = window.Sovra || {};
-window.Sovra.PublicTextFetcher = Object.freeze({
-  fetch() {
-    throw new Error("PublicTextFetcher is installed but not enabled.");
-  },
-  config: Object.freeze({})
+
+window.Sovra.SignalBus = (() => {
+  const listeners = Object.create(null);
+  return Object.freeze({
+    on(kind, fn) {
+      if (!listeners[kind]) listeners[kind] = [];
+      listeners[kind].push(fn);
+    },
+    emit(kind, payload) {
+      (listeners[kind] || []).forEach(fn => {
+        try { fn(payload); } catch (_) {}
+      });
+    }
+  });
+})();
+
+/* ============================================================
+   CAPABILITY SURFACE (renderable data availability state)
+   ============================================================ */
+window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
+  textFetch: "stub",     // "stub" | "live"
+  analysis: "ready"     // "ready" | "active"
 });
+
+/* ============================================================
+   PUBLIC TEXT FETCHER (PRIMARY SOURCE SOCKET)
+   - Stable contract: fetch(request) -> Promise<{ text, meta }>
+   - Remains inert until primary source is installed
+   ============================================================ */
+(() => {
+  const state = {
+    mode: "stub", // "stub" | "live"
+    impl: null,
+    config: Object.freeze({
+      publicOnly: true,
+      bounded: true,
+      readOnly: true,
+      nonSemantic: true
+    })
+  };
+
+  const api = {
+    async fetch(request) {
+      if (state.mode !== "live" || typeof state.impl !== "function") {
+        throw new Error("PublicTextFetcher is installed but not enabled.");
+      }
+      return state.impl(request);
+    },
+    get config() { return state.config; },
+    get mode() { return state.mode; }
+  };
+
+  window.Sovra.installPrimarySource = function installPrimarySource(fetchImpl, cfg = {}) {
+    if (typeof fetchImpl !== "function") {
+      throw new Error("Primary source install requires a fetch implementation.");
+    }
+
+    state.impl = fetchImpl;
+    state.mode = "live";
+    state.config = Object.freeze({ ...state.config, ...cfg });
+
+    window.Sovra.capabilities = Object.freeze({
+      ...window.Sovra.capabilities,
+      textFetch: "live",
+      analysis: "active"
+    });
+
+    window.Sovra.SignalBus.emit("PRIMARY_SOURCE_AVAILABLE", { config: state.config });
+    return true;
+  };
+
+  window.Sovra.PublicTextFetcher = Object.freeze(api);
+})();
+
+/* ============================================================
+   ANALYSIS SUITE (observational only)
+   - ZSE: mass / pressure indicators
+   - CDLM: density / packing indicators
+   - DELTA: change placeholder (aux-safe)
+   - FIELD SUMMARY: non-directive aggregation
+   ============================================================ */
+window.Sovra.AnalysisSuite = (() => {
+  const safeText = (t) => (typeof t === "string" ? t : String(t ?? ""));
+
+  function ZSE(text) {
+    const t = safeText(text);
+    const tokens = t.split(/\s+/).filter(Boolean);
+    return Object.freeze({
+      tokenCount: tokens.length,
+      charCount: t.length
+    });
+  }
+
+  function CDLM(text) {
+    const t = safeText(text);
+    const lines = t.split(/\n/);
+    const nonEmpty = lines.filter(l => l.trim().length > 0);
+    const avgLineLen = nonEmpty.length
+      ? Math.round(nonEmpty.join("").length / nonEmpty.length)
+      : 0;
+
+    return Object.freeze({
+      lineCount: lines.length,
+      nonEmptyLines: nonEmpty.length,
+      avgLineLen
+    });
+  }
+
+  function Delta(text, meta = {}) {
+    return Object.freeze({
+      snapshotId: meta.snapshotId || null,
+      hasHistory: false
+    });
+  }
+
+  function FieldSummary(zse, cdlm, delta, gates = {}) {
+    const densityHint =
+      cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
+        ? Math.min(1, cdlm.avgLineLen / 120)
+        : 0;
+
+    const massHint =
+      zse.tokenCount > 0
+        ? Math.min(1, zse.tokenCount / 2000)
+        : 0;
+
+    return Object.freeze({
+      field: Object.freeze({
+        massHint,
+        densityHint,
+        deltaPresent: !!delta.snapshotId && delta.hasHistory
+      }),
+      gates: Object.freeze({
+        rawData: !!gates.rawData,
+        driftCore: !!gates.driftCore,
+        contraCollapse: !!gates.contraCollapse,
+        zeroSum: !!gates.zeroSum,
+        welsingFuller: !!gates.welsingFuller,
+        sovraSpeaks: !!gates.sovraSpeaks
+      })
+    });
+  }
+
+  async function analyzeFromFetcher(request, gates = {}) {
+    const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
+    const zse = ZSE(text);
+    const cdlm = CDLM(text);
+    const delta = Delta(text, meta);
+    const summary = FieldSummary(zse, cdlm, delta, gates);
+
+    return Object.freeze({ text, meta, zse, cdlm, delta, summary });
+  }
+
+  return Object.freeze({
+    ZSE,
+    CDLM,
+    Delta,
+    FieldSummary,
+    analyzeFromFetcher
+  });
+})();
+
+/* ============================================================
+   OPTIONAL: UI SIGNAL HOOK (render-only)
+   ============================================================ */
+window.Sovra.SignalBus.on("PRIMARY_SOURCE_AVAILABLE", () => {
+  try {
+    // Optional: trigger re-render or status refresh
+  } catch (_) {}
+});
+
+
+
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
