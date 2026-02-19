@@ -34,7 +34,7 @@ html, body {
    SEARCH BAR
    ============================================================ */
 
-.search-box{
+.search-box {
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -43,7 +43,6 @@ html, body {
   padding: 12px 20px;
   border-bottom: 1px solid #ccc;
 
-  /* near full-page width */
   width: min(96vw, 1400px);
   margin: 0 auto;
 
@@ -52,7 +51,7 @@ html, body {
   gap: 10px;
 }
 
-.search-anchor{
+.search-anchor {
   position: relative;
   flex: 1;
   display: flex;
@@ -60,33 +59,64 @@ html, body {
   gap: 10px;
 }
 
-.search-box input[type="text"]{
+.search-box input[type="text"] {
   flex: 1;
   min-width: 0;
   padding: 8px;
   font-size: 16px;
 }
 
-.search-box button{
+.search-box button {
   padding: 8px 16px;
   font-size: 16px;
   cursor: pointer;
 }
 
-
 /* ============================================================
-   RESULTS AREA
+   DESIGN TOKENS
    ============================================================ */
 
-#results {
-  padding: 20px;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  line-height: 1.6;
+:root {
+  --card-bg: #ffffff;
+  --card-border: #e6e9ee;
+  --muted: #6b7280;
+  --accent: #0f172a;
+  --radius: 10px;
+  --gap: 12px;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, monospace;
 }
 
 /* ============================================================
-   CONTEXT CONTROL PANEL — CANONICAL GRID INSTALL
+   DIAGNOSTIC SCORING PANEL
+   ============================================================ */
+
+.diagnostic-panel {
+  position: relative;
+  width: 320px;
+  margin: 8px 0 12px auto;
+
+  background: #fafafa;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+
+  font-size: 13px;
+  color: #111;
+}
+
+/* Values start hidden */
+.diagnostic-panel .diag-label span {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Reveal only when gated */
+.diagnostic-panel[data-active="true"] .diag-label span {
+  opacity: 1;
+}
+
+/* ============================================================
+   CONTEXT CONTROL PANEL
    ============================================================ */
 
 #contextControlToggle {
@@ -96,7 +126,6 @@ html, body {
   z-index: 1000;
 }
 
-/* Panel container */
 .context-panel {
   position: fixed;
   top: 52px;
@@ -112,7 +141,6 @@ html, body {
   line-height: 1.4;
 }
 
-/* 2 × 3 grid — THIS is the layout authority */
 .context-grid {
   display: grid;
   grid-template-columns: auto auto;
@@ -121,7 +149,6 @@ html, body {
   row-gap: 10px;
 }
 
-/* Individual grid cells */
 .context-item {
   display: flex;
   align-items: center;
@@ -129,12 +156,10 @@ html, body {
   white-space: nowrap;
 }
 
-/* Labels */
 .context-label {
   font-weight: 500;
 }
 
-/* Checkboxes */
 .context-item input[type="checkbox"] {
   margin-left: auto;
   cursor: pointer;
@@ -157,7 +182,6 @@ html, body {
   padding: 6px 8px;
   font-size: 11px;
   line-height: 1.3;
-  white-space: normal;
   max-width: 220px;
 
   opacity: 0;
@@ -169,7 +193,6 @@ html, body {
   opacity: 1;
 }
 
-/* Close button */
 #closeContextPanel {
   margin-top: 12px;
   width: 100%;
@@ -182,39 +205,19 @@ html, body {
 }
 
 /* ============================================================
-   DIAGNOSTIC SCORING PANEL — STACKED UNDER SEARCH BAR
+   RESULTS AREA
    ============================================================ */
-.diagnostic-panel {
-  position: relative;
 
-  width: 320px;                 /* instrument width */
-  margin: 8px 0 12px auto;      /* push to the right */
-
-  background: #fafafa;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 10px 12px;
-
-  font-size: 13px;
-  color: #111;
+#results {
+  padding: 20px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  line-height: 1.6;
 }
-
-
-
 
 /* ============================================================
    SOVRA CARD SYSTEM
    ============================================================ */
-
-:root {
-  --card-bg: #ffffff;
-  --card-border: #e6e9ee;
-  --muted: #6b7280;
-  --accent: #0f172a;
-  --radius: 10px;
-  --gap: 12px;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, monospace;
-}
 
 .sovra-card {
   background: var(--card-bg);
@@ -265,11 +268,6 @@ html, body {
   gap: 10px;
 }
 
-.source-id {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
 .raw-excerpt {
   background: #f8fafc;
   border-radius: 8px;
@@ -285,60 +283,24 @@ html, body {
   font-size: 0.85rem;
   color: var(--muted);
 }
-/* =========================================================
-   SOVRA CSS CONNECTORS (light-surface)
-   Visual representation only
-   ========================================================= */
 
-/* Data Source State Indicator */
+/* ============================================================
+   QUAD‑CORE CSR — DORMANT VISUALS
+   ============================================================ */
+
+/* Data state bar (neutral until activated) */
 #sovra-data-state {
   width: 100%;
   height: 4px;
-  background-color: #e5e7eb; /* light neutral */
+  background-color: #e5e7eb;
 }
 
-#sovra-data-state[data-mode="calibration"] {
-  background-color: #d1d5db;
-}
-
-#sovra-data-state[data-mode="active"] {
-  background-color: #2e8bff;
-}
-
-/* Analysis Output Surface */
+/* Analysis surface intentionally hidden */
 #sovra-analysis-output {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  font-family: monospace;
-  font-size: 0.85rem;
-  color: #111; /* match your light theme */
-}
-
-/* Individual analysis readouts */
-#analysis-zse,
-#analysis-cdlm,
-#analysis-delta,
-#analysis-field {
-  background-color: #f8fafc;     /* light panel */
-  border-left: 3px solid #e5e7eb; /* subtle */
-  padding: 0.5rem;
-  white-space: pre-wrap;
-}
-
-/* Capability Flags (Hidden Surface) */
-#sovra-capabilities {
   display: none;
 }
 
-/* Raw Text Surface (Read-Only) */
-#raw-text-output {
-  background: #f8fafc;
-  color: #111;
-  padding: 0.75rem;
-  font-family: monospace;
-  font-size: 0.8rem;
-  white-space: pre-wrap;
-  border: 1px solid #e5e7eb;
+/* Capability flags never visible */
+#sovra-capabilities {
+  display: none;
 }
