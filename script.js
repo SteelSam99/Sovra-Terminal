@@ -80,7 +80,6 @@ console.log("Contradiction Artifact Flag:", result.metrics.isContradictionArtifa
    Drop-in block: replace your current PublicTextFetcher STUB
    and add the Quad-Core + auto-bind connector surface.
    ============================================================ */
-"use strict";
 
 /* ============================================================
    SOVRA SIGNAL BUS (public, inert, one-way notifications)
@@ -328,8 +327,8 @@ const CONTEXT_FRAME_VISIBILITY = {
   VOICE: true
 };
 const ZERO_SUM_TERMS = [
-  "take from", "steal", "replace", "erase", "dilute", "threaten", "lose ground",
-  "reverse discrimination", "they’re taking", "our jobs", "our schools", "our culture",
+  "take from", "steal", "replace", "erase", "dilute", "threaten", "lose ground", "breed", "reproduce",
+  "reverse discrimination", "they’re taking", "our jobs", "our schools", "our culture", "our land", "go home",
   "zero-sum", "finite", "limited", "scarce", "only one", "either/or", "us vs them"
 ];
 
