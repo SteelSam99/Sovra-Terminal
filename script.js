@@ -545,7 +545,7 @@ function detectPWSPhase(systemIndicators) {
    ========================= */
 
 function createUnifiedDriftCore({
-  getDriftEnabled = defaultGetDriftEnabled,
+  getDriftEnabled = window.Sovra.DriftGate.getEnabled,
   emitEventName = "drift:core",
   trifoldProtocol = null // optional: if you already have it on window
 } = {}) {
@@ -562,7 +562,7 @@ function createUnifiedDriftCore({
   }
 
   function analyzeText({ text = "", domain = "UNSPECIFIED", meta = {} } = {}) {
-        if (!window.Sovra.DriftGate.getEnabled()) {
+    if (!window.Sovra.DriftGate.require(getDriftEnabled)) {
       return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
     }
 
@@ -570,7 +570,6 @@ function createUnifiedDriftCore({
     const dod = DoD_DriftLens.extractSignals(t);
     const tri = trifoldLabel(t);
 
-    // Descriptive “density” (no thresholds, no triggers)
     const termHits = dod.filter(x => x.type === "TERM").length;
     const signalHits = dod.filter(x => x.type === "SIGNAL").length;
     const totalHits = termHits + signalHits;
@@ -581,7 +580,6 @@ function createUnifiedDriftCore({
       domain: String(domain || "UNSPECIFIED"),
       meta: Object.freeze({ ...meta }),
 
-      // DoD lens output (domain-specific, descriptive)
       dod: Object.freeze({
         id: DoD_DriftLens.id,
         scope: DoD_DriftLens.scope,
@@ -591,13 +589,10 @@ function createUnifiedDriftCore({
         hits: Object.freeze(dod)
       }),
 
-      // Trifold label (if available)
       trifold: Object.freeze(tri),
 
-      // Diagnostics utilities exposed (no automatic use)
       diagnostics: Object.freeze({
         pwsPhase: detectPWSPhase(meta?.systemIndicators || {}),
-        // Provide callable names only; GUI/Explainer decides whether to use
         available: Object.freeze(["Hn", "IDI", "Sigma", "Theta"])
       })
     });
@@ -621,68 +616,10 @@ function createUnifiedDriftCore({
   return Object.freeze({ analyzeText, export: exportAPI });
 }
 
-/* =========================
-   5) Global attach (manual integration)
-   ========================= */
 
-window.Sovra = window.Sovra || {};
-window.Sovra.UnifiedDriftCore = window.Sovra.UnifiedDriftCore || Object.freeze({
-  create: createUnifiedDriftCore
-});
-
-/* =========================
-   6) Optional: Patch your Drift Scanner gate (drop-in)
-   - Call this after you load the scanner code I gave you earlier.
-   ========================= */
-
-window.Sovra = window.Sovra || {};
-window.Sovra.DriftGate = window.Sovra.DriftGate || Object.freeze({
-  getEnabled: defaultGetDriftEnabled
-});
-
-// If you want: wrap an existing scanner instance so it hard-gates on DRIFT.
-window.Sovra.wrapScannerWithDriftGate = function wrapScannerWithDriftGate(scanner, getDriftEnabled = defaultGetDriftEnabled) {
-  if (!scanner || typeof scanner.scan !== "function") return scanner;
-  return Object.freeze({
-    ...scanner,
-    scan: async (args) => {
-      if (!requireDriftEnabled(getDriftEnabled)) {
-        return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
-      }
-      return scanner.scan(args);
-    }
-  });
-};
-
-/* =========================
-   7) Example wiring (commented)
-   ========================= */
-
-// const driftCore = Sovra.UnifiedDriftCore.create({
-//   getDriftEnabled: () => document.getElementById("DRIFT")?.checked === true,
-//   emitEventName: "drift:core",
-//   trifoldProtocol: window.TrifoldMirrorProtocol || null
-// });
-//
-// // Attach to your query pipeline (example):
-// // driftCore.analyzeText({ text: queryText, domain: "Law", meta: { systemIndicators: {} } });
 /* ============================================================
-   Chimera Explainer Core (NFIE-compliant, lens-only, user-gated)
-   Version: 0.1
-   Purpose:
-     - Explain HOW expressions relate (structural alignment), not WHY
-     - Trace divergence paths (same role, new surface; cross-domain migration)
-     - Generate context-aware explanation payloads (no prewritten narratives)
-   Activation:
-     - ONLY runs when user enables DRIFT checkbox
-     - Intended to run AFTER Drift Scanner + Calculator (optional)
-   Non-goals:
-     - No scoring, no thresholds, no flags, no enforcement, no predictions
+   DRIFT GATE (Authoritative, single source of truth)
    ============================================================ */
-
-/* =========================
-   0) Gate: DRIFT checkbox
-   ========================= */
 
 function defaultGetDriftEnabled() {
   const ids = ["ctx-drift", "DRIFT", "drift", "drift-checkbox", "toggle-drift"];
@@ -696,6 +633,12 @@ function defaultGetDriftEnabled() {
 function requireDriftEnabled(getDriftEnabled) {
   return !!(getDriftEnabled && getDriftEnabled());
 }
+
+window.Sovra.DriftGate = Object.freeze({
+  getEnabled: defaultGetDriftEnabled,
+  require: requireDriftEnabled
+});
+
 
 /* =========================
    1) Chimera structural vocabulary (lens-only)
@@ -958,13 +901,34 @@ function synthesizeExplanationAtoms({ query, domain, driftTimelinePayload, calcu
 
   return Object.freeze(atoms);
 }
+/* =========================
+   6) Optional: Patch your Drift Scanner gate (drop-in)
+   - Call this after you load the scanner code I gave you earlier.
+   ========================= */
+
+window.Sovra.wrapScannerWithDriftGate = function wrapScannerWithDriftGate(
+  scanner,
+  getDriftEnabled = window.Sovra.DriftGate.getEnabled
+) {
+  if (!scanner || typeof scanner.scan !== "function") return scanner;
+
+  return Object.freeze({
+    ...scanner,
+    scan: async (args) => {
+      if (!window.Sovra.DriftGate.require(getDriftEnabled)) {
+        return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
+      }
+      return scanner.scan(args);
+    }
+  });
+};
 
 /* =========================
-   7) Public module API (user-gated)
+   7) Public module API (user-gated, unified DriftGate)
    ========================= */
 
 function createChimeraExplainerCore({
-  getDriftEnabled = defaultGetDriftEnabled,
+  getDriftEnabled = window.Sovra.DriftGate.getEnabled,
   emitEventName = "drift:explain",
   trifoldProtocol = null
 } = {}) {
@@ -974,9 +938,10 @@ function createChimeraExplainerCore({
     driftTimelinePayload,
     calculatorPayload = null
   } = {}) {
-    if (!requireDriftEnabled(getDriftEnabled)) {
+    if (!window.Sovra.DriftGate.require(getDriftEnabled)) {
       return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
     }
+
     if (!driftTimelinePayload || driftTimelinePayload.ok !== true) {
       return Object.freeze({ ok: false, error: "MISSING_DRIFT_TIMELINE" });
     }
@@ -1007,6 +972,7 @@ function createChimeraExplainerCore({
 
   return Object.freeze({ explain, lens: CHIMERA_LENS });
 }
+
 
 /* =========================
    8) Global attach (manual integration)
@@ -1044,22 +1010,6 @@ window.Sovra.ChimeraExplainerCore = window.Sovra.ChimeraExplainerCore || Object.
      - Runs ONLY when DRIFT checkbox is enabled
    ============================================================ */
 
-/* =========================
-   0) Gate: DRIFT checkbox
-   ========================= */
-
-function defaultGetDriftEnabled() {
-  const ids = ["ctx-drift", "DRIFT", "drift", "drift-checkbox", "toggle-drift"];
-  for (const id of ids) {
-    const el = document.getElementById(id);
-    if (el && typeof el.checked === "boolean") return !!el.checked;
-  }
-  return false;
-}
-
-function requireDriftEnabled(getDriftEnabled) {
-  return !!(getDriftEnabled && getDriftEnabled());
-}
 
 /* =========================
    1) Lambda Speciation Lens
