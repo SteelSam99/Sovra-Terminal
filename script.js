@@ -1302,17 +1302,43 @@ function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
 
   return { collapse, contradiction, zeroSum };
 }
+window.Sovra.CollapseGate = (() => {
+  const THRESHOLDS = Object.freeze({
+    density: 0.72,        // example — tune later
+    contradiction: true  // artifact present
+  });
+
+  function hasCollapsed({ cdlm, contra }) {
+    if (!cdlm) return false;
+
+    const densityScore =
+      cdlm.nonEmptyLines > 0
+        ? Math.min(1, cdlm.avgLineLen / 120)
+        : 0;
+
+    const densityCollapse = densityScore >= THRESHOLDS.density;
+    const contraCollapse = contra === true;
+
+    return densityCollapse || contraCollapse;
+  }
+
+  return Object.freeze({ hasCollapsed });
+})();
 
 /* ============================================================
    CDLM SCORE EMITTER (UI BOUNDARY)
    ============================================================ */
 function emitCDLMScores(scores) {
-  if (!SOVRA_GATES.contraCollapse()) return;
+  if (!window.Sovra.CollapseGate.hasCollapsed({
+    cdlm: scores?.cdlm,
+    contra: scores?.isContradictionArtifact === true // or isContradictionArtifact
+  })) return;
 
   window.dispatchEvent(
     new CustomEvent("cdlm:scores", { detail: scores })
   );
 }
+
 
 /* ============================================================
    CDLM ANALYSIS EXECUTION (CORRECT BINDING POINT)
