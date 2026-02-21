@@ -1044,8 +1044,6 @@ window.Sovra.ChimeraExplainerCore = window.Sovra.ChimeraExplainerCore || Object.
      - Runs ONLY when DRIFT checkbox is enabled
    ============================================================ */
 
-"use strict";
-
 /* =========================
    0) Gate: DRIFT checkbox
    ========================= */
@@ -1268,13 +1266,15 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("score-contradiction").textContent = s.contradiction;
     document.getElementById("score-zero-sum").textContent = s.zeroSum;
 
- document
-  .getElementById("diagnostic-panel")
-  ?.classList.remove("hidden");
-
+    document
+      .getElementById("diagnostic-panel")
+      ?.classList.remove("hidden");
   });
 });
 
+/* ============================================================
+   CDLM SCORE SYNTHESIS (NUMERIC ONLY)
+   ============================================================ */
 function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
   // Zero‑Sum: 0–3
   const zsMatches = zse?.matches?.length || 0;
@@ -1302,10 +1302,10 @@ function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
 
   return { collapse, contradiction, zeroSum };
 }
-function toggleSemanticIndicators(_) {
-  // UI stub — no-op
-}
 
+/* ============================================================
+   CDLM SCORE EMITTER (UI BOUNDARY)
+   ============================================================ */
 function emitCDLMScores(scores) {
   if (!SOVRA_GATES.contraCollapse()) return;
 
@@ -1314,6 +1314,31 @@ function emitCDLMScores(scores) {
   );
 }
 
+/* ============================================================
+   CDLM ANALYSIS EXECUTION (CORRECT BINDING POINT)
+   ============================================================ */
+function runCDLMAnalysis({ text, zse, trifold, enginesFired }) {
+  // 1) 9×9 placement (DESCRIPTIVE ONLY)
+  Sovra.Topology9x9.bind({
+    text,
+    zse,
+    cdlm: traverseCDLM9x9(text),
+    trifold,
+    gates: enginesFired
+  });
+
+  // 2) Numeric synthesis
+  const scores = synthesizeCDLMScores({
+    zse,
+    trifold,
+    enginesFired
+  });
+
+  // 3) UI emission
+  emitCDLMScores(scores);
+
+  return scores;
+}
 
 
 /* ============================================================
@@ -1498,6 +1523,233 @@ function traverseCDLM9x9(text, caller = "core_diagnostic_map") {
     grid: Object.freeze(results)
   });
 }
+/* ============================================================
+   9×9 TOPOLOGY BINDER (NFIE-compliant, descriptive-only)
+   Purpose:
+     - Bind CDLM + ZSE outputs to a reference topology (9×9)
+     - Provide placement + resource-movement validation for zero-sum
+   Non-goals:
+     - No conclusions, no recommendations, no enforcement
+   Emits:
+     - window event: "sovra:topology" { detail: payload }
+   ============================================================ */
+
+(() => {
+  window.Sovra = window.Sovra || {};
+
+  /* ----------------------------
+     1) 9×9 reference topology
+     ---------------------------- */
+
+  const TOPOLOGY_9X9 = Object.freeze({
+    id: "SOVRA_9X9_TOPOLOGY_V1",
+    domains: Object.freeze({
+      Economics: Object.freeze({
+        resources: Object.freeze(["money", "credit", "wealth", "jobs", "housing", "loans", "interest", "assets"]),
+        routingCues: Object.freeze(["bank", "lender", "mortgage", "credit score", "interest rate", "underwriting", "investment"]),
+      }),
+      Education: Object.freeze({
+        resources: Object.freeze(["access", "placement", "grades", "discipline", "funding", "curriculum", "credentials"]),
+        routingCues: Object.freeze(["tracking", "gifted", "AP", "discipline", "suspension", "standardized", "accreditation"]),
+      }),
+      Entertainment: Object.freeze({
+        resources: Object.freeze(["visibility", "roles", "platform", "reach", "brand", "franchise", "algorithmic distribution"]),
+        routingCues: Object.freeze(["casting", "studio", "agent", "box office", "streaming", "algorithm", "franchise", "relatable"]),
+      }),
+      Labor: Object.freeze({
+        resources: Object.freeze(["hiring", "promotion", "pay", "benefits", "security", "status"]),
+        routingCues: Object.freeze(["HR", "manager", "promotion", "performance", "culture fit", "referral", "pipeline"]),
+      }),
+      Law: Object.freeze({
+        resources: Object.freeze(["rights", "protection", "due process", "bail", "sentencing", "access to counsel"]),
+        routingCues: Object.freeze(["probable cause", "prosecution", "plea", "bail", "sentencing", "qualified immunity"]),
+      }),
+      Politics: Object.freeze({
+        resources: Object.freeze(["representation", "access", "votes", "policy", "legitimacy", "speech reach"]),
+        routingCues: Object.freeze(["district", "ballot", "turnout", "PAC", "pundit", "platform", "messaging"]),
+      }),
+      Religion: Object.freeze({
+        resources: Object.freeze(["moral authority", "belonging", "purity status", "legitimacy"]),
+        routingCues: Object.freeze(["doctrine", "sin", "virtue", "mission", "civilizing", "chosen", "holy"]),
+      }),
+      Sex: Object.freeze({
+        resources: Object.freeze(["desirability", "safety", "status", "pairing access", "marriageability"]),
+        routingCues: Object.freeze(["preference", "type", "fetish", "exotic", "pure", "protect", "dangerous"]),
+      }),
+      War: Object.freeze({
+        resources: Object.freeze(["safety", "life", "territory", "sovereignty", "security", "justification"]),
+        routingCues: Object.freeze(["enemy", "threat", "collateral", "security", "terror", "occupation", "doctrine"]),
+      }),
+    }),
+
+    // 9×9 columns (kept as labels for GUI placement; not “logic”)
+    columns: Object.freeze([
+      "BranchingPattern",
+      "ConnectionTopology",
+      "RoutingFlowBehavior",
+      "OutputSymptoms",
+      "DefensiveReaction",
+      "MemeticReplication",
+      "CulturalPressure",
+      "EvolutionPressure",
+      "NetworkContagionDynamics"
+    ])
+  });
+
+  /* ----------------------------
+     2) Zero-sum “resource movement” validator
+     - Zero-sum is only “valid” if movement is asserted.
+     - This does NOT claim truth—only detects movement language.
+     ---------------------------- */
+
+  const MOVE_VERBS = Object.freeze([
+    "take", "took", "taken",
+    "steal", "stole", "stolen",
+    "remove", "removed",
+    "replace", "replaced",
+    "erase", "erased",
+    "deny", "denied",
+    "ban", "banned",
+    "cut", "cuts", "cutting",
+    "strip", "stripped",
+    "lose", "lost",
+    "give", "gave",
+    "grant", "granted",
+    "withhold", "withheld",
+    "transfer", "transferred",
+    "shift", "shifted"
+  ]);
+
+  function safeLower(s) { return String(s || "").toLowerCase(); }
+
+  function detectResourceMovement(text, domainDef) {
+    const t = safeLower(text);
+    const verbHit = MOVE_VERBS.some(v => t.includes(v));
+    const resourceHit = (domainDef?.resources || []).some(r => t.includes(String(r).toLowerCase()));
+    return Object.freeze({
+      asserted: !!(verbHit && resourceHit),
+      verbHit,
+      resourceHit
+    });
+  }
+
+  /* ----------------------------
+     3) Domain placement heuristics (descriptive)
+     - Uses routing cues + resource mentions
+     - Returns a ranked list (not a “decision”)
+     ---------------------------- */
+
+  function scoreDomain(text, domainDef) {
+    const t = safeLower(text);
+    const cues = domainDef?.routingCues || [];
+    const resources = domainDef?.resources || [];
+
+    const cueHits = cues.filter(c => t.includes(String(c).toLowerCase())).length;
+    const resourceHits = resources.filter(r => t.includes(String(r).toLowerCase())).length;
+
+    // Light weighting: cues > resources (routing is more diagnostic than nouns)
+    const score = (cueHits * 2) + (resourceHits * 1);
+
+    return Object.freeze({ score, cueHits, resourceHits });
+  }
+
+  function rankDomains(text) {
+    const out = [];
+    for (const [name, def] of Object.entries(TOPOLOGY_9X9.domains)) {
+      const s = scoreDomain(text, def);
+      out.push(Object.freeze({ domain: name, ...s }));
+    }
+    return Object.freeze(out.sort((a, b) => b.score - a.score));
+  }
+
+  /* ----------------------------
+     4) Bind CDLM + ZSE to topology
+     ---------------------------- */
+
+  function bindTo9x9({ text = "", zse = null, cdlm = null, trifold = null, gates = {}, domainHint = null } = {}) {
+    const t = String(text || "");
+    const ranked = rankDomains(t);
+
+    // If caller provides a domain hint, keep it as a “pinned” context (not forced)
+    const pinned = domainHint ? String(domainHint) : null;
+
+    const top = ranked[0] || { domain: "UNSPECIFIED", score: 0, cueHits: 0, resourceHits: 0 };
+    const chosenDomain = pinned && TOPOLOGY_9X9.domains[pinned] ? pinned : top.domain;
+    const domainDef = TOPOLOGY_9X9.domains[chosenDomain] || null;
+
+    // Zero-sum detection (reuse your existing detector if present)
+    const zs = (typeof window.runZSEStandalone === "function")
+      ? window.runZSEStandalone(t)
+      : (typeof window.detectZeroSum === "function")
+        ? window.detectZeroSum(t)
+        : { detected: false };
+
+    const movement = domainDef ? detectResourceMovement(t, domainDef) : Object.freeze({ asserted: false, verbHit: false, resourceHit: false });
+
+    // “Zero-sum valid” here means: zero-sum language + asserted movement in the chosen domain
+    const zeroSumStructural = Object.freeze({
+      detected: !!zs?.detected,
+      score: Number(zs?.score || 0),
+      movementAsserted: !!movement.asserted,
+      movementSignals: movement,
+      domain: chosenDomain
+    });
+
+    // CDLM/ZSE “group” payloads remain raw—topology only places them
+    const payload = Object.freeze({
+      ok: true,
+      kind: "SOVRA_9X9_BINDING_PAYLOAD",
+      topologyId: TOPOLOGY_9X9.id,
+      gates: Object.freeze({ ...gates }),
+
+      placement: Object.freeze({
+        pinnedDomain: pinned,
+        chosenDomain,
+        rankedDomains: ranked.slice(0, 5) // keep GUI light
+      }),
+
+      metrics: Object.freeze({
+        cdlm: cdlm ? Object.freeze({ ...cdlm }) : null,
+        zse: zse ? Object.freeze({ ...zse }) : null,
+        trifold: trifold ? Object.freeze({ ...trifold }) : null
+      }),
+
+      zeroSumStructural
+    });
+
+    try {
+      window.dispatchEvent(new CustomEvent("sovra:topology", { detail: payload }));
+    } catch (_) {}
+
+    return payload;
+  }
+
+  /* ----------------------------
+     5) Public API
+     ---------------------------- */
+
+  window.Sovra.Topology9x9 = window.Sovra.Topology9x9 || Object.freeze({
+    ref: TOPOLOGY_9X9,
+    bind: bindTo9x9
+  });
+
+  /* ----------------------------
+     6) Convenience: bind directly from AnalysisSuite output
+     ---------------------------- */
+
+  window.Sovra.bindAnalysisTo9x9 = window.Sovra.bindAnalysisTo9x9 || function bindAnalysisTo9x9(analysisResult, domainHint = null) {
+    const a = analysisResult || {};
+    return window.Sovra.Topology9x9.bind({
+      text: a.text || "",
+      zse: a.zse || null,
+      cdlm: a.cdlm || null,
+      trifold: a?.trifold || null,
+      gates: a?.summary?.gates || {},
+      domainHint
+    });
+  };
+
+})();
 
 
 /* ============================================================
