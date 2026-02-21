@@ -2090,95 +2090,42 @@ const EXPECTED_STRUCTURAL_CLASSES = Object.freeze([
 ]);
 
 /* ============================================================
-   Visibility Diagnostics Unit (VDU)
-   VAP + PCA + TUUR — Public Runtime (NFIE-safe)
-   Re-wire: VDU renders ONLY when CollapseGate confirms collapse
+   VDUManager — Passive Listener + Conditional Renderer
+   Listens for CDLM output and renders VDU block if collapse is confirmed
    ============================================================ */
 
-const VDU = (function () {
+window.Sovra = window.Sovra || {};
 
-  function inferStructuralClasses(results) {
-    const found = new Set();
+window.Sovra.VDUManager = (() => {
+  const containerId = "vdu-container"; // You can change this to your actual mount point
 
-    (results || []).forEach(r => {
-      const text = `${r?.title || ""} ${r?.snippet || ""}`.toLowerCase();
+  function renderVDUBlock(results, collapseContext = {}) {
+    if (!window.VDU || typeof window.VDU.run !== "function") return;
 
-      if (text.includes("system") || text.includes("structure")) found.add("systemic");
-      if (text.includes("history") || text.includes("historical")) found.add("historical");
-      if (text.includes("law") || text.includes("legal") || text.includes("court")) found.add("legal");
-      if (text.includes("economy") || text.includes("market")) found.add("economic");
-      if (text.includes("mechanism") || text.includes("process")) found.add("mechanistic");
+    const block = window.VDU.run(results, collapseContext);
+    if (!block) return;
+
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = ""; // Clear previous render
+      container.appendChild(block);
+    } else {
+      console.warn("VDUManager: Container not found:", containerId);
+    }
+  }
+
+  function listen() {
+    window.Sovra.SignalBus.on("CDLM_READY", (cdlm) => {
+      const results = window.Sovra?.LastSearchResults || [];
+      const collapseContext = window.Sovra?.CollapseContext || {};
+
+      renderVDUBlock(results, collapseContext);
     });
-
-    return Array.from(found);
   }
 
-  function computePCA(expected, surfaced) {
-    const exp = Array.isArray(expected) ? expected : [];
-    const surf = Array.isArray(surfaced) ? surfaced : [];
-
-    const missing = exp.filter(e => !surf.includes(e));
-    const score = exp.length ? (missing.length / exp.length) : 0;
-
-    return { expected: exp, surfaced: surf, missing, score };
-  }
-
-  function render(pca) {
-    if (!pca || !Array.isArray(pca.missing) || !pca.missing.length) return null;
-
-    const block = document.createElement("section");
-    block.className = "vdu-block";
-
-    block.innerHTML = `
-      <h3>Visibility Diagnostic</h3>
-      <p>
-        Several structurally relevant explanations did not appear in the surfaced results.
-      </p>
-      <p>
-        Perceptual Complement Analysis indicates a ${
-          pca.score > 0.66 ? "high" :
-          pca.score > 0.33 ? "moderate" : "low"
-        } omission pattern at this resolution.
-      </p>
-      <p>
-        This observation is consistent with visibility attenuation, a stability‑preserving behavior
-        where encounter probability can be reduced without suppression.
-      </p>
-      <p class="vdu-context">
-        Such patterns are commonly associated with homeostatic coherence preservation in complex systems.
-      </p>
-    `;
-
-    return block;
-  }
-
-  function hasCollapse(collapseContext) {
-    const gate = window?.Sovra?.CollapseGate;
-    if (!gate || typeof gate.hasCollapsed !== "function") return false;
-
-    try {
-      return !!gate.hasCollapsed(collapseContext || {});
-    } catch (_) {
-      return false;
-    }
-  }
-
-  return Object.freeze({
-    run(results, collapseContext = {}) {
-      // HARD GUARD: VDU is silent unless collapse is confirmed
-      if (!hasCollapse(collapseContext)) return null;
-
-      const expected = (typeof EXPECTED_STRUCTURAL_CLASSES !== "undefined" && Array.isArray(EXPECTED_STRUCTURAL_CLASSES))
-        ? EXPECTED_STRUCTURAL_CLASSES
-        : [];
-
-      const surfaced = inferStructuralClasses(results);
-      const pca = computePCA(expected, surfaced);
-      return render(pca);
-    }
-  });
-
+  return Object.freeze({ listen });
 })();
+
 
 /* ============================================================
    Welsing–Fuller Query Rewrite (METHOD-LEVEL, IMMUTABLE)
