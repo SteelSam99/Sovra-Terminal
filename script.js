@@ -2142,6 +2142,7 @@ const EXPECTED_STRUCTURAL_CLASSES = Object.freeze([
 /* ============================================================
    Visibility Diagnostics Unit (VDU)
    VAP + PCA + TUUR — Public Runtime (NFIE-safe)
+   Re-wire: VDU renders ONLY when CollapseGate confirms collapse
    ============================================================ */
 
 const VDU = (function () {
@@ -2149,8 +2150,8 @@ const VDU = (function () {
   function inferStructuralClasses(results) {
     const found = new Set();
 
-    results.forEach(r => {
-      const text = `${r.title || ""} ${r.snippet || ""}`.toLowerCase();
+    (results || []).forEach(r => {
+      const text = `${r?.title || ""} ${r?.snippet || ""}`.toLowerCase();
 
       if (text.includes("system") || text.includes("structure")) found.add("systemic");
       if (text.includes("history") || text.includes("historical")) found.add("historical");
@@ -2163,21 +2164,17 @@ const VDU = (function () {
   }
 
   function computePCA(expected, surfaced) {
-    const missing = expected.filter(e => !surfaced.includes(e));
-    const score = expected.length
-      ? missing.length / expected.length
-      : 0;
+    const exp = Array.isArray(expected) ? expected : [];
+    const surf = Array.isArray(surfaced) ? surfaced : [];
 
-    return {
-      expected,
-      surfaced,
-      missing,
-      score
-    };
+    const missing = exp.filter(e => !surf.includes(e));
+    const score = exp.length ? (missing.length / exp.length) : 0;
+
+    return { expected: exp, surfaced: surf, missing, score };
   }
 
   function render(pca) {
-    if (!pca.missing.length) return null;
+    if (!pca || !Array.isArray(pca.missing) || !pca.missing.length) return null;
 
     const block = document.createElement("section");
     block.className = "vdu-block";
@@ -2205,14 +2202,31 @@ const VDU = (function () {
     return block;
   }
 
-  return {
-    run(results) {
-      const expected = EXPECTED_STRUCTURAL_CLASSES;
+  function hasCollapse(collapseContext) {
+    const gate = window?.Sovra?.CollapseGate;
+    if (!gate || typeof gate.hasCollapsed !== "function") return false;
+
+    try {
+      return !!gate.hasCollapsed(collapseContext || {});
+    } catch (_) {
+      return false;
+    }
+  }
+
+  return Object.freeze({
+    run(results, collapseContext = {}) {
+      // HARD GUARD: VDU is silent unless collapse is confirmed
+      if (!hasCollapse(collapseContext)) return null;
+
+      const expected = (typeof EXPECTED_STRUCTURAL_CLASSES !== "undefined" && Array.isArray(EXPECTED_STRUCTURAL_CLASSES))
+        ? EXPECTED_STRUCTURAL_CLASSES
+        : [];
+
       const surfaced = inferStructuralClasses(results);
       const pca = computePCA(expected, surfaced);
       return render(pca);
     }
-  };
+  });
 
 })();
 
@@ -2443,8 +2457,13 @@ const diagnostics = {
 const scores = synthesizeCDLMScores(diagnostics);
 emitCDLMScores(scores);
 
-const vduBlock = VDU.run(list);
+const vduBlock = VDU.run(list, {
+  cdlm: scores?.cdlm,
+  contra: scores?.isContradictionArtifact === true
+});
+
 if (vduBlock) results.appendChild(vduBlock);
+
 
     list.forEach((r, i) => {
       // --- CDLM traversal (non-force, per-object) ---
