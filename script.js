@@ -1,4 +1,20 @@
 /* ============================================================
+   Sovra — Purpose Statement
+
+   Sovra exposes structural harm within systems of white supremacy
+   by retrieving and displaying public information without
+   interpretation or direction.
+
+   Sovra does not accuse individuals or entities.
+   Sovra does not persuade, instruct, or optimize behavior.
+   Sovra presents observable structure so users may witness
+   continuity and draw their own conclusions.
+
+   This statement is declarative only and has no effect on
+   program execution.
+   ============================================================ */
+
+/* ============================================================
    Sovra Public Runtime (NFIE-compliant)
    Version: 1.0
    Purpose: Search UI + evidence handling + one-way telemetry
