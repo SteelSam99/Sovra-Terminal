@@ -278,6 +278,208 @@ window.Sovra.AnalysisSuite = (() => {
     analyzeFromFetcher
   });
 })();
+/* ============================================================
+   MEDIA SIGNAL INTEGRITY FILTER (MSIF)
+   Module ID: module-msif
+   Purpose:
+     - Detect anomalous valence and frequency drift in media streams
+     - Provide threat-level classification based on weighted signal deviation
+   Constraints:
+     - Read-only analysis
+     - No enforcement or blocking
+     - Callable only by authorized modules
+   Output:
+     - { anomalyDetected, valenceDrift, freqDrift, threatLevel }
+   ============================================================ */
+const MSIF = {
+  id: "module-msif",
+  authorizedCallers: new Set(["SOVRA_DEFENSE_UPGRADE", "EMOTIONAL_FLUENCY_MATRIX"]),
+
+  detectAnomalousValence: function (mediaStream, baselineProfile, caller = "msif") {
+    if (!this.authorizedCallers.has(caller)) {
+      throw new Error(`MSIF Access Denied: Unauthorized caller '${caller}'`);
+    }
+
+    const valenceDrift = mediaStream.valence - baselineProfile.expectedValence;
+    const freqDrift = mediaStream.frequency - baselineProfile.expectedFrequency;
+
+    const valenceAnomaly = Math.abs(valenceDrift) > baselineProfile.valenceThreshold;
+    const freqAnomaly = Math.abs(freqDrift) > baselineProfile.frequencyThreshold;
+
+    return {
+      anomalyDetected: valenceAnomaly || freqAnomaly,
+      valenceDrift,
+      freqDrift,
+      threatLevel: this.calculateThreatLevel(valenceDrift, freqDrift)
+    };
+  },
+
+  calculateThreatLevel: function (valenceDrift, freqDrift) {
+    const weightedScore = (Math.abs(valenceDrift) * 0.6) + (Math.abs(freqDrift) * 0.4);
+    if (weightedScore > 1.5) return "HIGH";
+    if (weightedScore > 0.8) return "MODERATE";
+    return "LOW";
+  }
+};
+
+/* ============================================================
+   SECURITY POSTURE MANAGER
+   Module ID: SECURITY_POSTURE_MANAGER.sys
+   Purpose:
+     - Maintain and escalate system security posture levels
+     - Dispatch alerts via SOVRA_PING
+   Levels:
+     - 0: Normal
+     - 1–4: Increasing severity (up to Red Alert)
+   ============================================================ */
+const SecurityPostureManager = (() => {
+  let currentLevel = 0;
+
+  const escalate = (level, reason) => {
+    if (level > currentLevel) {
+      currentLevel = level;
+      const payload = {
+        type: "SECURITY_POSTURE_ESCALATION",
+        level,
+        reason,
+        timestamp: now()
+      };
+      SOVRA_PING.dispatch(payload, SOVRA_PING.levels[level]);
+    }
+  };
+
+  const reset = () => {
+    currentLevel = 0;
+    logAudit("SECURITY_POSTURE_RESET", { timestamp: now() });
+  };
+
+  return {
+    getLevel: () => currentLevel,
+    escalate,
+    reset
+  };
+})();
+registerModule("SECURITY_POSTURE_MANAGER.sys", SecurityPostureManager);
+
+/* ============================================================
+   RUNTIME INTEGRITY MANAGER
+   Module ID: RUNTIME_INTEGRITY_MANAGER.sys
+   Purpose:
+     - Verify runtime module hashes against known values
+     - Escalate posture if mismatch is detected
+   ============================================================ */
+const RuntimeIntegrityManager = (() => {
+  const knownHashes = {
+    "SOVRA_CORE.js": "abc123def456...", // Replace with real SHA-256 hashes
+    "SOVRA_PING.sys": "789ghi012jkl...",
+    "VDU_ENGINE.js": "mno345pqr678..."
+  };
+
+  const verify = async () => {
+    for (const [module, expectedHash] of Object.entries(knownHashes)) {
+      const actualHash = await hashModule(module);
+      if (actualHash !== expectedHash) {
+        SecurityPostureManager.escalate(3, `Hash mismatch in ${module}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  return { verify };
+})();
+registerModule("RUNTIME_INTEGRITY_MANAGER.sys", RuntimeIntegrityManager);
+
+/* ============================================================
+   SIGNAL THREAT MONITOR
+   Module ID: SIGNAL_THREAT_MONITOR.sys
+   Purpose:
+     - Evaluate media streams for anomalous valence/frequency
+     - Escalate posture based on threat level
+   ============================================================ */
+const SignalThreatMonitor = (() => {
+  const evaluate = (mediaStream, baselineProfile, caller) => {
+    try {
+      const result = MSIF.detectAnomalousValence(mediaStream, baselineProfile, caller);
+
+      if (result.anomalyDetected) {
+        const level = result.threatLevel === "HIGH" ? 3 :
+                      result.threatLevel === "MODERATE" ? 2 : 1;
+
+        SecurityPostureManager.escalate(level, `MSIF anomaly: ${result.threatLevel}`);
+      }
+
+      return result;
+    } catch (err) {
+      SecurityPostureManager.escalate(3, `MSIF access violation by '${caller}'`);
+      return { anomalyDetected: false, error: err.message };
+    }
+  };
+
+  return { evaluate };
+})();
+registerModule("SIGNAL_THREAT_MONITOR.sys", SignalThreatMonitor);
+
+/* ============================================================
+   DOM MUTATION SENTINEL
+   Module ID: DOM_MUTATION_SENTINEL.sys
+   Purpose:
+     - Detect unexpected DOM changes
+     - Escalate posture on suspicious mutations
+   ============================================================ */
+const DOMMutationSentinel = (() => {
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      if (mutation.addedNodes.length > 0) {
+        SecurityPostureManager.escalate(2, "Unexpected DOM mutation detected");
+        break;
+      }
+    }
+  });
+
+  const start = () => {
+    observer.observe(document.body, { childList: true, subtree: true });
+  };
+
+  return { start };
+})();
+registerModule("DOM_MUTATION_SENTINEL.sys", DOMMutationSentinel);
+DOMMutationSentinel.start();
+
+/* ============================================================
+   GLOBAL POLLUTION DETECTOR
+   Module ID: GLOBAL_POLLUTION_DETECTOR.sys
+   Purpose:
+     - Detect unauthorized additions to the global namespace
+     - Escalate posture on pollution detection
+   ============================================================ */
+const GlobalPollutionDetector = (() => {
+  const baselineGlobals = new Set(Object.getOwnPropertyNames(window));
+
+  const scan = () => {
+    const currentGlobals = new Set(Object.getOwnPropertyNames(window));
+    for (const key of currentGlobals) {
+      if (!baselineGlobals.has(key)) {
+        SecurityPostureManager.escalate(3, `Global pollution detected: ${key}`);
+        break;
+      }
+    }
+  };
+
+  return { scan };
+})();
+registerModule("GLOBAL_POLLUTION_DETECTOR.sys", GlobalPollutionDetector);
+
+/* ============================================================
+   DEFENSE NET SCAN LOOP
+   Purpose:
+     - Periodically verify runtime integrity and global state
+     - Interval: 60 seconds
+   ============================================================ */
+setInterval(() => {
+  RuntimeIntegrityManager.verify();
+  GlobalPollutionDetector.scan();
+}, 60000);
 
 /* ============================================================
    OPTIONAL: UI SIGNAL HOOK (render-only)
