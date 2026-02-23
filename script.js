@@ -266,36 +266,44 @@ window.Sovra.AnalysisSuite = (() => {
   }
 
   async function analyzeFromFetcher(request, gates = {}) {
-    const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
-    const zse = ZSE(text);
-    const cdlm = CDLM(text);
-    const delta = Delta(text, meta);
-    const summary = FieldSummary(zse, cdlm, delta, gates);
+  const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
+  const zse = ZSE(text);
+  const cdlm = CDLM(text);
+  const delta = Delta(text, meta);
 
-    // Render analysis output
-    document.getElementById("analysis-zse").textContent = JSON.stringify(zse, null, 2);
-    document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
-    document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
-    document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
-    
-     // Inject diagnostic scores into the GUI
-if (summary?.field) {
-  const field = summary.field;
-  const collapseEl = document.getElementById("score-collapse");
-  const contradictionEl = document.getElementById("score-contradiction");
-  const zeroSumEl = document.getElementById("score-zero-sum");
+  // TEMP: Stub scores for testing
+  const calcPayload = {
+    collapseScore: 7,
+    contradictionScore: 4,
+    zeroSumScore: 2
+  };
 
-  if (collapseEl) collapseEl.textContent = field.collapseScore ?? "–";
-  if (contradictionEl) contradictionEl.textContent = field.contradictionScore ?? "–";
-  if (zeroSumEl) zeroSumEl.textContent = field.zeroSumScore ?? "–";
+  const summary = FieldSummary(zse, cdlm, delta, gates, calcPayload);
+
+  // Render analysis output
+  document.getElementById("analysis-zse").textContent = JSON.stringify(zse, null, 2);
+  document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
+  document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
+  document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
+
+  // Inject diagnostic scores into the GUI
+  if (summary?.field) {
+    const field = summary.field;
+    const collapseEl = document.getElementById("score-collapse");
+    const contradictionEl = document.getElementById("score-contradiction");
+    const zeroSumEl = document.getElementById("score-zero-sum");
+
+    if (collapseEl) collapseEl.textContent = field.collapseScore ?? "–";
+    if (contradictionEl) contradictionEl.textContent = field.contradictionScore ?? "–";
+    if (zeroSumEl) zeroSumEl.textContent = field.zeroSumScore ?? "–";
+  }
+
+  // Apply fallback if delta is empty
+  ensureDeltaFallback();
+
+  return Object.freeze({ text, meta, zse, cdlm, delta, summary });
 }
 
-
-    // Apply fallback if delta is empty
-    ensureDeltaFallback();
-
-    return Object.freeze({ text, meta, zse, cdlm, delta, summary });
-  }
 
  function FieldSummary(zse, cdlm, delta, gates = {}, scores = {}) {
   const densityHint =
@@ -327,7 +335,6 @@ if (summary?.field) {
     })
   });
 }
-
 
 /* ============================================================
    MEDIA SIGNAL INTEGRITY FILTER (MSIF)
