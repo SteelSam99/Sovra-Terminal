@@ -307,22 +307,61 @@ html, body {
 }
 
 /* ============================================================
-   QUAD‑CORE CSR — DORMANT VISUALS
+   QUAD‑CORE CSR — ACTIVE VISUALS
    ============================================================ */
 
-/* Data state bar (neutral until activated) */
+/* Data Source State Indicator */
 #sovra-data-state {
   width: 100%;
   height: 4px;
-  background-color: #e5e7eb;
+  background-color: #444;
 }
 
-/* Analysis surface intentionally hidden */
+#sovra-data-state[data-mode="calibration"] {
+  background-color: #666;
+}
+
+#sovra-data-state[data-mode="active"] {
+  background-color: #2e8bff;
+}
+
+/* Analysis Output Surface */
 #sovra-analysis-output {
-  display: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #e0e0e0;
 }
 
-/* Capability flags never visible */
+/* Individual analysis readouts */
+#analysis-zse,
+#analysis-cdlm,
+#analysis-delta,
+#analysis-field {
+  background-color: #111;
+  border-left: 3px solid #333;
+  padding: 0.5rem;
+  white-space: pre-wrap;
+}
+
+/* Capability Flags (Hidden Surface) */
 #sovra-capabilities {
   display: none;
+}
+
+/* Raw Text Surface (Read-Only) */
+#sovra-raw-text {
+  margin-top: 1rem;
+}
+
+#raw-text-output {
+  background-color: #0b0b0b;
+  color: #cfcfcf;
+  padding: 0.75rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
 }
