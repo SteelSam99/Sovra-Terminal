@@ -283,6 +283,28 @@ html, body {
   font-size: 0.85rem;
   color: var(--muted);
 }
+#voice-output {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #0f0f0f;
+  border-left: 4px solid #2e8bff;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  white-space: pre-wrap;
+  border-radius: 6px;
+}
+
+.voice-card {
+  padding: 12px;
+  background-color: #111;
+  border-left: 3px solid #2e8bff;
+  margin-bottom: 1rem;
+}
+
+.voice-text {
+  line-height: 1.5;
+}
 
 /* ============================================================
    QUAD‑CORE CSR — DORMANT VISUALS
