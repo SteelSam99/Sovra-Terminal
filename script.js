@@ -289,11 +289,7 @@ window.Sovra.SignalBus.on("PRIMARY_SOURCE_AVAILABLE", () => {
 });
 
 
-
-
-
 document.addEventListener("DOMContentLoaded", () => {
-
   const contextToggle = document.getElementById("contextControlToggle");
   const contextPanel = document.getElementById("contextControlPanel");
   const closeContextPanel = document.getElementById("closeContextPanel");
@@ -309,19 +305,24 @@ document.addEventListener("DOMContentLoaded", () => {
       contextPanel.classList.add("hidden");
 
       const contextState = {
-        rawData: document.getElementById("rawData")?.checked ?? false,
+        raw: document.getElementById("rawData")?.checked ?? false,
         collapseContra: document.getElementById("collapseContra")?.checked ?? false,
         zeroSum: document.getElementById("zeroSum")?.checked ?? false,
-        welsingFuller: document.getElementById("welsingFuller")?.checked ?? false,
-        driftCore: document.getElementById("driftCore")?.checked ?? false,
+        welsing: document.getElementById("welsingFuller")?.checked ?? false,
+        drift: document.getElementById("driftCore")?.checked ?? false,
         sovraSpeaks: document.getElementById("sovraSpeaks")?.checked ?? false
       };
 
-      // optional: persist or log contextState here
+      // Inject into CollapseContext.gates
+      window.Sovra = window.Sovra || {};
+      window.Sovra.CollapseContext = window.Sovra.CollapseContext || {};
+      window.Sovra.CollapseContext.gates = contextState;
+
+      console.log("Updated CollapseContext.gates:", contextState);
     });
   }
-
 });
+
 
 
 /* ================================================================
