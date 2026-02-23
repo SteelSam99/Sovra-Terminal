@@ -2,7 +2,7 @@
    NON-INTERFERENCE DECLARATION — CEASE AND DESIST CONDITIONS
    ============================================================
 
-   The only cease and desist that will be accepted and immediately complied with are as follows:
+   The only cease and desist orders or requests that will be accepted and immediately complied with are as follows:
 
    {
      1: The estate or legal representative of Dr. Francis Cress Welsing.
@@ -2818,6 +2818,25 @@ window.VDU = (() => {
   return Object.freeze({ run });
 })();
 
+function renderDiagnosticScores(cdlm) {
+  if (!cdlm) return;
+
+  const { collapse, contradiction, zeroSum } = cdlm;
+
+  const collapseEl = document.getElementById("score-collapse");
+  const contradictionEl = document.getElementById("score-contradiction");
+  const zeroSumEl = document.getElementById("score-zero-sum");
+
+  if (collapseEl) collapseEl.textContent = `${collapse} / 10`;
+  if (contradictionEl) contradictionEl.textContent = `${contradiction} / 10`;
+  if (zeroSumEl) zeroSumEl.textContent = `${zeroSum} / 3`;
+
+  document.getElementById("diagnostic-bar")?.classList.remove("hidden");
+  document.getElementById("diagnostic-panel")?.classList.remove("hidden");
+
+  console.log("[CDLM] Scores rendered:", { collapse, contradiction, zeroSum });
+}
+
 /* ============================================================
    6) Public search runtime (NO interpretive enforcement)
    ============================================================ */
@@ -2893,6 +2912,8 @@ if (!contentType.includes("application/json")) {
 }
 
 const data = await response.json();
+     renderDiagnosticScores(data.cdlm);
+
 
 /* --------------------------------
    Temporal Drift Timeline (LEFT COLUMN)
