@@ -2120,6 +2120,7 @@ const EXPECTED_STRUCTURAL_CLASSES = Object.freeze([
   "economic",
   "mechanistic"
 ]);
+
 const FRAGMENTS = Object.freeze({
   visibility: Object.freeze({
     concentration: ["visibility", "concentrated", "single", "institutional", "perspective"],
@@ -2136,7 +2137,9 @@ const FRAGMENTS = Object.freeze({
   })
 });
 
-==========================================================================================================================================================================
+/* ============================================================
+   Fragment Selection
+   ============================================================ */
 function selectFragments(vdu) {
   const out = [];
 
@@ -2158,7 +2161,10 @@ function selectFragments(vdu) {
 
   return out;
 }
-=================================================================================================================================================
+
+/* ============================================================
+   Sentence Assembly
+   ============================================================ */
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -2179,7 +2185,10 @@ function assembleSentences(fragmentSets, maxSentences = 2) {
 
   return sentences.join(" ");
 }
-===========================================================================================================================================
+
+/* ============================================================
+   Semantic Filtering
+   ============================================================ */
 const SEMANTIC_FIELD = Object.freeze({
   allow: Object.freeze(["visibility", "structure", "resolution", "power", "asymmetry", "omissions", "attenuation"]),
   block: Object.freeze(["blame", "intent", "belief", "morality", "guilt"])
@@ -2196,7 +2205,10 @@ function filterTokens(tokens) {
     return allow.has(k);
   });
 }
-=====================================================================================================================================================
+
+/* ============================================================
+   Reflection Modules
+   ============================================================ */
 function visibilityReflection(vdu) {
   if (!vdu.visibility?.concentratedAroundInstitution &&
       !vdu.visibility?.externalLowResolution &&
@@ -2208,7 +2220,7 @@ function visibilityReflection(vdu) {
   const filtered = frags.map(filterTokens);
   return assembleSentences(filtered, vdu.speech?.maxSentences || 2);
 }
-========================================================================================================================================================
+
 function powerAsymmetryReflection(vdu) {
   if (!vdu.field?.powerAsymmetryLikely) return null;
 
@@ -2216,7 +2228,7 @@ function powerAsymmetryReflection(vdu) {
   const filtered = frags.map(filterTokens);
   return assembleSentences(filtered, 1);
 }
-==========================================================================================================================================================
+
 function negativeSpaceReflection(vdu) {
   if (!vdu.visibility?.omissionsDetected) return null;
 
@@ -2224,7 +2236,10 @@ function negativeSpaceReflection(vdu) {
   const filtered = frags.map(filterTokens);
   return assembleSentences(filtered, 2);
 }
-===============================================================================================================================================================
+
+/* ============================================================
+   Voice Generator
+   ============================================================ */
 function generateVoice(vdu) {
   const outputs = [];
 
@@ -2242,13 +2257,12 @@ function generateVoice(vdu) {
   return outputs.slice(0, vdu.speech.maxSentences).join(" ");
 }
 
+
 /* ============================================================
    SOVRA SPEAKS — VDU FILTERED
    Version: 1.0
    Mode: Full-Parse Only | On-Site Generated | Non-Patterned
    ============================================================ */
-
-"use strict";
 
 window.Sovra = window.Sovra || {};
 
