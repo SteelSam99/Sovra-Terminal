@@ -380,6 +380,10 @@ html, body {
   color: #e0e0e0;
 }
 
+#sovra-analysis-output pre:empty {
+  display: none;
+}
+
 /* Individual analysis readouts */
 #analysis-zse,
 #analysis-cdlm,
