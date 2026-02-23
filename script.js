@@ -322,6 +322,9 @@ const MSIF = {
   }
 };
 
+registerModule("module-msif", MSIF); // ✅ This goes right here
+
+
 /* ============================================================
    SECURITY POSTURE MANAGER
    Module ID: SECURITY_POSTURE_MANAGER.sys
