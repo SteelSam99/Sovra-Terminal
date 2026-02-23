@@ -322,7 +322,7 @@ const MSIF = {
   }
 };
 
-registerModule("module-msif", MSIF); //
+registerModule("SECURITY_POSTURE_MANAGER.sys", SecurityPostureManager);
 
 
 /* ============================================================
