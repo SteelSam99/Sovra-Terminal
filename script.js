@@ -349,7 +349,7 @@ const SecurityPostureManager = (() => {
         type: "SECURITY_POSTURE_ESCALATION",
         level,
         reason,
-        timestamp: now()
+      timestamp: Date.now()
       };
       SOVRA_PING.dispatch(payload, SOVRA_PING.levels[level]);
     }
@@ -357,7 +357,7 @@ const SecurityPostureManager = (() => {
 
   const reset = () => {
     currentLevel = 0;
-    logAudit("SECURITY_POSTURE_RESET", { timestamp: now() });
+   logAudit("SECURITY_POSTURE_RESET", { timestamp: Date.now() });
   };
 
   return {
@@ -375,6 +375,11 @@ registerModule("SECURITY_POSTURE_MANAGER.sys", SecurityPostureManager);
      - Verify runtime module hashes against known values
      - Escalate posture if mismatch is detected
    ============================================================ */
+async function hashModule(moduleName) {
+  // Simulated hash for development — replace with real logic later
+  return "abc123def456...";
+}
+
 const RuntimeIntegrityManager = (() => {
   const knownHashes = {
     "SOVRA_CORE.js": "abc123def456...", // Replace with real SHA-256 hashes
