@@ -2054,6 +2054,35 @@ function accumulateGridObservations(gridResult, passId) {
     CDLM_GRID_ACCUMULATOR[pid][key] = cell;
   });
 }
+window.Sovra.CDLMResolver = (() => {
+  function resolveCollapse(cdlmOutput) {
+    const context = {
+      collapseDetected: false,
+      visibility: {},
+      field: {},
+      speech: { allowed: true, maxSentences: 2 }
+    };
+
+    // Example logic (simplified)
+    if (cdlmOutput.omissions?.length > 0) {
+      context.collapseDetected = true;
+      context.visibility.omissionsDetected = true;
+    }
+
+    if (cdlmOutput.powerAsymmetryScore > 0.7) {
+      context.field.powerAsymmetryLikely = true;
+    }
+
+    // Store for VDUManager and Sovra Speaks
+    window.Sovra.CollapseContext = context;
+
+    // Signal downstream modules
+    window.Sovra.SignalBus.emit("CDLM_READY", cdlmOutput);
+  }
+
+  return Object.freeze({ resolveCollapse });
+})();
+
 /* ============================================================
    CDLM GRID STATE READER (READ-ONLY, NON-FORCE)
    - Summarizes accumulated observations
