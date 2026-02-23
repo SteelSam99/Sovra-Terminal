@@ -39,6 +39,11 @@
 
 "use strict";
 window.Sovra = window.Sovra || {};
+window.Sovra.Modules = window.Sovra.Modules || {};
+
+function registerModule(id, module) {
+  window.Sovra.Modules[id] = module;
+}
 
 /* ============================================================
    DRIFT GATE (Authoritative, single source of truth)
