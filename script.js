@@ -277,6 +277,19 @@ window.Sovra.AnalysisSuite = (() => {
     document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
     document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
     document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
+    
+     // Inject diagnostic scores into the GUI
+if (summary?.field) {
+  const field = summary.field;
+  const collapseEl = document.getElementById("score-collapse");
+  const contradictionEl = document.getElementById("score-contradiction");
+  const zeroSumEl = document.getElementById("score-zero-sum");
+
+  if (collapseEl) collapseEl.textContent = field.collapseScore ?? "–";
+  if (contradictionEl) contradictionEl.textContent = field.contradictionScore ?? "–";
+  if (zeroSumEl) zeroSumEl.textContent = field.zeroSumScore ?? "–";
+}
+
 
     // Apply fallback if delta is empty
     ensureDeltaFallback();
@@ -284,21 +297,37 @@ window.Sovra.AnalysisSuite = (() => {
     return Object.freeze({ text, meta, zse, cdlm, delta, summary });
   }
 
-  function ensureDeltaFallback() {
-    const deltaEl = document.getElementById("analysis-delta");
-    if (deltaEl && !deltaEl.textContent.trim()) {
-      deltaEl.textContent = "⏳ Awaiting delta analysis…";
-    }
-  }
+ function FieldSummary(zse, cdlm, delta, gates = {}, scores = {}) {
+  const densityHint =
+    cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
+      ? Math.min(1, cdlm.avgLineLen / 120)
+      : 0;
+
+  const massHint =
+    zse.tokenCount > 0
+      ? Math.min(1, zse.tokenCount / 2000)
+      : 0;
 
   return Object.freeze({
-    ZSE,
-    CDLM,
-    Delta,
-    FieldSummary,
-    analyzeFromFetcher
+    field: Object.freeze({
+      massHint,
+      densityHint,
+      deltaPresent: !!delta.snapshotId && delta.hasHistory,
+      collapseScore: scores.collapseScore ?? null,
+      contradictionScore: scores.contradictionScore ?? null,
+      zeroSumScore: scores.zeroSumScore ?? null
+    }),
+    gates: Object.freeze({
+      rawData: !!gates.rawData,
+      driftCore: !!gates.driftCore,
+      contraCollapse: !!gates.contraCollapse,
+      zeroSum: !!gates.zeroSum,
+      welsingFuller: !!gates.welsingFuller,
+      sovraSpeaks: !!gates.sovraSpeaks
+    })
   });
-})();
+}
+
 
 /* ============================================================
    MEDIA SIGNAL INTEGRITY FILTER (MSIF)
