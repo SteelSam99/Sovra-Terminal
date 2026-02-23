@@ -330,6 +330,33 @@ const MSIF = {
 registerModule("module-msif", MSIF);
 
 /* ============================================================
+   SOVRA_PING Dispatcher
+   Module ID: SOVRA_PING.sys
+   Purpose:
+     - Dispatch system-level alerts and telemetry
+     - Route posture changes and diagnostics to external listeners
+   ============================================================ */
+const SOVRA_PING = (() => {
+  const levels = {
+    0: "NORMAL",
+    1: "NOTICE",
+    2: "CAUTION",
+    3: "ALERT",
+    4: "CRITICAL"
+  };
+
+  const dispatch = (payload, levelLabel = "NOTICE") => {
+    console.warn(`[SOVRA_PING] ${levelLabel}:`, payload);
+    window.dispatchEvent(new CustomEvent("sovra:ping", { detail: { level: levelLabel, ...payload } }));
+  };
+
+  return Object.freeze({
+    levels,
+    dispatch
+  });
+})();
+
+/* ============================================================
    SECURITY POSTURE MANAGER
    Module ID: SECURITY_POSTURE_MANAGER.sys
    Purpose:
@@ -342,19 +369,19 @@ registerModule("module-msif", MSIF);
 const SecurityPostureManager = (() => {
   let currentLevel = 0;
 
-  const escalate = (level, reason) => {
-    if (level > currentLevel) {
-      currentLevel = level;
-      const payload = {
-        type: "SECURITY_POSTURE_ESCALATION",
-        level,
-        reason,
+ const escalate = (level, reason) => {
+  if (level > currentLevel) {
+    currentLevel = level;
+    const payload = {
+      type: "SECURITY_POSTURE_ESCALATION",
+      level,
+      reason,
       timestamp: Date.now()
-      };
-      SOVRA_PING.dispatch(payload, SOVRA_PING.levels[level]);
-    }
-  };
-
+    };
+    SOVRA_PING.dispatch(payload, SOVRA_PING.levels[level]);
+  }
+};
+   
   const reset = () => {
     currentLevel = 0;
    logAudit("SECURITY_POSTURE_RESET", { timestamp: Date.now() });
@@ -3046,6 +3073,10 @@ if (provPanel && vduBlock) {
 console.log("searchSovra() loaded (NFIE public runtime).");
 
 document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("sovra:ping", (event) => {
+  const { level, type, reason, timestamp } = event.detail;
+  console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
+});
 
   /* ===============================
      SEARCH BINDINGS (ALWAYS RUN)
