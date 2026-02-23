@@ -636,11 +636,6 @@ function defaultGetDriftEnabled() {
   return false;
 }
 
-function requireDriftEnabled(getDriftEnabled) {
-  const ok = !!(getDriftEnabled && getDriftEnabled());
-  return ok;
-}
-
 /* =========================
    1) DoD Drift Lens (NFIE)
    - No thresholds
