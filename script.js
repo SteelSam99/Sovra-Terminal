@@ -321,6 +321,7 @@ const MSIF = {
     return "LOW";
   }
 };
+
 registerModule("module-msif", MSIF);
 
 /* ============================================================
