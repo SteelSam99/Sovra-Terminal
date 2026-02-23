@@ -272,7 +272,23 @@ window.Sovra.AnalysisSuite = (() => {
     const delta = Delta(text, meta);
     const summary = FieldSummary(zse, cdlm, delta, gates);
 
+    // Render analysis output
+    document.getElementById("analysis-zse").textContent = JSON.stringify(zse, null, 2);
+    document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
+    document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
+    document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
+
+    // Apply fallback if delta is empty
+    ensureDeltaFallback();
+
     return Object.freeze({ text, meta, zse, cdlm, delta, summary });
+  }
+
+  function ensureDeltaFallback() {
+    const deltaEl = document.getElementById("analysis-delta");
+    if (deltaEl && !deltaEl.textContent.trim()) {
+      deltaEl.textContent = "⏳ Awaiting delta analysis…";
+    }
   }
 
   return Object.freeze({
@@ -283,6 +299,7 @@ window.Sovra.AnalysisSuite = (() => {
     analyzeFromFetcher
   });
 })();
+
 /* ============================================================
    MEDIA SIGNAL INTEGRITY FILTER (MSIF)
    Module ID: module-msif
