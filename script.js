@@ -1514,13 +1514,15 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("cdlm:scores", (ev) => {
     const s = ev.detail;
 
-    document.getElementById("score-collapse").textContent = s.collapse;
-    document.getElementById("score-contradiction").textContent = s.contradiction;
-    document.getElementById("score-zero-sum").textContent = s.zeroSum;
+    document.getElementById("score-collapse").textContent = `${s.collapse} / 10`;
+    document.getElementById("score-contradiction").textContent = `${s.contradiction} / 10`;
+    document.getElementById("score-zero-sum").textContent = `${s.zeroSum} / 3`;
 
-    document
-      .getElementById("diagnostic-panel")
-      ?.classList.remove("hidden");
+    const panel = document.getElementById("diagnostic-panel");
+    if (panel) {
+      panel.classList.remove("hidden");
+      panel.setAttribute("data-active", "true");
+    }
   });
 });
 
