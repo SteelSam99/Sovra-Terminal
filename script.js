@@ -237,7 +237,7 @@ window.Sovra.AnalysisSuite = (() => {
     });
   }
 
-  function FieldSummary(zse, cdlm, delta, gates = {}) {
+  function FieldSummary(zse, cdlm, delta, gates = {}, scores = {}) {
     const densityHint =
       cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
         ? Math.min(1, cdlm.avgLineLen / 120)
@@ -252,7 +252,10 @@ window.Sovra.AnalysisSuite = (() => {
       field: Object.freeze({
         massHint,
         densityHint,
-        deltaPresent: !!delta.snapshotId && delta.hasHistory
+        deltaPresent: !!delta.snapshotId && delta.hasHistory,
+        collapseScore: scores.collapseScore ?? null,
+        contradictionScore: scores.contradictionScore ?? null,
+        zeroSumScore: scores.zeroSumScore ?? null
       }),
       gates: Object.freeze({
         rawData: !!gates.rawData,
@@ -266,75 +269,52 @@ window.Sovra.AnalysisSuite = (() => {
   }
 
   async function analyzeFromFetcher(request, gates = {}) {
-  const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
-  const zse = ZSE(text);
-  const cdlm = CDLM(text);
-  const delta = Delta(text, meta);
+    const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
+    const zse = ZSE(text);
+    const cdlm = CDLM(text);
+    const delta = Delta(text, meta);
 
-  // TEMP: Stub scores for testing
-  const calcPayload = {
-    collapseScore: 7,
-    contradictionScore: 4,
-    zeroSumScore: 2
-  };
+    // TEMP: Stub scores for testing
+    const calcPayload = {
+      collapseScore: 7,
+      contradictionScore: 4,
+      zeroSumScore: 2
+    };
 
-  const summary = FieldSummary(zse, cdlm, delta, gates, calcPayload);
+    const summary = FieldSummary(zse, cdlm, delta, gates, calcPayload);
 
-  // Render analysis output
-  document.getElementById("analysis-zse").textContent = JSON.stringify(zse, null, 2);
-  document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
-  document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
-  document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
+    // Render analysis output
+    document.getElementById("analysis-zse").textContent = JSON.stringify(zse, null, 2);
+    document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
+    document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
+    document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
 
-  // Inject diagnostic scores into the GUI
-  if (summary?.field) {
-    const field = summary.field;
-    const collapseEl = document.getElementById("score-collapse");
-    const contradictionEl = document.getElementById("score-contradiction");
-    const zeroSumEl = document.getElementById("score-zero-sum");
+    // Inject diagnostic scores into the GUI
+    if (summary?.field) {
+      const field = summary.field;
+      const collapseEl = document.getElementById("score-collapse");
+      const contradictionEl = document.getElementById("score-contradiction");
+      const zeroSumEl = document.getElementById("score-zero-sum");
 
-    if (collapseEl) collapseEl.textContent = field.collapseScore ?? "–";
-    if (contradictionEl) contradictionEl.textContent = field.contradictionScore ?? "–";
-    if (zeroSumEl) zeroSumEl.textContent = field.zeroSumScore ?? "–";
+      if (collapseEl) collapseEl.textContent = field.collapseScore ?? "–";
+      if (contradictionEl) contradictionEl.textContent = field.contradictionScore ?? "–";
+      if (zeroSumEl) zeroSumEl.textContent = field.zeroSumScore ?? "–";
+    }
+
+    // Apply fallback if delta is empty
+    ensureDeltaFallback();
+
+    return Object.freeze({ text, meta, zse, cdlm, delta, summary });
   }
 
-  // Apply fallback if delta is empty
-  ensureDeltaFallback();
-
-  return Object.freeze({ text, meta, zse, cdlm, delta, summary });
-}
-
-
- function FieldSummary(zse, cdlm, delta, gates = {}, scores = {}) {
-  const densityHint =
-    cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
-      ? Math.min(1, cdlm.avgLineLen / 120)
-      : 0;
-
-  const massHint =
-    zse.tokenCount > 0
-      ? Math.min(1, zse.tokenCount / 2000)
-      : 0;
-
   return Object.freeze({
-    field: Object.freeze({
-      massHint,
-      densityHint,
-      deltaPresent: !!delta.snapshotId && delta.hasHistory,
-      collapseScore: scores.collapseScore ?? null,
-      contradictionScore: scores.contradictionScore ?? null,
-      zeroSumScore: scores.zeroSumScore ?? null
-    }),
-    gates: Object.freeze({
-      rawData: !!gates.rawData,
-      driftCore: !!gates.driftCore,
-      contraCollapse: !!gates.contraCollapse,
-      zeroSum: !!gates.zeroSum,
-      welsingFuller: !!gates.welsingFuller,
-      sovraSpeaks: !!gates.sovraSpeaks
-    })
+    ZSE,
+    CDLM,
+    Delta,
+    FieldSummary,
+    analyzeFromFetcher
   });
-}
+})();
 
 /* ============================================================
    MEDIA SIGNAL INTEGRITY FILTER (MSIF)
