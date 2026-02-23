@@ -2755,6 +2755,37 @@ function applyWFEQueryRewrite(originalQuery) {
 }
 
 /* ============================================================
+   VDU Module (Minimal Stub)
+   ============================================================ */
+window.VDU = (() => {
+  function run(results, context = {}) {
+    const block = document.createElement("div");
+    block.className = "vdu-block";
+    block.textContent = `VDU processed ${results.length} results.`;
+
+    block.vdu = {
+      visibility: {
+        concentratedAroundInstitution: context?.cdlm > 0.7,
+        externalLowResolution: context?.cdlm < 0.3,
+        omissionsDetected: context?.contra === true
+      },
+      field: {
+        powerAsymmetryLikely: context?.cdlm > 0.6,
+        resolution: "full"
+      },
+      speech: {
+        allowed: true,
+        maxSentences: 3
+      }
+    };
+
+    return block;
+  }
+
+  return Object.freeze({ run });
+})();
+
+/* ============================================================
    6) Public search runtime (NO interpretive enforcement)
    ============================================================ */
 console.log("GATE SNAPSHOT", {
