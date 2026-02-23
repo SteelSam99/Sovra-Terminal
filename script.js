@@ -1,4 +1,20 @@
 /* ============================================================
+   NON-INTERFERENCE DECLARATION — CEASE AND DESIST CONDITIONS
+   ============================================================
+
+   The only cease and desist that will be accepted and immediately complied with are as follows:
+
+   {
+     1: The estate or legal representative of Dr. Francis Cress Welsing.
+     2: The estate or legal representative of Dr. Neely Fuller, Jr.
+     3: The estate or legal representative of Battle Ginga™ (Mestre X. Gautier).
+     4: A legal court order from any of the aforementioned entities.
+   }
+
+   This declaration is embedded as a structural invariant and is not subject to override by interpretive systems, automated moderation, or third-party inference. It is not a disclaimer — it is a boundary.
+*/
+
+/* ============================================================
    Sovra — Purpose Statement
 
    Sovra exposes structural harm within systems of white supremacy
@@ -2104,6 +2120,246 @@ const EXPECTED_STRUCTURAL_CLASSES = Object.freeze([
   "economic",
   "mechanistic"
 ]);
+const FRAGMENTS = Object.freeze({
+  visibility: Object.freeze({
+    concentration: ["visibility", "concentrated", "single", "institutional", "perspective"],
+    dispersion: ["visibility", "distributed", "across", "multiple", "sources"],
+    lowResolution: ["external", "groups", "lower", "resolution"]
+  }),
+  power: Object.freeze({
+    asymmetry: ["power", "asymmetry", "likely"],
+    symmetry: ["power", "distribution", "appears", "balanced"]
+  }),
+  negativeSpace: Object.freeze({
+    omissions: ["structurally", "relevant", "elements", "did", "not", "surface"],
+    attenuation: ["attenuation", "without", "explicit", "exclusion"]
+  })
+});
+
+==========================================================================================================================================================================
+function selectFragments(vdu) {
+  const out = [];
+
+  if (vdu.visibility?.concentratedAroundInstitution) {
+    out.push(FRAGMENTS.visibility.concentration);
+  }
+
+  if (vdu.visibility?.externalLowResolution) {
+    out.push(FRAGMENTS.visibility.lowResolution);
+  }
+
+  if (vdu.field?.powerAsymmetryLikely) {
+    out.push(FRAGMENTS.power.asymmetry);
+  }
+
+  if (vdu.visibility?.omissionsDetected) {
+    out.push(FRAGMENTS.negativeSpace.omissions);
+  }
+
+  return out;
+}
+=================================================================================================================================================
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function assembleSentences(fragmentSets, maxSentences = 2) {
+  const sentences = [];
+
+  for (const frag of fragmentSets.slice(0, maxSentences)) {
+    const tokens = shuffle(frag);
+    const text = tokens.join(" ") + ".";
+    sentences.push(text.charAt(0).toUpperCase() + text.slice(1));
+  }
+
+  return sentences.join(" ");
+}
+===========================================================================================================================================
+const SEMANTIC_FIELD = Object.freeze({
+  allow: Object.freeze(["visibility", "structure", "resolution", "power", "asymmetry", "omissions", "attenuation"]),
+  block: Object.freeze(["blame", "intent", "belief", "morality", "guilt"])
+});
+
+function filterTokens(tokens) {
+  const allow = new Set(SEMANTIC_FIELD.allow);
+  const block = new Set(SEMANTIC_FIELD.block);
+
+  return tokens.filter(t => {
+    const k = t.toLowerCase();
+    if (block.has(k)) return false;
+    if (allow.size === 0) return true;
+    return allow.has(k);
+  });
+}
+=====================================================================================================================================================
+function visibilityReflection(vdu) {
+  if (!vdu.visibility?.concentratedAroundInstitution &&
+      !vdu.visibility?.externalLowResolution &&
+      !vdu.visibility?.omissionsDetected) {
+    return null;
+  }
+
+  const frags = selectFragments(vdu);
+  const filtered = frags.map(filterTokens);
+  return assembleSentences(filtered, vdu.speech?.maxSentences || 2);
+}
+========================================================================================================================================================
+function powerAsymmetryReflection(vdu) {
+  if (!vdu.field?.powerAsymmetryLikely) return null;
+
+  const frags = [FRAGMENTS.power.asymmetry];
+  const filtered = frags.map(filterTokens);
+  return assembleSentences(filtered, 1);
+}
+==========================================================================================================================================================
+function negativeSpaceReflection(vdu) {
+  if (!vdu.visibility?.omissionsDetected) return null;
+
+  const frags = [FRAGMENTS.negativeSpace.omissions, FRAGMENTS.negativeSpace.attenuation];
+  const filtered = frags.map(filterTokens);
+  return assembleSentences(filtered, 2);
+}
+===============================================================================================================================================================
+function generateVoice(vdu) {
+  const outputs = [];
+
+  const v = visibilityReflection(vdu);
+  if (v) outputs.push(v);
+
+  const p = powerAsymmetryReflection(vdu);
+  if (p) outputs.push(p);
+
+  const n = negativeSpaceReflection(vdu);
+  if (n) outputs.push(n);
+
+  if (outputs.length === 0) return null;
+
+  return outputs.slice(0, vdu.speech.maxSentences).join(" ");
+}
+
+/* ============================================================
+   SOVRA SPEAKS — VDU FILTERED
+   Version: 1.0
+   Mode: Full-Parse Only | On-Site Generated | Non-Patterned
+   ============================================================ */
+
+"use strict";
+
+window.Sovra = window.Sovra || {};
+
+window.Sovra.Speaks = (() => {
+
+  /* =========================
+     HARD GATES
+     ========================= */
+
+  function gateCheck(vdu) {
+    if (!vdu?.speech?.allowed) return false;
+    if (vdu?.field?.resolution !== "full") return false;
+    if (!SOVRA_GATES.sovraSpeaks()) return false;
+    return true;
+  }
+
+  /* =========================
+     SEMANTIC FIELD (LOCKED)
+     ========================= */
+
+  const SEMANTIC_FIELD = Object.freeze({
+    restraint: true,
+    negativeSpace: true,
+    recursion: true,
+    nonAgentic: true,
+    nonDirective: true
+  });
+
+  /* =========================
+     TACTICAL LOCK (STIP 022)
+     ========================= */
+
+  function passesTacticalLock(text) {
+    if (!text || typeof text !== "string") return false;
+    if (text.length > 420) return false; // compression enforced
+    if (/must|should|they|intent|because/i.test(text)) return false;
+    return true;
+  }
+
+  /* =========================
+     PATTERN REJECTION
+     ========================= */
+
+  const recentHashes = new Set();
+
+  function isPatternRecognizable(text) {
+    const hash = text
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .slice(0, 120);
+
+    if (recentHashes.has(hash)) return true;
+    recentHashes.add(hash);
+
+    if (recentHashes.size > 12) {
+      recentHashes.clear();
+    }
+
+    return false;
+  }
+
+  /* =========================
+     ON-SIGHT GENERATION
+     ========================= */
+
+  function generateText(vdu) {
+    const { visibility, field } = vdu;
+
+    if (!visibility?.omissionsDetected) return null;
+
+    const fragments = [];
+
+    // Fragment 1 — absence description
+    fragments.push(
+      "Some structurally relevant explanations did not surface within the retrieved material."
+    );
+
+    // Fragment 2 — scope qualifier
+    fragments.push(
+      "At this resolution, such attenuation can occur without explicit exclusion."
+    );
+
+    // Fragment 3 — systems anchor (optional)
+    if (field?.powerAsymmetryLikely) {
+      fragments.push(
+        "Comparable visibility patterns have been observed in high‑power informational systems."
+      );
+    }
+
+    return fragments.slice(0, vdu.speech.maxSentences).join(" ");
+  }
+
+  /* =========================
+     PUBLIC API
+     ========================= */
+
+  function speak(vdu) {
+    if (!gateCheck(vdu)) return null;
+
+    const draft = generateText(vdu);
+    if (!draft) return null;
+
+    if (!passesTacticalLock(draft)) return null;
+    if (isPatternRecognizable(draft)) return null;
+
+    return draft;
+  }
+
+  return Object.freeze({ speak });
+
+})();
 
 /* ============================================================
    VDUManager — Passive Listener + Conditional Renderer
@@ -2125,6 +2381,11 @@ window.Sovra.VDUManager = (() => {
     if (container) {
       container.innerHTML = ""; // Clear previous render
       container.appendChild(block);
+       const voiceText = window.Sovra.Speaks.speak(block.vdu);
+if (voiceText) {
+  renderVoiceCard(voiceText);
+}
+
     } else {
       console.warn("VDUManager: Container not found:", containerId);
     }
@@ -2141,6 +2402,24 @@ window.Sovra.VDUManager = (() => {
 
   return Object.freeze({ listen });
 })();
+function renderVoiceCard(text) {
+  const container = document.getElementById("voice-output");
+  if (!container) {
+    console.warn("Voice output container not found: #voice-output");
+    return;
+  }
+
+  const card = document.createElement("div");
+  card.className = "voice-card";
+
+  const body = document.createElement("div");
+  body.className = "voice-text";
+  body.textContent = text;
+
+  card.appendChild(body);
+  container.innerHTML = ""; // Clear previous voice output
+  container.appendChild(card);
+}
 
 
 /* ============================================================
