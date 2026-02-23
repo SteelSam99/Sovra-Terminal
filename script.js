@@ -322,7 +322,7 @@ const MSIF = {
   }
 };
 
-registerModule("module-msif", MSIF);
+registerModule("module-msif", MSIF); //
 
 
 /* ============================================================
