@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sovra-FCL-MHCE-v2.3 :: Foxtrot-Chimera-Lambda</title>
+  <title>Sovra-FCL-MHCE-v2.5 :: Foxtrot-Chimera-Lambda</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -11,7 +11,7 @@
   <div class="container">
 
     <header class="banner">
-      <h1>Sovra-FCL-MHCE-v2.4 :: Foxtrot-Chimera-Lambda</h1>
+      <h1>Sovra-FCL-MHCE-v2.5 :: Foxtrot-Chimera-Lambda</h1>
       <h2>Machine‑Human Code Evolution ⟦MH⟧</h2>
       <h3>Sovereign‑F.I.D.A.R.C.H. Search Engine</h3>
       <h4>Site under Construction(NFIE Compliant)</h4>
@@ -176,6 +176,46 @@
 
   <script src="script.js"></script>
 
+  <!-- Inject test scores and unhide diagnostic panels -->
+  <script>
+    (() => {
+      const summary = {
+        field: {
+          massHint: 0.6,
+          densityHint: 0.8,
+          deltaPresent: true,
+          collapseScore: 3,
+          contradictionScore: 4,
+          zeroSumScore: 1
+        },
+        gates: {
+          rawData: false,
+          driftCore: true,
+          contraCollapse: true,
+          zeroSum: true,
+          welsingFuller: false,
+          sovraSpeaks: true
+        }
+      };
+
+      // Inject into GUI
+      document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
+
+      const collapseEl = document.getElementById("score-collapse");
+      const contradictionEl = document.getElementById("score-contradiction");
+      const zeroSumEl = document.getElementById("score-zero-sum");
+
+      if (collapseEl) collapseEl.textContent = `${summary.field.collapseScore} / 10`;
+      if (contradictionEl) contradictionEl.textContent = `${summary.field.contradictionScore} / 10`;
+      if (zeroSumEl) zeroSumEl.textContent = `${summary.field.zeroSumScore} / 3`;
+
+      // Unhide diagnostic panels
+      document.getElementById("diagnostic-bar")?.classList.remove("hidden");
+      document.getElementById("diagnostic-panel")?.classList.remove("hidden");
+
+      console.log("[DEV] GUI-compatible FieldSummary injected and panels unhidden:", summary);
+    })();
+  </script>
 
 </body>
 </html>
