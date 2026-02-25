@@ -250,6 +250,43 @@ html, body {
 .density-value {
   font-weight: 600;
 }
+/* ============================================================
+   FIELD DENSITY BOX (CENTERED CONTEXT)
+   ============================================================ */
+
+.density-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 14px;
+}
+
+.density-box {
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  color: #111;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  opacity: 0.9;
+}
+
+.density-item {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.density-label {
+  color: var(--muted);
+}
+
+.density-value {
+  font-weight: 600;
+}
 
 /* ============================================================
    RESULTS AREA
