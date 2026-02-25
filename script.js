@@ -3175,26 +3175,12 @@ SovraSyncTrigger.send({
 console.log("searchSovra() loaded (NFIE public runtime).");
 
 document.addEventListener("DOMContentLoaded", () => {
+
   window.addEventListener("sovra:ping", (event) => {
     const { level, type, reason, timestamp } = event.detail;
     console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
   });
-// Context Control Panel toggle
-  const ctxToggleBtn = document.getElementById("contextControlToggle");
-  const ctxPanel = document.getElementById("contextControlPanel");
 
-  if (ctxToggleBtn && ctxPanel) {
-    ctxToggleBtn.addEventListener("click", () => {
-      ctxPanel.classList.toggle("hidden");
-    });
-  }
-
-  const ctxCloseBtn = document.getElementById("closeContextPanel");
-  if (ctxCloseBtn && ctxPanel) {
-    ctxCloseBtn.addEventListener("click", () => {
-      ctxPanel.classList.add("hidden");
-    });
-  }
   // Search bindings
   const searchButton = document.getElementById("search-btn");
   const queryInput = document.getElementById("query");
@@ -3215,65 +3201,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Context Control Panel toggle
-  const toggleBtn = document.getElementById("contextControlToggle");
-  const contextPanel = document.getElementById("contextPanel");
+  const ctxToggleBtn = document.getElementById("contextControlToggle");
+  const ctxPanel = document.getElementById("contextControlPanel");
 
-  if (toggleBtn && contextPanel) {
-    toggleBtn.addEventListener("click", () => {
-      contextPanel.classList.toggle("hidden");
+  if (ctxToggleBtn && ctxPanel) {
+    ctxToggleBtn.addEventListener("click", () => {
+      ctxPanel.classList.toggle("hidden");
     });
   }
 
-  const closeBtn = document.getElementById("closeContextPanel");
-  if (closeBtn && contextPanel) {
-    closeBtn.addEventListener("click", () => {
-      contextPanel.classList.add("hidden");
+  const ctxCloseBtn = document.getElementById("closeContextPanel");
+  if (ctxCloseBtn && ctxPanel) {
+    ctxCloseBtn.addEventListener("click", () => {
+      ctxPanel.classList.add("hidden");
     });
   }
 
 });
-
-  /* ===============================
-     SEARCH BINDINGS (ALWAYS RUN)
-     =============================== */
-
-  const searchButton = document.getElementById("search-btn");
-  const queryInput = document.getElementById("query");
-
-  if (searchButton) {
-    searchButton.addEventListener("click", () => {
-      window.searchSovra?.();
-    });
-  }
-
-  if (queryInput) {
-    queryInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        window.searchSovra?.();
-      }
-    });
-  }
-
-  /* ===============================
-     CONTEXT CONTROL PANEL (OPTIONAL)
-     =============================== */
-
-// Context Control Panel toggle
-const toggleBtn = document.getElementById("contextControlToggle");
-const contextPanel = document.getElementById("contextPanel");
-
-if (toggleBtn && contextPanel) {
-  toggleBtn.addEventListener("click", () => {
-    contextPanel.classList.toggle("hidden");
-  });
-}
-
-const closeBtn = document.getElementById("closeContextPanel");
-if (closeBtn && contextPanel) {
-  closeBtn.addEventListener("click", () => {
-    contextPanel.classList.add("hidden");
-  });
-}
-
 
