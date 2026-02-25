@@ -3180,19 +3180,19 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
   });
 // Context Control Panel toggle
-  const toggleBtn = document.getElementById("contextControlToggle");
-  const contextPanel = document.getElementById("contextControlPanel");
+  const ctxToggleBtn = document.getElementById("contextControlToggle");
+  const ctxPanel = document.getElementById("contextControlPanel");
 
-  if (toggleBtn && contextPanel) {
-    toggleBtn.addEventListener("click", () => {
-      contextPanel.classList.toggle("hidden");
+  if (ctxToggleBtn && ctxPanel) {
+    ctxToggleBtn.addEventListener("click", () => {
+      ctxPanel.classList.toggle("hidden");
     });
   }
 
-  const closeBtn = document.getElementById("closeContextPanel");
-  if (closeBtn && contextPanel) {
-    closeBtn.addEventListener("click", () => {
-      contextPanel.classList.add("hidden");
+  const ctxCloseBtn = document.getElementById("closeContextPanel");
+  if (ctxCloseBtn && ctxPanel) {
+    ctxCloseBtn.addEventListener("click", () => {
+      ctxPanel.classList.add("hidden");
     });
   }
   // Search bindings
