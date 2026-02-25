@@ -14,17 +14,17 @@
       <h1>Sovra-FCL-MHCE-v2.5 :: Foxtrot-Chimera-Lambda</h1>
       <h2>Machine‑Human Code Evolution ⟦MH⟧</h2>
       <h3>Sovereign‑F.I.D.A.R.C.H. Search Engine</h3>
-      <h4>Site under Construction (NFIE Compliant)</h4>
+      <h4>Site under Construction(NFIE Compliant)</h4>
     </header>
 
-    <!-- =========================================================
-         CONTEXT CONTROL PANEL
-         ========================================================= -->
-    <button id="contextControlToggle" type="button">Context Control Panel</button>
+    <!-- Context Control Panel Trigger -->
+    <button id="contextControlToggle">Context Control Panel</button>
 
-    <div id="contextPanel" class="context-panel hidden">
+    <!-- Context Control Panel -->
+    <div id="contextControlPanel" class="context-panel hidden">
       <div class="context-grid">
 
+        <!-- Row 1 -->
         <div class="context-item">
           <span class="context-label">Raw Data</span>
           <input type="checkbox" id="rawData">
@@ -36,6 +36,7 @@
           <div class="tooltip">A structured reasoning context.</div>
         </div>
 
+        <!-- Row 2 -->
         <div class="context-item tooltip-host">
           <span class="context-label">Collapse / Contra</span>
           <input type="checkbox" id="collapseContra">
@@ -48,6 +49,7 @@
           <div class="tooltip">A context for observing change over time.</div>
         </div>
 
+        <!-- Row 3 -->
         <div class="context-item tooltip-host">
           <span class="context-label">Zero‑Sum</span>
           <input type="checkbox" id="zeroSum">
@@ -62,48 +64,48 @@
 
       </div>
 
-      <button id="closeContextPanel" type="button">Close Menu</button>
+      <button id="closeContextPanel">Close Menu</button>
     </div>
 
-    <!-- =========================================================
-         SEARCH
-         ========================================================= -->
     <section class="query-stack">
+
       <div class="search-box">
         <div class="search-anchor">
           <input id="query" type="text" placeholder="Invoke Sovra…">
           <button id="search-btn" type="button">Search</button>
         </div>
       </div>
-    </section>
 
-    <!-- =========================================================
-         DIAGNOSTIC BAR (single instance)
-         ========================================================= -->
-    <div id="diagnostic-bar" class="diagnostic-bar hidden">
-      <div class="diag-left">
-        <div id="voice-card" class="voice-card">Sovra Voice will appear here…</div>
-      </div>
-      <div class="diag-center">
-        <div class="center-placeholder">[Insert middle module here]</div>
-      </div>
-      <div class="diag-right">
-        <div class="diag-row">
-          <span class="diag-label">Zero‑Sum: <span id="score-zero-sum">–</span> / 3</span>
-          <span class="diag-desc">Asymmetric Balance Indicator</span>
+      <!-- Diagnostic Bar (single instance — scores populate here on query) -->
+      <div id="diagnostic-bar" class="diagnostic-bar hidden">
+        <div class="diag-left">
+          <div id="voice-card" class="voice-card">Sovra Voice will appear here…</div>
         </div>
-        <hr>
-        <div class="diag-row">
-          <span class="diag-label">Collapse: <span id="score-collapse">–</span> / 10</span>
-          <span class="diag-desc">Narrative Weight Index</span>
+        <div class="diag-center">
+          <div class="center-placeholder">[Insert middle module here]</div>
         </div>
-        <hr>
-        <div class="diag-row">
-          <span class="diag-label">Contradiction: <span id="score-contradiction">–</span> / 10</span>
-          <span class="diag-desc">Claim Coherence Variance</span>
+        <div class="diag-right">
+          <div class="diag-row">
+            <span class="diag-icon zse-icon"></span>
+            <span class="diag-label">Zero‑Sum: <span id="score-zero-sum">–</span> / 3</span>
+            <span class="diag-desc">Asymmetric Balance Indicator</span>
+          </div>
+          <hr>
+          <div class="diag-row">
+            <span class="diag-icon collapse-icon"></span>
+            <span class="diag-label">Collapse: <span id="score-collapse">–</span> / 10</span>
+            <span class="diag-desc">Narrative Weight Index</span>
+          </div>
+          <hr>
+          <div class="diag-row">
+            <span class="diag-icon contradiction-icon"></span>
+            <span class="diag-label">Contradiction: <span id="score-contradiction">–</span> / 10</span>
+            <span class="diag-desc">Claim Coherence Variance</span>
+          </div>
         </div>
       </div>
-    </div>
+
+    </section>
 
     <!-- =========================================================
          SOVRA ANALYSIS CONNECTORS
@@ -127,15 +129,11 @@
          data-analysis="ready">
     </div>
 
-    <!-- =========================================================
-         RESULTS
-         ========================================================= -->
     <main id="results" class="results-container" aria-live="polite">
       <div class="results-left"></div>
       <div class="results-right"></div>
     </main>
 
-    <!-- Voice Output Panel -->
     <div id="voice-output"></div>
 
     <footer>
