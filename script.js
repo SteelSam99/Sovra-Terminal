@@ -1590,6 +1590,7 @@ window.Sovra.CollapseGate = (() => {
    CDLM SCORE EMITTER (UI BOUNDARY)
    ============================================================ */
 function emitCDLMScores(scores) {
+   console.log("[CDLM EMIT]", scores);
   // Always emit scores to the diagnostic panel
   window.dispatchEvent(
     new CustomEvent("cdlm:scores", { detail: scores })
