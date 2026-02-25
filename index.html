@@ -76,16 +76,39 @@
         </div>
       </div>
 
-   <!-- Diagnostic Bar (single instance — scores populate here on query) -->
+<!-- Diagnostic Bar (single instance — scores populate here on query) -->
 <div id="diagnostic-panel" class="diagnostic-bar hidden">
+
+  <!-- LEFT: Sovra Voice -->
   <div class="diag-left">
-    <div id="voice-card" class="voice-card">Sovra Voice will appear here…</div>
+    <div id="voice-card" class="voice-card">
+      Sovra Voice will appear here…
+    </div>
   </div>
 
+  <!-- CENTER: Field Density (Context Layer) -->
   <div class="diag-center">
-    <div class="center-placeholder">[Insert middle module here]</div>
+    <div id="field-density" class="density-wrapper hidden">
+      <div class="density-box">
+        <div class="density-item">
+          <span class="density-label">Field Mass</span>
+          <span id="density-mass" class="density-value">–</span>
+        </div>
+
+        <div class="density-item">
+          <span class="density-label">Packing</span>
+          <span id="density-packing" class="density-value">–</span>
+        </div>
+
+        <div class="density-item">
+          <span class="density-label">Flow</span>
+          <span id="density-flow" class="density-value">–</span>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- RIGHT: CDLM / ZSE Scores -->
   <div class="diag-right">
     <div class="diag-row">
       <span class="diag-icon zse-icon"></span>
@@ -115,24 +138,9 @@
       <span class="diag-desc">Claim Coherence Variance</span>
     </div>
   </div>
-</div>
-<!-- Field Density Band -->
-<div id="field-density" class="density-band hidden">
-  <div class="density-item">
-    <span class="density-label">Field Mass</span>
-    <span id="density-mass" class="density-value">–</span>
-  </div>
 
-  <div class="density-item">
-    <span class="density-label">Packing</span>
-    <span id="density-packing" class="density-value">–</span>
-  </div>
-
-  <div class="density-item">
-    <span class="density-label">Flow</span>
-    <span id="density-flow" class="density-value">–</span>
-  </div>
 </div>
+
 
 
     <!-- =========================================================
