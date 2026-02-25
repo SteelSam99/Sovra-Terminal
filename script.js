@@ -3206,28 +3206,21 @@ document.addEventListener("DOMContentLoaded", () => {
      CONTEXT CONTROL PANEL (OPTIONAL)
      =============================== */
 
-  const contextFrameList = document.querySelector(".context-frame-list");
+// Context Control Panel toggle
+const toggleBtn = document.getElementById("contextControlToggle");
+const contextPanel = document.getElementById("contextPanel");
 
-  if (contextFrameList) {
-    Object.keys(CONTEXT_FRAME_VISIBILITY).forEach(engine => {
-      const label = document.createElement("label");
-      label.className = "context-frame-toggle";
+if (toggleBtn && contextPanel) {
+  toggleBtn.addEventListener("click", () => {
+    contextPanel.classList.toggle("hidden");
+  });
+}
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = CONTEXT_FRAME_VISIBILITY[engine];
-
-      checkbox.addEventListener("change", () => {
-        CONTEXT_FRAME_VISIBILITY[engine] = checkbox.checked;
-        window.searchSovra?.(); // re-render via existing pipeline
-      });
-
-      label.appendChild(checkbox);
-      label.append(` ${engine}`);
-      contextFrameList.appendChild(label);
-    });
-  }
-
-});
+const closeBtn = document.getElementById("closeContextPanel");
+if (closeBtn && contextPanel) {
+  closeBtn.addEventListener("click", () => {
+    contextPanel.classList.add("hidden");
+  });
+}
 
 
