@@ -1583,14 +1583,23 @@ window.Sovra.CollapseGate = (() => {
    CDLM SCORE EMITTER (UI BOUNDARY)
    ============================================================ */
 function emitCDLMScores(scores) {
-  if (!window.Sovra.CollapseGate.hasCollapsed({
-    cdlm: scores?.cdlm,
-    contra: scores?.isContradictionArtifact === true // or isContradictionArtifact
-  })) return;
-
+  // Always emit scores to the diagnostic panel
   window.dispatchEvent(
     new CustomEvent("cdlm:scores", { detail: scores })
   );
+
+  // VDU render only fires if collapse confirmed AND gate is active
+  if (
+    SOVRA_GATES.contraCollapse() &&
+    window.Sovra.CollapseGate.hasCollapsed({
+      cdlm: scores?.cdlm,
+      contra: scores?.isContradictionArtifact === true
+    })
+  ) {
+    window.dispatchEvent(
+      new CustomEvent("cdlm:collapse-confirmed", { detail: scores })
+    );
+  }
 }
 
 
@@ -2941,15 +2950,20 @@ if (SOVRA_GATES.driftCore() && window.Sovra?.DriftScanner?.create) {
   }
 }
 
-// Render Zero‑Sum block once per query
+// Render Zero-Sum block once per query
 if (SOVRA_GATES.zeroSum() && data.zse) {
   renderZSEStandalone(data.zse);
 }
+
 function renderDriftTimeline(payload) {
   if (!payload || !payload.ok || payload.kind !== "DRIFT_TIMELINE") return;
 
   const container = document.querySelector(".results-left");
   if (!container) return;
+
+  // FIX 3: Remove existing drift block before prepending new one
+  const existing = container.querySelector(".drift-block");
+  if (existing) existing.remove();
 
   const block = document.createElement("section");
   block.className = "drift-block";
@@ -2989,15 +3003,15 @@ function renderDriftTimeline(payload) {
 
 results.innerHTML = `<div class="section-label">Search results</div>`;
 
+const list = Array.isArray(data.organic_results) ? data.organic_results : [];
+if (!list.length) {
+  toggleSemanticIndicators(false);
+  results.innerHTML += `<div class="empty">No results found.</div>`;
+  SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
+  return;
+}
 
-    const list = Array.isArray(data.organic_results) ? data.organic_results : [];
-    if (!list.length) {
-       toggleSemanticIndicators(false);
-      results.innerHTML += `<div class="empty">No results found.</div>`;
-      SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
-      return;
-    }
-     const narrativeText = list
+const narrativeText = list
   .map(r => `${r.title || ""} ${r.snippet || ""} ${r.full_text || ""}`)
   .join("\n");
 
@@ -3016,154 +3030,155 @@ const diagnostics = {
 const scores = synthesizeCDLMScores(diagnostics);
 emitCDLMScores(scores);
 
-const vduBlock = VDU.run(list, {
-  cdlm: scores?.cdlm,
-  contra: scores?.isContradictionArtifact === true
-});
-
-if (vduBlock) results.appendChild(vduBlock);
-
-
-    list.forEach((r, i) => {
-      // --- CDLM traversal (non-force, per-object) ---
-const traversal = emitTraversalEvent(r, data.query_token || "pass-0");
-
-// Forward + lateral observation (read-only)
-const gridObservations = traverseCDLM(traversal.text, "public_runtime");
-accumulateGridObservations(gridObservations, traversal.passId);
-
-// One-way telemetry (optional, NFIE-safe)
-SovraSyncTrigger.send({
-  kind: "CDLM_TRAVERSAL",
-  traversal,
-  grid: gridObservations
-});
-       const card = document.createElement("article");
-      card.className = "sovra-card";
-
-      const provId = `prov-${i + 1}`;
-      const titleId = `card-title-${i + 1}`;
-      const hash = r.hash || ("0x" + String(r.link || "").slice(-6));
-
-      let host = "unknown";
-      try {
-        host = r.link ? new URL(r.link).hostname : "unknown";
-      } catch (_) {
-        host = "unknown";
-      }
-
-      const excerptText =
-        r.full_text ||
-        r.rich_snippet ||
-        r.snippet ||
-        "";
-
-      card.innerHTML = `
-        <header class="card-head">
-          <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
-          <div class="card-meta">
-            <time class="card-ts" datetime="${new Date().toISOString()}">${new Date().toISOString()}</time>
-            <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${escapeAttr(hash)}">
-              ${escapeHtml(hash.slice(0, 6))}…
-            </button>
-          </div>
-        </header>
-
-        <section class="card-body">
-          <div class="source-id">Source — ${escapeHtml(host)}</div>
-         ${Array.isArray(r.predicate) ? r.predicate
-  .filter(p => CONTEXT_FRAME_VISIBILITY[p.engine] !== false)
-  .map(p => `
-    <div class="predicate-context" data-engine="${escapeAttr(p.engine)}">
-      <strong>${escapeHtml(p.engine)} Context</strong>
-      <p>${escapeHtml(p.explanation)}</p>
-    </div>
-  `).join("") : ""}
-
-          <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
-
-        <footer class="card-foot">
-          <div class="mirrors">
-            Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span>
-          </div>
-          <div class="tamper-flag" aria-live="polite" role="status">OK</div>
-          <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">
-            Provenance
-          </button>
-        </footer>
-
-        <div id="${provId}" class="provenance-panel" hidden>
-          <pre class="signed-manifest">${escapeHtml(
-            JSON.stringify({
-              query_token: data.query_token || "",
-              retrieval_predicate: r.predicate || "",
-              signature: r.signature || ""
-            })
-          )}</pre>
-          <details>
-            <summary>Retrieval predicate</summary>
-            <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
-          </details>
-          <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">
-            View Source
-          </a>
-        </div>
-      `;
-
-      if (SOVRA_GATES.sovraSpeaks()) {
-        NFIE.validateStateTransition("SovraSpeaks");
-        const excerpt = card.querySelector(".raw-excerpt");
-        if (excerpt) {
-          excerpt.textContent = applySovraVoice(excerpt.textContent);
-          card.classList.add("voice-enabled");
-        }
-      }
-
-      results.appendChild(card);
-    });
-const provPanel = document.querySelector(".provenance-panel");
-if (provPanel && vduBlock) {
-  provPanel.prepend(vduBlock);
+// FIX 1: VDU block only renders when Contra/Collapse gate is active
+if (SOVRA_GATES.contraCollapse()) {
+  const vduBlock = VDU.run(list, {
+    cdlm: scores?.cdlm,
+    contra: scores?.isContradictionArtifact === true
+  });
+  if (vduBlock) results.appendChild(vduBlock);
 }
 
-    // Optional comparator (descriptive)
-    if (list.length >= 2) {
-      const comparison = compareNarratives(list[0], list[1]);
-      SovraSyncTrigger.send({ kind: "COMPARISON", query, comparison });
-    }
+list.forEach((r, i) => {
+  // --- CDLM traversal (non-force, per-object) ---
+  const traversal = emitTraversalEvent(r, data.query_token || "pass-0");
 
-    // Optional drift log (pure telemetry)
-    Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
-      domain: "retrieval",
-      source: "public_search"
-    });
+  // Forward + lateral observation (read-only)
+  const gridObservations = traverseCDLM(traversal.text, "public_runtime");
+  accumulateGridObservations(gridObservations, traversal.passId);
 
-    SovraSyncTrigger.send({
-      kind: "SEARCH_OK",
-      query,
-      count: list.length
-    });
+  // One-way telemetry (optional, NFIE-safe)
+  SovraSyncTrigger.send({
+    kind: "CDLM_TRAVERSAL",
+    traversal,
+    grid: gridObservations
+  });
 
-  } catch (error) {
-    if (results) {
-      results.innerText = "Search error.";
-    }
-    console.error("Sovra fetch error:", error);
-    SovraSyncTrigger.send({
-      kind: "FETCH_ERROR",
-      query: String(error?.query || ""),
-      error: String(error)
-    });
+  const card = document.createElement("article");
+  card.className = "sovra-card";
+
+  const provId = `prov-${i + 1}`;
+  const titleId = `card-title-${i + 1}`;
+  const hash = r.hash || ("0x" + String(r.link || "").slice(-6));
+
+  let host = "unknown";
+  try {
+    host = r.link ? new URL(r.link).hostname : "unknown";
+  } catch (_) {
+    host = "unknown";
   }
+
+  const excerptText =
+    r.full_text ||
+    r.rich_snippet ||
+    r.snippet ||
+    "";
+
+  card.innerHTML = `
+    <header class="card-head">
+      <h3 id="${titleId}" class="card-title">${escapeHtml(r.title)}</h3>
+      <div class="card-meta">
+        <time class="card-ts" datetime="${new Date().toISOString()}">${new Date().toISOString()}</time>
+        <button class="hash-btn" aria-label="Copy canonical hash" data-hash="${escapeAttr(hash)}">
+          ${escapeHtml(hash.slice(0, 6))}…
+        </button>
+      </div>
+    </header>
+
+    <section class="card-body">
+      <div class="source-id">Source — ${escapeHtml(host)}</div>
+      ${Array.isArray(r.predicate) ? r.predicate
+        .filter(p => CONTEXT_FRAME_VISIBILITY[p.engine] !== false)
+        .map(p => `
+          <div class="predicate-context" data-engine="${escapeAttr(p.engine)}">
+            <strong>${escapeHtml(p.engine)} Context</strong>
+            <p>${escapeHtml(p.explanation)}</p>
+          </div>
+        `).join("") : ""}
+
+      <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
+
+    <footer class="card-foot">
+      <div class="mirrors">
+        Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span>
+      </div>
+      <div class="tamper-flag" aria-live="polite" role="status">OK</div>
+      <button class="expand-provenance" aria-expanded="false" aria-controls="${provId}">
+        Provenance
+      </button>
+    </footer>
+
+    <div id="${provId}" class="provenance-panel" hidden>
+      <pre class="signed-manifest">${escapeHtml(
+        JSON.stringify({
+          query_token: data.query_token || "",
+          retrieval_predicate: r.predicate || "",
+          signature: r.signature || ""
+        })
+      )}</pre>
+      <details>
+        <summary>Retrieval predicate</summary>
+        <code>${escapeHtml(r.predicate || "predicate: unknown")}</code>
+      </details>
+      <a class="card-link" href="${escapeAttr(r.link)}" target="_blank" rel="noopener">
+        View Source
+      </a>
+    </div>
+  `;
+
+  if (SOVRA_GATES.sovraSpeaks()) {
+    NFIE.validateStateTransition("SovraSpeaks");
+    const excerpt = card.querySelector(".raw-excerpt");
+    if (excerpt) {
+      excerpt.textContent = applySovraVoice(excerpt.textContent);
+      card.classList.add("voice-enabled");
+    }
+  }
+
+  results.appendChild(card);
+});
+
+// FIX 2: Removed provPanel.prepend(vduBlock) — caused vduBlock to render twice
+// vduBlock is now appended once above, inside the contraCollapse gate check
+
+// Optional comparator (descriptive)
+if (list.length >= 2) {
+  const comparison = compareNarratives(list[0], list[1]);
+  SovraSyncTrigger.send({ kind: "COMPARISON", query, comparison });
+}
+
+// Optional drift log (pure telemetry)
+Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
+  domain: "retrieval",
+  source: "public_search"
+});
+
+SovraSyncTrigger.send({
+  kind: "SEARCH_OK",
+  query,
+  count: list.length
+});
+
+} catch (error) {
+  if (results) {
+    results.innerText = "Search error.";
+  }
+  console.error("Sovra fetch error:", error);
+  SovraSyncTrigger.send({
+    kind: "FETCH_ERROR",
+    query: String(error?.query || ""),
+    error: String(error)
+  });
+}
 };
 
 console.log("searchSovra() loaded (NFIE public runtime).");
 
 document.addEventListener("DOMContentLoaded", () => {
-window.addEventListener("sovra:ping", (event) => {
-  const { level, type, reason, timestamp } = event.detail;
-  console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
-});
+  window.addEventListener("sovra:ping", (event) => {
+    const { level, type, reason, timestamp } = event.detail;
+    console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
+  });
 
   /* ===============================
      SEARCH BINDINGS (ALWAYS RUN)
