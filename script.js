@@ -1491,30 +1491,33 @@ const CGEC = Object.freeze({
 /* ============================================================
    FIELD DENSITY UI SINK (DESCRIPTIVE ONLY)
    ============================================================ */
-window.addEventListener("sovra:field-density", (ev) => {
-  const { mass, packing, flow } = ev.detail || {};
+document.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("sovra:field-density", (ev) => {
+    const { mass, packing, flow } = ev.detail || {};
 
-  const massEl = document.getElementById("density-mass");
-  const packEl = document.getElementById("density-packing");
-  const flowEl = document.getElementById("density-flow");
-  const band = document.getElementById("field-density");
+    const massEl = document.getElementById("density-mass");
+    const packEl = document.getElementById("density-packing");
+    const flowEl = document.getElementById("density-flow");
+    const band = document.getElementById("field-density");
 
-  if (!massEl || !packEl || !flowEl || !band) return;
+    if (!massEl || !packEl || !flowEl || !band) return;
 
-  massEl.textContent =
-    mass < 0.3 ? "Light" :
-    mass < 0.7 ? "Moderate" :
-    "Heavy";
+    massEl.textContent =
+      mass < 0.3 ? "Light" :
+      mass < 0.7 ? "Moderate" :
+      "Heavy";
 
-  packEl.textContent =
-    packing < 0.3 ? "Diffuse" :
-    packing < 0.7 ? "Compact" :
-    "Compressed";
+    packEl.textContent =
+      packing < 0.3 ? "Diffuse" :
+      packing < 0.7 ? "Compact" :
+      "Compressed";
 
-  flowEl.textContent = flow ? "Shifting" : "Static";
+    flowEl.textContent = flow ? "Shifting" : "Static";
 
-  band.classList.remove("hidden");
+    band.classList.remove("hidden");
+  });
 });
+
 
 /* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
