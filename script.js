@@ -1562,15 +1562,20 @@ function synthesizeCDLMScores({ zse, trifold, enginesFired, querySignal }) {
     typeof querySignal === "number"
       ? querySignal % 3
       : 0;
+// 🔹 ZSE mass contribution (non‑semantic, NFIE‑safe)
+const zseMass =
+  typeof zse?.tokenCount === "number"
+    ? Math.min(3, Math.floor(zse.tokenCount / 400))
+    : 0;
 
-  const collapse = Math.min(
-    10,
-    engineCount +
-      Math.round(contradiction / 3) +
-      zeroSum +
-      queryVariance
-  );
-
+const collapse = Math.min(
+  10,
+  engineCount +
+    Math.round(contradiction / 3) +
+    zeroSum +
+    queryVariance +
+    zseMass
+); 
   return { collapse, contradiction, zeroSum };
 }
 
