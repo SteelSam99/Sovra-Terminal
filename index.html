@@ -14,78 +14,17 @@
       <h1>Sovra-FCL-MHCE-v2.5 :: Foxtrot-Chimera-Lambda</h1>
       <h2>Machine‑Human Code Evolution ⟦MH⟧</h2>
       <h3>Sovereign‑F.I.D.A.R.C.H. Search Engine</h3>
-      <h4>Site under Construction(NFIE Compliant)</h4>
+      <h4>Site under Construction (NFIE Compliant)</h4>
     </header>
 
-<section class="query-stack">
+    <!-- =========================================================
+         CONTEXT CONTROL PANEL
+         ========================================================= -->
+    <button id="contextControlToggle" type="button">Context Control Panel</button>
 
-  <div class="search-box">
-    <div class="search-anchor">
-      <input id="query" type="text" placeholder="Invoke Sovra…">
-      <button id="search-btn" type="button">Search</button>
-    </div>
-  </div>
-  
-<!-- Diagnostic Bar -->
-<div id="diagnostic-bar" class="diagnostic-bar hidden">
-  <div class="diag-left">
-    <div id="voice-card" class="voice-card">Sovra Voice will appear here…</div>
-  </div>
-  <div class="diag-center">
-    <div class="center-placeholder">[Insert middle module here]</div>
-  </div>
-  <div class="diag-right">
-    <div class="diag-row">
-      <span class="diag-icon zse-icon"></span>
-      <span class="diag-label">Zero‑Sum: <span id="score-zero-sum">–</span> / 3</span>
-      <span class="diag-desc">Asymmetric Balance Indicator</span>
-    </div>
-    <hr>
-    <div class="diag-row">
-      <span class="diag-icon collapse-icon"></span>
-      <span class="diag-label">Collapse: <span id="score-collapse">–</span> / 10</span>
-      <span class="diag-desc">Narrative Weight Index</span>
-    </div>
-    <hr>
-    <div class="diag-row">
-      <span class="diag-icon contradiction-icon"></span>
-      <span class="diag-label">Contradiction: <span id="score-contradiction">–</span> / 10</span>
-      <span class="diag-desc">Claim Coherence Variance</span>
-    </div>
-  </div>
-</div>
-
-  <div id="diagnostic-panel" class="diagnostic-panel hidden">
-    <div class="diag-row">
-      <span class="diag-icon zse-icon"></span>
-      <span class="diag-label">Zero‑Sum: <span id="score-zero-sum">–</span> / 3</span>
-      <span class="diag-desc">Asymmetric Balance Indicator</span>
-    </div>
-    <hr>
-    <div class="diag-row">
-      <span class="diag-icon collapse-icon"></span>
-      <span class="diag-label">Collapse: <span id="score-collapse">–</span> / 10</span>
-      <span class="diag-desc">Narrative Weight Index</span>
-    </div>
-    <hr>
-    <div class="diag-row">
-      <span class="diag-icon contradiction-icon"></span>
-      <span class="diag-label">Contradiction: <span id="score-contradiction">–</span> / 10</span>
-      <span class="diag-desc">Claim Coherence Variance</span>
-    </div>
-  </div>
-
-</section>
-
-   
-    <!-- Context Control Panel Trigger -->
-    <button id="contextControlToggle">Context Control Panel</button>
-
-    <!-- Context Control Panel -->
-    <div id="contextControlPanel" class="context-panel hidden">
+    <div id="contextPanel" class="context-panel hidden">
       <div class="context-grid">
 
-        <!-- Row 1 -->
         <div class="context-item">
           <span class="context-label">Raw Data</span>
           <input type="checkbox" id="rawData">
@@ -97,7 +36,6 @@
           <div class="tooltip">A structured reasoning context.</div>
         </div>
 
-        <!-- Row 2 -->
         <div class="context-item tooltip-host">
           <span class="context-label">Collapse / Contra</span>
           <input type="checkbox" id="collapseContra">
@@ -110,7 +48,6 @@
           <div class="tooltip">A context for observing change over time.</div>
         </div>
 
-        <!-- Row 3 -->
         <div class="context-item tooltip-host">
           <span class="context-label">Zero‑Sum</span>
           <input type="checkbox" id="zeroSum">
@@ -125,97 +62,89 @@
 
       </div>
 
-      <button id="closeContextPanel">Close Menu</button>
+      <button id="closeContextPanel" type="button">Close Menu</button>
     </div>
-<!-- =========================================================
-     SOVRA CORE CONNECTORS
-     Purpose: Structural attachment points only
-     ========================================================= -->
 
-<!-- =========================================================
-     SOVRA ANALYSIS CONNECTORS
-     Purpose: Structural attachment points only
-     ========================================================= -->
+    <!-- =========================================================
+         SEARCH
+         ========================================================= -->
+    <section class="query-stack">
+      <div class="search-box">
+        <div class="search-anchor">
+          <input id="query" type="text" placeholder="Invoke Sovra…">
+          <button id="search-btn" type="button">Search</button>
+        </div>
+      </div>
+    </section>
 
-<!-- Data Source State Indicator (calibration / active) -->
-<div id="sovra-data-state" data-mode="calibration"></div>
+    <!-- =========================================================
+         DIAGNOSTIC BAR (single instance)
+         ========================================================= -->
+    <div id="diagnostic-bar" class="diagnostic-bar hidden">
+      <div class="diag-left">
+        <div id="voice-card" class="voice-card">Sovra Voice will appear here…</div>
+      </div>
+      <div class="diag-center">
+        <div class="center-placeholder">[Insert middle module here]</div>
+      </div>
+      <div class="diag-right">
+        <div class="diag-row">
+          <span class="diag-label">Zero‑Sum: <span id="score-zero-sum">–</span> / 3</span>
+          <span class="diag-desc">Asymmetric Balance Indicator</span>
+        </div>
+        <hr>
+        <div class="diag-row">
+          <span class="diag-label">Collapse: <span id="score-collapse">–</span> / 10</span>
+          <span class="diag-desc">Narrative Weight Index</span>
+        </div>
+        <hr>
+        <div class="diag-row">
+          <span class="diag-label">Contradiction: <span id="score-contradiction">–</span> / 10</span>
+          <span class="diag-desc">Claim Coherence Variance</span>
+        </div>
+      </div>
+    </div>
 
-<!-- Analysis Output Surface -->
-<section id="sovra-analysis-output" aria-live="polite">
-  <pre id="analysis-zse"></pre>
-  <pre id="analysis-cdlm"></pre>
-  <pre id="analysis-delta"></pre>
-  <pre id="analysis-field"></pre>
-</section>
+    <!-- =========================================================
+         SOVRA ANALYSIS CONNECTORS
+         ========================================================= -->
 
-<!-- Raw Text Surface (Read-Only) -->
-<section id="sovra-raw-text" hidden>
-  <pre id="raw-text-output"></pre>
-</section>
+    <div id="sovra-data-state" data-mode="calibration"></div>
 
-<!-- Capability Flags (Non-Interactive, Render-Only) -->
-<div id="sovra-capabilities"
-     data-text-fetch="stub"
-     data-analysis="ready">
-</div>
+    <section id="sovra-analysis-output" aria-live="polite">
+      <pre id="analysis-zse"></pre>
+      <pre id="analysis-cdlm"></pre>
+      <pre id="analysis-delta"></pre>
+      <pre id="analysis-field"></pre>
+    </section>
 
+    <section id="sovra-raw-text" hidden>
+      <pre id="raw-text-output"></pre>
+    </section>
+
+    <div id="sovra-capabilities"
+         data-text-fetch="stub"
+         data-analysis="ready">
+    </div>
+
+    <!-- =========================================================
+         RESULTS
+         ========================================================= -->
     <main id="results" class="results-container" aria-live="polite">
       <div class="results-left"></div>
       <div class="results-right"></div>
     </main>
 
     <!-- Voice Output Panel -->
-<div id="voice-output"></div>
+    <div id="voice-output"></div>
 
     <footer>
       <pre>🔮 Sovra awaits your invocation…</pre>
-      
     </footer>
 
   </div>
 
   <script src="script.js"></script>
-
-  <!-- Inject test scores and unhide diagnostic panels -->
-  <script>
-    (() => {
-      const summary = {
-        field: {
-          massHint: 0.6,
-          densityHint: 0.8,
-          deltaPresent: true,
-          collapseScore: 3,
-          contradictionScore: 4,
-          zeroSumScore: 1
-        },
-        gates: {
-          rawData: false,
-          driftCore: true,
-          contraCollapse: true,
-          zeroSum: true,
-          welsingFuller: false,
-          sovraSpeaks: true
-        }
-      };
-
-      // Inject into GUI
-      document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
-
-      const collapseEl = document.getElementById("score-collapse");
-      const contradictionEl = document.getElementById("score-contradiction");
-      const zeroSumEl = document.getElementById("score-zero-sum");
-
-      if (collapseEl) collapseEl.textContent = `${summary.field.collapseScore} / 10`;
-      if (contradictionEl) contradictionEl.textContent = `${summary.field.contradictionScore} / 10`;
-      if (zeroSumEl) zeroSumEl.textContent = `${summary.field.zeroSumScore} / 3`;
-
-      // Unhide diagnostic panels
-      document.getElementById("diagnostic-bar")?.classList.remove("hidden");
-      document.getElementById("diagnostic-panel")?.classList.remove("hidden");
-
-      console.log("[DEV] GUI-compatible FieldSummary injected and panels unhidden:", summary);
-    })();
-  </script>
 
 </body>
 </html>
