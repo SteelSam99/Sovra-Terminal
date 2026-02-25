@@ -1512,11 +1512,17 @@ const CGEC = Object.freeze({
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("cdlm:scores", (ev) => {
+    // Gate controls visibility — scores may exist without exposure
+    if (!SOVRA_GATES.contraCollapse()) return;
+
     const s = ev.detail;
 
-    document.getElementById("score-collapse").textContent = `${s.collapse} / 10`;
-    document.getElementById("score-contradiction").textContent = `${s.contradiction} / 10`;
-    document.getElementById("score-zero-sum").textContent = `${s.zeroSum} / 3`;
+    document.getElementById("score-collapse").textContent =
+      `${s.collapse} / 10`;
+    document.getElementById("score-contradiction").textContent =
+      `${s.contradiction} / 10`;
+    document.getElementById("score-zero-sum").textContent =
+      `${s.zeroSum} / 3`;
 
     const panel = document.getElementById("diagnostic-panel");
     if (panel) {
@@ -1525,6 +1531,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
 
 /* ============================================================
    CDLM SCORE SYNTHESIS (NUMERIC ONLY)
