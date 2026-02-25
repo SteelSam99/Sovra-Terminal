@@ -3179,7 +3179,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const { level, type, reason, timestamp } = event.detail;
     console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
   });
-
+const toggleBtn = document.getElementById("contextControlToggle");
+const contextPanel = document.getElementById("contextControlPanel");
   // Search bindings
   const searchButton = document.getElementById("search-btn");
   const queryInput = document.getElementById("query");
