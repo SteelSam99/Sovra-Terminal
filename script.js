@@ -3179,8 +3179,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const { level, type, reason, timestamp } = event.detail;
     console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
   });
-const toggleBtn = document.getElementById("contextControlToggle");
-const contextPanel = document.getElementById("contextControlPanel");
+// Context Control Panel toggle
+  const toggleBtn = document.getElementById("contextControlToggle");
+  const contextPanel = document.getElementById("contextControlPanel");
+
+  if (toggleBtn && contextPanel) {
+    toggleBtn.addEventListener("click", () => {
+      contextPanel.classList.toggle("hidden");
+    });
+  }
+
+  const closeBtn = document.getElementById("closeContextPanel");
+  if (closeBtn && contextPanel) {
+    closeBtn.addEventListener("click", () => {
+      contextPanel.classList.add("hidden");
+    });
+  }
   // Search bindings
   const searchButton = document.getElementById("search-btn");
   const queryInput = document.getElementById("query");
