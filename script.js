@@ -3180,6 +3180,44 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(`[PING RECEIVED] Level: ${level} | Type: ${type} | Reason: ${reason} | Time: ${new Date(timestamp).toLocaleString()}`);
   });
 
+  // Search bindings
+  const searchButton = document.getElementById("search-btn");
+  const queryInput = document.getElementById("query");
+
+  if (searchButton) {
+    searchButton.addEventListener("click", () => {
+      window.searchSovra?.();
+    });
+  }
+
+  if (queryInput) {
+    queryInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        window.searchSovra?.();
+      }
+    });
+  }
+
+  // Context Control Panel toggle
+  const toggleBtn = document.getElementById("contextControlToggle");
+  const contextPanel = document.getElementById("contextPanel");
+
+  if (toggleBtn && contextPanel) {
+    toggleBtn.addEventListener("click", () => {
+      contextPanel.classList.toggle("hidden");
+    });
+  }
+
+  const closeBtn = document.getElementById("closeContextPanel");
+  if (closeBtn && contextPanel) {
+    closeBtn.addEventListener("click", () => {
+      contextPanel.classList.add("hidden");
+    });
+  }
+
+});
+
   /* ===============================
      SEARCH BINDINGS (ALWAYS RUN)
      =============================== */
