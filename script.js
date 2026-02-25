@@ -2801,12 +2801,13 @@ function applyWFEQueryRewrite(originalQuery) {
 /* ============================================================
    VDU Module (Minimal Stub)
    ============================================================ */
-window.VDU = (() => {
+window.Sovra = window.Sovra || {};
+
+window.Sovra.VDU = (() => {
   function run(results, context = {}) {
     const block = document.createElement("div");
     block.className = "vdu-block";
     block.textContent = `VDU processed ${results.length} results.`;
-
     block.vdu = {
       visibility: {
         concentratedAroundInstitution: context?.cdlm > 0.7,
@@ -2822,31 +2823,10 @@ window.VDU = (() => {
         maxSentences: 3
       }
     };
-
     return block;
   }
-
   return Object.freeze({ run });
 })();
-
-function renderDiagnosticScores(cdlm) {
-  if (!cdlm) return;
-
-  const { collapse, contradiction, zeroSum } = cdlm;
-
-  const collapseEl = document.getElementById("score-collapse");
-  const contradictionEl = document.getElementById("score-contradiction");
-  const zeroSumEl = document.getElementById("score-zero-sum");
-
-  if (collapseEl) collapseEl.textContent = `${collapse} / 10`;
-  if (contradictionEl) contradictionEl.textContent = `${contradiction} / 10`;
-  if (zeroSumEl) zeroSumEl.textContent = `${zeroSum} / 3`;
-
-  document.getElementById("diagnostic-bar")?.classList.remove("hidden");
-  document.getElementById("diagnostic-panel")?.classList.remove("hidden");
-
-  console.log("[CDLM] Scores rendered:", { collapse, contradiction, zeroSum });
-}
 
 /* ============================================================
    6) Public search runtime (NO interpretive enforcement)
@@ -2860,29 +2840,24 @@ console.log("GATE SNAPSHOT", {
   speaks: SOVRA_GATES.sovraSpeaks()
 });
 
-
 window.searchSovra = async function () {
   const results = document.querySelector(".results-left");
-
   try {
- let query = (document.getElementById("query")?.value || "").trim();
-const compareRaw = document.getElementById("toggleRaw")?.checked || false;
+    let query = (document.getElementById("query")?.value || "").trim();
+    const compareRaw = document.getElementById("toggleRaw")?.checked || false;
 
-if (!results) return;
+    if (!results) return;
+    if (!query) {
+      results.innerText = "Sovra requires a query to proceed.";
+      return;
+    }
 
-if (!query) {
-  results.innerText = "Sovra requires a query to proceed.";
-  return;
-}
-
-let wfeMeta = null;
-
-if (SOVRA_GATES.welsingFuller()) {
-  const rewritten = applyWFEQueryRewrite(query);
-  query = rewritten.rewrittenQuery;
-  wfeMeta = rewritten.meta;
-}
-
+    let wfeMeta = null;
+    if (SOVRA_GATES.welsingFuller()) {
+      const rewritten = applyWFEQueryRewrite(query);
+      query = rewritten.rewrittenQuery;
+      wfeMeta = rewritten.meta;
+    }
 
     // Local, non-authoritative memory (for UI continuity only)
     sovraMemory.push({
@@ -2902,29 +2877,27 @@ if (SOVRA_GATES.welsingFuller()) {
       ts: new Date().toISOString()
     });
 
-const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
-const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
-const collapseContraOn = SOVRA_GATES.contraCollapse() ? "1" : "0";
+    const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
+    const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
+    const collapseContraOn = SOVRA_GATES.contraCollapse() ? "1" : "0";
 
-const endpoint =
-  `/api/search` +
-  `?q=${encodeURIComponent(query)}` +
-  `&raw=${compareRaw}` +
-  `&zse=${zeroSumOn}` +
-  `&wfe=${wfeOn}` +
-  `&contra=${collapseContraOn}`;
-     
+    const endpoint =
+      `/api/search` +
+      `?q=${encodeURIComponent(query)}` +
+      `&raw=${compareRaw}` +
+      `&zse=${zeroSumOn}` +
+      `&wfe=${wfeOn}` +
+      `&contra=${collapseContraOn}`;
+
     const response = await fetch(endpoint);
-  const contentType = response.headers.get("content-type") || "";
+    const contentType = response.headers.get("content-type") || "";
 
-if (!contentType.includes("application/json")) {
-  const text = await response.text();
-  throw new Error("Upstream returned non-JSON: " + text.slice(0, 120));
-}
+    if (!contentType.includes("application/json")) {
+      const text = await response.text();
+      throw new Error("Upstream returned non-JSON: " + text.slice(0, 120));
+    }
 
-const data = await response.json();
-     renderDiagnosticScores(data.cdlm);
-
+    const data = await response.json();
 
 /* --------------------------------
    Temporal Drift Timeline (LEFT COLUMN)
