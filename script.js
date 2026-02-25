@@ -1608,8 +1608,6 @@ function emitCDLMScores(scores) {
     );
   }
 }
-console.log("[CDLM EMIT]", scores);
-
 
 /* ============================================================
    CDLM ANALYSIS EXECUTION (CORRECT BINDING POINT)
