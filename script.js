@@ -3204,8 +3204,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const ctxToggleBtn = document.getElementById("contextControlToggle");
   const ctxPanel = document.getElementById("contextControlPanel");
 
-  if (ctxToggleBtn && ctxPanel) {
-    ctxToggleBtn.addEventListener("click", () => {
+ if (ctxToggleBtn && ctxPanel) {
+    ctxToggleBtn.replaceWith(ctxToggleBtn.cloneNode(true));
+    const freshToggle = document.getElementById("contextControlToggle");
+    freshToggle.addEventListener("click", () => {
       ctxPanel.classList.toggle("hidden");
     });
   }
