@@ -1536,7 +1536,7 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ============================================================
    CDLM SCORE SYNTHESIS (NUMERIC ONLY)
    ============================================================ */
-function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
+function synthesizeCDLMScores({ zse, trifold, enginesFired, querySignal }) {
   // Zero‑Sum: 0–3
   const zsMatches = zse?.matches?.length || 0;
   const zeroSum =
@@ -1554,15 +1554,26 @@ function synthesizeCDLMScores({ zse, trifold, enginesFired }) {
     tfCount === 1 ? 4 : 0;
 
   // Collapse: stacking pressure
-  const engineCount = Object.values(enginesFired || {}).filter(Boolean).length;
+  const engineCount =
+    Object.values(enginesFired || {}).filter(Boolean).length;
+
+  // 🔹 Per‑query variance (forces resampling per query, NFIE‑safe)
+  const queryVariance =
+    typeof querySignal === "number"
+      ? querySignal % 3
+      : 0;
 
   const collapse = Math.min(
     10,
-    engineCount + Math.round(contradiction / 3) + zeroSum
+    engineCount +
+      Math.round(contradiction / 3) +
+      zeroSum +
+      queryVariance
   );
 
   return { collapse, contradiction, zeroSum };
 }
+
 window.Sovra.CollapseGate = (() => {
   const THRESHOLDS = Object.freeze({
     density: 0.72,        // example — tune later
