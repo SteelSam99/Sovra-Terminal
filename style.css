@@ -229,6 +229,27 @@ html, body {
   max-width: 25%;
   text-align: right;
 }
+.density-band {
+  display: flex;
+  gap: 24px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.density-item {
+  display: flex;
+  gap: 6px;
+}
+
+.density-label {
+  color: #aaa;
+}
+
+.density-value {
+  font-weight: 600;
+}
 
 /* ============================================================
    RESULTS AREA
