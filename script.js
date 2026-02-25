@@ -201,7 +201,7 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
    - ZSE: mass / pressure indicators
    - CDLM: density / packing indicators
    - DELTA: change placeholder (aux-safe)
-   - FIELD SUMMARY: non-directive aggregation
+   - FIELD DENSITY: first-class, non-directive state
    ============================================================ */
 window.Sovra.AnalysisSuite = (() => {
   const safeText = (t) => (typeof t === "string" ? t : String(t ?? ""));
@@ -237,81 +237,63 @@ window.Sovra.AnalysisSuite = (() => {
     });
   }
 
-  function FieldSummary(zse, cdlm, delta, gates = {}, scores = {}) {
-    const densityHint =
-      cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
-        ? Math.min(1, cdlm.avgLineLen / 120)
-        : 0;
-
-    const massHint =
+  /* ------------------------------------------------------------
+     FIELD DENSITY (authoritative, non-directive)
+     ------------------------------------------------------------ */
+  function FieldDensity(zse, cdlm, delta) {
+    const mass =
       zse.tokenCount > 0
         ? Math.min(1, zse.tokenCount / 2000)
         : 0;
 
-    return Object.freeze({
-      field: Object.freeze({
-        massHint,
-        densityHint,
-        deltaPresent: !!delta.snapshotId && delta.hasHistory,
-        collapseScore: scores.collapseScore ?? null,
-        contradictionScore: scores.contradictionScore ?? null,
-        zeroSumScore: scores.zeroSumScore ?? null
-      }),
-      gates: Object.freeze({
-        rawData: !!gates.rawData,
-        driftCore: !!gates.driftCore,
-        contraCollapse: !!gates.contraCollapse,
-        zeroSum: !!gates.zeroSum,
-        welsingFuller: !!gates.welsingFuller,
-        sovraSpeaks: !!gates.sovraSpeaks
-      })
-    });
+    const packing =
+      cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
+        ? Math.min(1, cdlm.avgLineLen / 120)
+        : 0;
+
+    const flow = !!delta.snapshotId && delta.hasHistory;
+
+    return Object.freeze({ mass, packing, flow });
   }
 
   async function analyzeFromFetcher(request, gates = {}) {
     const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
+
     const zse = ZSE(text);
     const cdlm = CDLM(text);
     const delta = Delta(text, meta);
 
-    // TEMP: Stub scores for testing
-    const calcPayload = {
-      collapseScore: 7,
-      contradictionScore: 4,
-      zeroSumScore: 2
-    };
+    const density = FieldDensity(zse, cdlm, delta);
 
-    const summary = FieldSummary(zse, cdlm, delta, gates, calcPayload);
+    /* --------------------------------------------------------
+       EMIT FIELD DENSITY (UI layer above CDLM)
+       -------------------------------------------------------- */
+    window.dispatchEvent(
+      new CustomEvent("sovra:field-density", { detail: density })
+    );
 
-    // Render analysis output
-    document.getElementById("analysis-zse").textContent = JSON.stringify(zse, null, 2);
-    document.getElementById("analysis-cdlm").textContent = JSON.stringify(cdlm, null, 2);
-    document.getElementById("analysis-delta").textContent = JSON.stringify(delta, null, 2);
-    document.getElementById("analysis-field").textContent = JSON.stringify(summary, null, 2);
+    /* --------------------------------------------------------
+       DEBUG / INSPECTION OUTPUT (optional)
+       -------------------------------------------------------- */
+    document.getElementById("analysis-zse").textContent =
+      JSON.stringify(zse, null, 2);
+    document.getElementById("analysis-cdlm").textContent =
+      JSON.stringify(cdlm, null, 2);
+    document.getElementById("analysis-delta").textContent =
+      JSON.stringify(delta, null, 2);
+    document.getElementById("analysis-field").textContent =
+      JSON.stringify(density, null, 2);
 
-    // Inject diagnostic scores into the GUI
-    if (summary?.field) {
-      const field = summary.field;
-      const collapseEl = document.getElementById("score-collapse");
-      const contradictionEl = document.getElementById("score-contradiction");
-      const zeroSumEl = document.getElementById("score-zero-sum");
-
-      if (collapseEl) collapseEl.textContent = field.collapseScore ?? "–";
-      if (contradictionEl) contradictionEl.textContent = field.contradictionScore ?? "–";
-      if (zeroSumEl) zeroSumEl.textContent = field.zeroSumScore ?? "–";
-    }
-
-    // Apply fallback if delta is empty
     ensureDeltaFallback();
 
-    return Object.freeze({ text, meta, zse, cdlm, delta, summary });
+    return Object.freeze({ text, meta, zse, cdlm, delta, density });
   }
 
   return Object.freeze({
     ZSE,
     CDLM,
     Delta,
-    FieldSummary,
+    FieldDensity,
     analyzeFromFetcher
   });
 })();
