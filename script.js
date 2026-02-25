@@ -1608,6 +1608,7 @@ function emitCDLMScores(scores) {
     );
   }
 }
+console.log("[CDLM EMIT]", scores);
 
 
 /* ============================================================
