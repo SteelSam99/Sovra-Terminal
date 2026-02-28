@@ -2482,6 +2482,8 @@ const FRAGMENTS = Object.freeze({
   })
 });
 
+  return out;
+
 /* ============================================================
    Fragment Selection
    ============================================================ */
@@ -2495,16 +2497,6 @@ function selectFragments(vdu) {
   if (vdu.visibility?.externalLowResolution) {
     out.push(FRAGMENTS.visibility.lowResolution);
   }
-
-  if (vdu.field?.powerAsymmetryLikely) {
-    out.push(FRAGMENTS.power.asymmetry);
-  }
-
-  if (vdu.visibility?.omissionsDetected) {
-    out.push(FRAGMENTS.negativeSpace.omissions);
-  }
-
-  return out;
 }
 
 /* ============================================================
@@ -2566,42 +2558,21 @@ function visibilityReflection(vdu) {
   return assembleSentences(filtered, vdu.speech?.maxSentences || 2);
 }
 
-function powerAsymmetryReflection(vdu) {
-  if (!vdu.field?.powerAsymmetryLikely) return null;
-
-  const frags = [FRAGMENTS.power.asymmetry];
-  const filtered = frags.map(filterTokens);
-  return assembleSentences(filtered, 1);
-}
-
-function negativeSpaceReflection(vdu) {
-  if (!vdu.visibility?.omissionsDetected) return null;
-
-  const frags = [FRAGMENTS.negativeSpace.omissions, FRAGMENTS.negativeSpace.attenuation];
-  const filtered = frags.map(filterTokens);
-  return assembleSentences(filtered, 2);
-}
 
 /* ============================================================
    Voice Generator
    ============================================================ */
-function generateVoice(vdu) {
-  const outputs = [];
+function speak(vdu) {
+  if (!gateCheck(vdu)) return null;
 
-  const v = visibilityReflection(vdu);
-  if (v) outputs.push(v);
+  const draft = attemptAssembly(vdu);
+  if (!draft) return null;
 
-  const p = powerAsymmetryReflection(vdu);
-  if (p) outputs.push(p);
+  if (!passesTacticalLock(draft)) return null;
+  if (isPatternRecognizable(draft)) return null;
 
-  const n = negativeSpaceReflection(vdu);
-  if (n) outputs.push(n);
-
-  if (outputs.length === 0) return null;
-
-  return outputs.slice(0, vdu.speech.maxSentences).join(" ");
+  return draft;
 }
-
 
 /* ============================================================
    SOVRA SPEAKS — VDU FILTERED
@@ -2670,55 +2641,56 @@ window.Sovra.Speaks = (() => {
   }
 
   /* =========================
-     ON-SIGHT GENERATION
-     ========================= */
+   ON-SIGHT ASSEMBLY
+   ========================= */
 
-  function generateText(vdu) {
-    const { visibility, field } = vdu;
+const LEXICON = Object.freeze({
+  nouns: {
+    absence: "Some structurally relevant explanations",
+    surface: "the retrieved material",
+    patterns: "visibility patterns",
+    systems: "high‑power informational systems"
+  },
+  verbs: {
+    notSurface: "did not surface",
+    canOccur: "can occur",
+    observed: "have been observed"
+  },
+  qualifiers: {
+    scope: "At this resolution",
+    without: "without explicit exclusion",
+    comparable: "Comparable"
+  }
+});
 
-    if (!visibility?.omissionsDetected) return null;
+function attemptAssembly(vdu) {
+  const { visibility, field } = vdu;
+  const out = [];
 
-    const fragments = [];
+  if (!visibility?.omissionsDetected) return null;
 
-    // Fragment 1 — absence description
-    fragments.push(
-      "Some structurally relevant explanations did not surface within the retrieved material."
+  if (LEXICON.nouns.absence && LEXICON.verbs.notSurface) {
+    out.push(
+      `${LEXICON.nouns.absence} ${LEXICON.verbs.notSurface} within ${LEXICON.nouns.surface}.`
     );
-
-    // Fragment 2 — scope qualifier
-    fragments.push(
-      "At this resolution, such attenuation can occur without explicit exclusion."
-    );
-
-    // Fragment 3 — systems anchor (optional)
-    if (field?.powerAsymmetryLikely) {
-      fragments.push(
-        "Comparable visibility patterns have been observed in high‑power informational systems."
-      );
-    }
-
-    return fragments.slice(0, vdu.speech.maxSentences).join(" ");
   }
 
-  /* =========================
-     PUBLIC API
-     ========================= */
-
-  function speak(vdu) {
-    if (!gateCheck(vdu)) return null;
-
-    const draft = generateText(vdu);
-    if (!draft) return null;
-
-    if (!passesTacticalLock(draft)) return null;
-    if (isPatternRecognizable(draft)) return null;
-
-    return draft;
+  if (LEXICON.qualifiers.scope && LEXICON.verbs.canOccur) {
+    out.push(
+      `${LEXICON.qualifiers.scope}, such attenuation ${LEXICON.verbs.canOccur} ${LEXICON.qualifiers.without}.`
+    );
   }
 
-  return Object.freeze({ speak });
+  if (field?.powerAsymmetryLikely && LEXICON.qualifiers.comparable) {
+    out.push(
+      `${LEXICON.qualifiers.comparable} ${LEXICON.nouns.patterns} ${LEXICON.verbs.observed} in ${LEXICON.nouns.systems}.`
+    );
+  }
 
-})();
+  return out.length ? out.join(" ") : null;
+}
+
+
 
 /* ============================================================
    VDUManager — Passive Listener + Conditional Renderer
