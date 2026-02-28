@@ -2575,7 +2575,7 @@ function speak(vdu) {
 /* ============================================================
    SOVRA SPEAKS — VDU FILTERED
    Version: 1.0
-   Mode: Full-Parse Only | On-Site Generated | Non-Patterned
+   Mode: Full-Parse Only | On-Site Assembly | Non-Patterned
    ============================================================ */
 
 window.Sovra = window.Sovra || {};
@@ -2589,29 +2589,17 @@ window.Sovra.Speaks = (() => {
   function gateCheck(vdu) {
     if (!vdu?.speech?.allowed) return false;
     if (vdu?.field?.resolution !== "full") return false;
-    if (!SOVRA_GATES.sovraSpeaks()) return false;
+    if (typeof window.SOVRA_GATES?.sovraSpeaks === "function" && !window.SOVRA_GATES.sovraSpeaks()) return false;
     return true;
   }
 
   /* =========================
-     SEMANTIC FIELD (LOCKED)
-     ========================= */
-
-  const SEMANTIC_FIELD = Object.freeze({
-    restraint: true,
-    negativeSpace: true,
-    recursion: true,
-    nonAgentic: true,
-    nonDirective: true
-  });
-
-  /* =========================
-     TACTICAL LOCK (STIP 022)
+     TACTICAL LOCK
      ========================= */
 
   function passesTacticalLock(text) {
     if (!text || typeof text !== "string") return false;
-    if (text.length > 420) return false; // compression enforced
+    if (text.length > 420) return false;
     if (/must|should|they|intent|because/i.test(text)) return false;
     return true;
   }
@@ -2629,66 +2617,78 @@ window.Sovra.Speaks = (() => {
       .slice(0, 120);
 
     if (recentHashes.has(hash)) return true;
-    recentHashes.add(hash);
 
-    if (recentHashes.size > 12) {
-      recentHashes.clear();
-    }
+    recentHashes.add(hash);
+    if (recentHashes.size > 12) recentHashes.clear();
 
     return false;
   }
 
   /* =========================
-   ON-SIGHT ASSEMBLY
-   ========================= */
+     ON-SIGHT ASSEMBLY
+     ========================= */
 
-const LEXICON = Object.freeze({
-  nouns: {
-    absence: "Some structurally relevant explanations",
-    surface: "the retrieved material",
-    patterns: "visibility patterns",
-    systems: "high‑power informational systems"
-  },
-  verbs: {
-    notSurface: "did not surface",
-    canOccur: "can occur",
-    observed: "have been observed"
-  },
-  qualifiers: {
-    scope: "At this resolution",
-    without: "without explicit exclusion",
-    comparable: "Comparable"
-  }
-});
+  const LEXICON = Object.freeze({
+    nouns: Object.freeze({
+      absence: "Some structurally relevant explanations",
+      surface: "the retrieved material",
+      patterns: "visibility patterns",
+      systems: "high‑power informational systems"
+    }),
+    verbs: Object.freeze({
+      notSurface: "did not surface",
+      canOccur: "can occur",
+      observed: "have been observed"
+    }),
+    qualifiers: Object.freeze({
+      scope: "At this resolution",
+      without: "without explicit exclusion",
+      comparable: "Comparable"
+    })
+  });
 
-function attemptAssembly(vdu) {
-  const { visibility, field } = vdu;
-  const out = [];
+  function attemptAssembly(vdu) {
+    const { visibility, field } = vdu || {};
+    const out = [];
 
-  if (!visibility?.omissionsDetected) return null;
+    if (!visibility?.omissionsDetected) return null;
 
-  if (LEXICON.nouns.absence && LEXICON.verbs.notSurface) {
     out.push(
       `${LEXICON.nouns.absence} ${LEXICON.verbs.notSurface} within ${LEXICON.nouns.surface}.`
     );
-  }
 
-  if (LEXICON.qualifiers.scope && LEXICON.verbs.canOccur) {
     out.push(
       `${LEXICON.qualifiers.scope}, such attenuation ${LEXICON.verbs.canOccur} ${LEXICON.qualifiers.without}.`
     );
+
+    if (field?.powerAsymmetryLikely) {
+      out.push(
+        `${LEXICON.qualifiers.comparable} ${LEXICON.nouns.patterns} ${LEXICON.verbs.observed} in ${LEXICON.nouns.systems}.`
+      );
+    }
+
+    return out.length ? out.join(" ") : null;
   }
 
-  if (field?.powerAsymmetryLikely && LEXICON.qualifiers.comparable) {
-    out.push(
-      `${LEXICON.qualifiers.comparable} ${LEXICON.nouns.patterns} ${LEXICON.verbs.observed} in ${LEXICON.nouns.systems}.`
-    );
+  /* =========================
+     PUBLIC API
+     ========================= */
+
+  function speak(vdu) {
+    if (!gateCheck(vdu)) return null;
+
+    const draft = attemptAssembly(vdu);
+    if (!draft) return null;
+
+    if (!passesTacticalLock(draft)) return null;
+    if (isPatternRecognizable(draft)) return null;
+
+    return draft;
   }
 
-  return out.length ? out.join(" ") : null;
-}
+  return Object.freeze({ speak });
 
-
+})();
 
 /* ============================================================
    VDUManager — Passive Listener + Conditional Renderer
