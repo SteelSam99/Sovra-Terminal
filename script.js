@@ -253,11 +253,22 @@ const artifact_DS4_SOV_204 = {
   }
 };
 
-NFIE.registerArtifact({
-  id: "DS4-SOV-204",
-  type: "LEXICON",
-  payload: artifact_DS4_SOV_204
-});
+(function registerWhenReady() {
+  if (typeof window.NFIE !== "undefined" &&
+      typeof window.NFIE.registerArtifact === "function") {
+
+    window.NFIE.registerArtifact({
+      id: "DS4-SOV-204",
+      type: "LEXICON",
+      payload: artifact_DS4_SOV_204
+    });
+
+  } else {
+    // Defer until NFIE is available
+    setTimeout(registerWhenReady, 0);
+  }
+})();
+
 
 /* ============================================================
    ANALYSIS SUITE (observational only)
