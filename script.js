@@ -2202,16 +2202,6 @@ function classifyActivity(text) {
   return matches.length ? matches : ["OTHER"];
 }
 
-
-  const t = (text || "").toLowerCase();
-  for (const category in categories) {
-    for (const kw of categories[category]) {
-      if (t.includes(kw)) return category;
-    }
-  }
-  return "OTHER";
-}
-
 function detectBias(_text) {
   // Descriptive placeholder. Must not enforce an interpretive lens in public runtime.
   return ["unspecified"];
