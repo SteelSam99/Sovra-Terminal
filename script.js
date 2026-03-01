@@ -2179,8 +2179,29 @@ function parseLegalText(text) {
 
 function classifyActivity(text) {
   const categories = {
-    LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"]
+    LAW: ["court", "legal", "statute", "justice", "discrimination", "civil rights", "housing law"],
+    HOUSING: ["housing", "rent", "eviction", "zoning", "mortgage"],
+    EMPLOYMENT: ["employment", "hiring", "termination", "workplace"],
+    MEDICAL: ["medical", "healthcare", "diagnosis", "treatment"],
+    FINANCIAL: ["loan", "credit", "bank", "debt"],
+    EDUCATION: ["school", "education", "curriculum"],
+    GOVERNMENT: ["policy", "agency", "regulation"],
+    TECHNOLOGY: ["algorithm", "ai", "software"],
+    CULTURE: ["race", "identity", "history"]
   };
+
+  const t = (text || "").toLowerCase();
+  const matches = [];
+
+  for (const category in categories) {
+    if (categories[category].some(kw => t.includes(kw))) {
+      matches.push(category);
+    }
+  }
+
+  return matches.length ? matches : ["OTHER"];
+}
+
 
   const t = (text || "").toLowerCase();
   for (const category in categories) {
