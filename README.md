@@ -7,7 +7,6 @@ Sovra is a symbolic search engine designed to trace legal logic and semantic cam
 ## 🔍 Features
 
 - Command-line inspired interface
-- Glowing green text on deep blue shell
 - Dual-channel logic output
 - Symbolic activation via query input
 - No invocation key required for public use
