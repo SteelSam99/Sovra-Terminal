@@ -1,8 +1,8 @@
 # Sovra-Terminal
 We only speak the truth.
-# Sovra-FCL-MHC-v2.0 :: Chimera–Lambda
+# Sovra-FCL-MHC-v2.5 :: Chimera–Lambda
 
-Sovra is a symbolic search engine designed to trace legal logic and semantic camouflage across time. This interface simulates dual-channel cognition: constrained legal facts and symbolic inference.
+Sovra-FCL-MHCE is a search engine desinged to seek out both covert and overt racism, which is white supremacy, and expose it freely and publicly. This interface simulates dual-channel cognition: constrained legal facts and symbolic inference. Sovra-FCL-MHCE
 
 ## 🔍 Features
 
@@ -18,7 +18,7 @@ trace the symbolic continuity between Tennessee’s 2021 ‘Divisive Concepts’
 ## 🛠️ Tech Stack
 
 - HTML, CSS, JavaScript
-- Static deployment via Netlify
+- Static deployment via Vercel
 - No backend required (symbolic logic simulated client-side)
 
 ## 🧠 Sovereign Logic
