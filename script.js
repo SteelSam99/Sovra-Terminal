@@ -264,6 +264,7 @@ const result = TrifoldMirrorProtocol.evaluateClaim(claim);
 console.log("Trifold Mirror Diagnostic:", result.diagnostics);
 console.log("Contradiction Score:", result.metrics.contradictionScore);
 console.log("Contradiction Artifact Flag:", result.metrics.isContradictionArtifact);
+
 /* ============================================================
    SOVRA QUAD-CORE CSR — WARP-CORE READY PATCH (script.js)
    Drop-in block: replace your current PublicTextFetcher STUB
@@ -347,6 +348,106 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
 
   window.Sovra.PublicTextFetcher = Object.freeze(api);
 })();
+
+/* ============================================================
+   ANALYSIS SUITE (observational only)
+   - ZSE: mass / pressure indicators
+   - CDLM: density / packing indicators
+   - DELTA: change placeholder (aux-safe)
+   - FIELD SUMMARY: non-directive aggregation
+   ============================================================ */
+window.Sovra.AnalysisSuite = (() => {
+  const safeText = (t) => (typeof t === "string" ? t : String(t ?? ""));
+
+  function ZSE(text) {
+    const t = safeText(text);
+    const tokens = t.split(/\s+/).filter(Boolean);
+    return Object.freeze({
+      tokenCount: tokens.length,
+      charCount: t.length
+    });
+  }
+
+  function CDLM(text) {
+    const t = safeText(text);
+    const lines = t.split(/\n/);
+    const nonEmpty = lines.filter(l => l.trim().length > 0);
+    const avgLineLen = nonEmpty.length
+      ? Math.round(nonEmpty.join("").length / nonEmpty.length)
+      : 0;
+
+    return Object.freeze({
+      lineCount: lines.length,
+      nonEmptyLines: nonEmpty.length,
+      avgLineLen
+    });
+  }
+
+  function Delta(text, meta = {}) {
+    return Object.freeze({
+      snapshotId: meta.snapshotId || null,
+      hasHistory: false
+    });
+  }
+
+  function FieldSummary(zse, cdlm, delta, gates = {}) {
+    const densityHint =
+      cdlm.nonEmptyLines > 0 && cdlm.avgLineLen > 0
+        ? Math.min(1, cdlm.avgLineLen / 120)
+        : 0;
+
+    const massHint =
+      zse.tokenCount > 0
+        ? Math.min(1, zse.tokenCount / 2000)
+        : 0;
+
+    return Object.freeze({
+      field: Object.freeze({
+        massHint,
+        densityHint,
+        deltaPresent: !!delta.snapshotId && delta.hasHistory
+      }),
+      gates: Object.freeze({
+        rawData: !!gates.rawData,
+        driftCore: !!gates.driftCore,
+        contraCollapse: !!gates.contraCollapse,
+        zeroSum: !!gates.zeroSum,
+        welsingFuller: !!gates.welsingFuller,
+        sovraSpeaks: !!gates.sovraSpeaks
+      })
+    });
+  }
+
+  async function analyzeFromFetcher(request, gates = {}) {
+    const { text, meta } = await window.Sovra.PublicTextFetcher.fetch(request);
+    const zse = ZSE(text);
+    const cdlm = CDLM(text);
+    const delta = Delta(text, meta);
+    const summary = FieldSummary(zse, cdlm, delta, gates);
+
+    return Object.freeze({ text, meta, zse, cdlm, delta, summary });
+  }
+
+  return Object.freeze({
+    ZSE,
+    CDLM,
+    Delta,
+    FieldSummary,
+    analyzeFromFetcher
+  });
+})();
+
+/* ============================================================
+   OPTIONAL: UI SIGNAL HOOK (render-only)
+   ============================================================ */
+window.Sovra.SignalBus.on("PRIMARY_SOURCE_AVAILABLE", () => {
+  try {
+    // Optional: trigger re-render or status refresh
+  } catch (_) {}
+});
+
+
+
 
 /* ============================================================
    DS4-SOV-204 (NFIE-Compliant)
