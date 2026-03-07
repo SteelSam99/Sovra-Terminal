@@ -3356,6 +3356,30 @@ emitCDLMScores(scores);
 if (SOVRA_GATES.sovraSpeaks()) {
   applySovraVoice(narrativeText);
 }
+     // Dispatch field density to diagnostic bar center column
+(function emitFieldDensity() {
+  const zseData = runZSEStandalone(narrativeText);
+  const tokens = narrativeText.trim().split(/\s+/).filter(Boolean);
+  const lines = narrativeText.split(/\n/);
+  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  const avgLineLen = nonEmpty.length
+    ? Math.round(nonEmpty.join("").length / nonEmpty.length)
+    : 0;
+
+  const mass = Math.min(1, (zseData?.tokenCount || tokens.length) / 2000);
+  const packing = Math.min(1, avgLineLen / 120);
+  const flow = false; // Delta history not yet active
+
+  window.dispatchEvent(
+    new CustomEvent("sovra:field-density", {
+      detail: { mass, packing, flow }
+    })
+  );
+
+  // Unhide diagnostic panel
+  const panel = document.getElementById("diagnostic-panel");
+  if (panel) panel.classList.remove("hidden");
+})();
 
 // FIX 1: VDU block only renders when Contra/Collapse gate is active
 if (SOVRA_GATES.contraCollapse()) {
