@@ -59,7 +59,159 @@ window.Sovra.DriftGate = window.Sovra.DriftGate || Object.freeze({
     return false;
   }
 });
+/* ============================================================
+   SOVRA VOICE — Single field observation per query
+   Observes the full result set via narrativeText.
+   Writes once to #voice-card. No per-card intervention.
+   Author: Samuel Peacock | SOVRA-FCL-MHCE-v2.5 | NFIE Compliant
+   ============================================================ */
 
+function applySovraVoice(narrativeText) {
+  if (!narrativeText || typeof narrativeText !== "string") return;
+
+  const voiceCard = document.getElementById("voice-card");
+  if (!voiceCard) return;
+
+  // --- PCE PROXY DERIVATION (from full result field) ---
+  const tokens = narrativeText.trim().split(/\s+/).filter(Boolean);
+  const sentences = narrativeText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const charCount = narrativeText.length;
+
+  // velocity: information density proxy
+  const velocity = tokens.length > 0
+    ? Math.min(1.2, tokens.length / Math.max(charCount, 1) * 8)
+    : 0;
+
+  // integrationTime: binding duration proxy
+  const integrationTime = Math.min(sentences.length / 10, 1.0);
+
+  // stateDerivative: forward motion indicator
+  const forwardIndicators = /is|are|has|have|show|indicate|reveal|demonstrate|document/i;
+  const stateDerivative = forwardIndicators.test(narrativeText) ? 1 : -1;
+
+  // stateSecondDerivative: volatility — hedging and contradiction language
+  const hedgePattern = /however|but|although|despite|while|yet|contrary|conflict|dispute|contested/i;
+  const hedgeCount = (narrativeText.match(new RegExp(hedgePattern.source, "gi")) || []).length;
+  const stateSecondDerivative = Math.min(hedgeCount * 0.15, 1.5);
+
+  // contradictionDensity: from TrifoldMirrorProtocol
+  let contradictionDensity = 0;
+  if (window.TrifoldMirrorProtocol) {
+    const tf = window.TrifoldMirrorProtocol.evaluateClaim(narrativeText);
+    contradictionDensity = (tf.metrics.contradictionScore || 0) / 3;
+  }
+
+  // PCE structural constants for this runtime
+  const _c = 1.0;
+  const _T_rep = 0.2;
+  const _θ = 0.3;
+
+  // --- SCAFFOLD INVOCATION ---
+  const result = sovraVoiceScaffold({
+    velocity, integrationTime, stateDerivative,
+    stateSecondDerivative, contradictionDensity,
+    _c, _T_rep, _θ
+  });
+
+  // Admissible field — no voice output
+  if (!result.voice || result.posture === "admissible") {
+    voiceCard.innerHTML = `
+      <div class="voice-text">
+        <span style="color:#6a6a8a;font-size:0.75rem;letter-spacing:2px;">
+          SOVRA VOICE — ⟦P⟧ ADMISSIBLE
+        </span><br/>
+        <span style="color:#4a4a6a;">Field within corridor. No instability detected.</span>
+      </div>`;
+    return;
+  }
+
+  // Liminal or rejected — assemble output
+  const assembled = result.output.join(" ");
+
+  voiceCard.innerHTML = `
+    <div class="voice-text">
+      <span style="color:#6a6a8a;font-size:0.75rem;letter-spacing:2px;">
+        SOVRA VOICE — ⟦${result.cadence.symbol}⟧ ${result.posture.toUpperCase()}
+      </span><br/>
+      ${assembled}
+    </div>`;
+}
+
+/* ============================================================
+   SOVRA VOICE SCAFFOLD — PCE State Detection
+   Source: Sovra Voice Scaffold Liminal State Detection
+   Author: Samuel + Kitt | MHCE v2.5
+   ============================================================ */
+
+function sovraVoiceScaffold(input) {
+  const {
+    velocity, integrationTime, stateDerivative,
+    stateSecondDerivative, contradictionDensity,
+    _c = 1.0, _T_rep = 0.2, _θ = 0.3
+  } = input;
+
+  const inCorridor =
+    velocity > 0 &&
+    velocity <= _c &&
+    integrationTime >= _T_rep &&
+    stateDerivative > 0;
+
+  const inWobble =
+    inCorridor &&
+    Math.abs(stateSecondDerivative) > _θ;
+
+  const inWall =
+    velocity > _c ||
+    integrationTime < _T_rep ||
+    stateDerivative <= 0;
+
+  if (inWobble) {
+    return {
+      voice: true,
+      posture: "liminal",
+      cadence: {
+        symbol: "W", tempo: 115, pitch: 190,
+        timbre: "breathy", silence: 400,
+        ssml: '<prosody rate="slow" pitch="-2st">'
+      },
+      output: [
+        "This field resides within the perceptual corridor but exhibits symbolic instability.",
+        "Contradiction density is elevated.",
+        "No commitment to state transition is made.",
+        "This is a liminal observation."
+      ]
+    };
+  }
+
+  if (inWall) {
+    return {
+      voice: true,
+      posture: "rejected",
+      cadence: {
+        symbol: "B", tempo: 175, pitch: 170,
+        timbre: "flat", silence: 100,
+        ssml: '<prosody rate="fast" pitch="-4st">'
+      },
+      output: [
+        "This field exceeds corridor constraints.",
+        "Propagation velocity, integration threshold, or symbolic direction is invalid.",
+        "No observation is made.",
+        "This field is outside admissible bounds."
+      ]
+    };
+  }
+
+  return {
+    voice: false,
+    posture: "admissible",
+    cadence: {
+      symbol: "P", tempo: 155, pitch: 210,
+      timbre: "neutral", silence: 200,
+      ssml: '<prosody rate="medium" pitch="medium">'
+    },
+    output: []
+  };
+}
 /* ============================================================
    Trifold Mirror Protocol — Sovra Diagnostic Overlay
    ============================================================ */
@@ -3098,6 +3250,11 @@ const diagnostics = {
 
 const scores = synthesizeCDLMScores(diagnostics);
 emitCDLMScores(scores);
+     
+     // Single field observation — NFIE compliant, no per-card force
+if (SOVRA_GATES.sovraSpeaks()) {
+  applySovraVoice(narrativeText);
+}
 
 // FIX 1: VDU block only renders when Contra/Collapse gate is active
 if (SOVRA_GATES.contraCollapse()) {
@@ -3194,15 +3351,6 @@ list.forEach((r, i) => {
       </a>
     </div>
   `;
-
-  if (SOVRA_GATES.sovraSpeaks()) {
-    NFIE.validateStateTransition("SovraSpeaks");
-    const excerpt = card.querySelector(".raw-excerpt");
-    if (excerpt) {
-      excerpt.textContent = applySovraVoice(excerpt.textContent);
-      card.classList.add("voice-enabled");
-    }
-  }
 
   results.appendChild(card);
 });
