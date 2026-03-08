@@ -2944,26 +2944,6 @@ const provBtn = e.target.closest
     }
   }
 });
-/* ============================================================
-   Diagnostic Surface Listener (CDLM Instrumentation)
-   ============================================================ */
-
-window.addEventListener("cdlm:scores", (e) => {
-  const { zeroSum, collapse, contradiction } = e.detail || {};
-
-  const zseEl = document.getElementById("score-zero-sum");
-  const collapseEl = document.getElementById("score-collapse");
-  const contraEl = document.getElementById("score-contradiction");
-  const panel = document.getElementById("diagnostic-panel");
-
-  if (!zseEl || !collapseEl || !contraEl || !panel) return;
-
-  zseEl.textContent = zeroSum ?? "–";
-  collapseEl.textContent = collapse ?? "–";
-  contraEl.textContent = contradiction ?? "–";
-
-  panel.classList.remove("hidden");
-});
 
 function renderZSEStandalone(result) {
   if (!result.detected) return;
