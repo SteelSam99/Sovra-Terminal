@@ -3674,7 +3674,7 @@ if (SOVRA_GATES.contraCollapse()) {
   if (panel) panel.classList.remove("hidden");
 }
 
-// FIX 1: VDU block only renders when Contra/Collapse gate is active
+   // FIX 1: VDU block only renders when Contra/Collapse gate is active
 if (SOVRA_GATES.contraCollapse()) {
   const vduBlock = VDU.run(list, {
     cdlm: scores?.cdlm,
