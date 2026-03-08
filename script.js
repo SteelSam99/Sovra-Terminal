@@ -3668,13 +3668,14 @@ if (SOVRA_GATES.sovraSpeaks()) {
     })
   );
 
-  // Unhide diagnostic panel
-if (SOVRA_GATES.contraCollapse()) {
-  const panel = document.getElementById("diagnostic-panel");
-  if (panel) panel.classList.remove("hidden");
-}
+// Unhide diagnostic panel
+  if (SOVRA_GATES.contraCollapse()) {
+    const panel = document.getElementById("diagnostic-panel");
+    if (panel) panel.classList.remove("hidden");
+  }
+})();
 
-   // FIX 1: VDU block only renders when Contra/Collapse gate is active
+     // FIX 1: VDU block only renders when Contra/Collapse gate is active
 if (SOVRA_GATES.contraCollapse()) {
   const vduBlock = VDU.run(list, {
     cdlm: scores?.cdlm,
