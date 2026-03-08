@@ -1435,27 +1435,424 @@ function synthesizeExplanationAtoms({ query, domain, driftTimelinePayload, calcu
 
   return Object.freeze(atoms);
 }
-/* =========================
-   6) Optional: Patch your Drift Scanner gate (drop-in)
-   - Call this after you load the scanner code I gave you earlier.
-   ========================= */
+/* ============================================================
+   Sovra Drift Scanner (NFIE-compliant, descriptive-only)
+   Built on: Recursion Delay Protocol
+   Version: 0.1
+   Purpose:
+     - Observe HOW language changes over time (sequence, not causality)
+     - Anchor observations to public artifacts with dates + context windows
+     - Emit a timeline payload for GUI synthesis (no pre-written narratives)
+   Non-goals:
+     - No enforcement, no triggers, no thresholds that cause action
+     - No intent inference, no "why", no prescriptions
+   ============================================================ */
 
-window.Sovra.wrapScannerWithDriftGate = function wrapScannerWithDriftGate(
-  scanner,
-  getDriftEnabled = window.Sovra.DriftGate.getEnabled
-) {
-  if (!scanner || typeof scanner.scan !== "function") return scanner;
+"use strict";
 
+/* ============================================================
+   0) Recursion Delay Protocol (RDP)
+   - Delays synthesis until enough temporal evidence exists
+   - Prevents premature coherence / early-sample overfitting
+   ============================================================ */
+
+const RECURSION_DELAY_PROTOCOL = Object.freeze({
+  engage(anomalyLabel, meta = {}) {
+    return Object.freeze({
+      anomalyLabel: String(anomalyLabel || "UNSPECIFIED_ANOMALY"),
+      meta: Object.freeze({ ...meta }),
+      t0: Date.now()
+    });
+  },
+
+  vocalize(state, message) {
+    // NFIE-safe: logging only, no behavioral control
+    try {
+      console.log("[RDP:VOCALIZE]", state.anomalyLabel, "-", String(message || ""));
+    } catch (_) {}
+    return state;
+  },
+
+  async release(delayMs) {
+    const ms = Math.max(0, Number(delayMs || 0));
+    if (!ms) return;
+    await new Promise((r) => setTimeout(r, ms));
+  },
+
+  reEnter(state) {
+    return Object.freeze({ ...state, t1: Date.now() });
+  },
+
+  reveal(state, payload) {
+    return Object.freeze({
+      ...state,
+      t2: Date.now(),
+      payload: Object.freeze(payload || {})
+    });
+  }
+});
+
+/* ============================================================
+   1) Utilities
+   ============================================================ */
+
+function clamp(n, a, b) {
+  n = Number(n);
+  if (Number.isNaN(n)) return a;
+  return Math.max(a, Math.min(b, n));
+}
+
+function safeLower(s) {
+  return String(s || "").toLowerCase();
+}
+
+function uniq(arr) {
+  return Array.from(new Set(arr || []));
+}
+
+function tokenize(text) {
+  return safeLower(text)
+    .replace(/[^a-z0-9\s\-’']/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function topNCounts(items, n = 12) {
+  const m = new Map();
+  for (const it of items || []) m.set(it, (m.get(it) || 0) + 1);
+  return Array.from(m.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([term, count]) => ({ term, count }));
+}
+
+/* ============================================================
+   2) Date extraction (best-effort, descriptive-only)
+   - Prefers explicit fields if present
+   - Falls back to parsing snippets/titles
+   ============================================================ */
+
+function parseYearFromText(text) {
+  const t = String(text || "");
+  const m = t.match(/\b(17\d{2}|18\d{2}|19\d{2}|20\d{2})\b/);
+  if (!m) return null;
+  const y = Number(m[1]);
+  if (y < 1700 || y > 2099) return null;
+  return y;
+}
+
+function extractYear(result) {
+  // Prefer structured fields if your upstream provides them
+  const candidates = [
+    result?.year,
+    result?.published_year,
+    result?.date,
+    result?.published,
+    result?.published_at,
+    result?.timestamp
+  ];
+
+  for (const c of candidates) {
+    if (typeof c === "number" && c >= 1700 && c <= 2099) return c;
+    if (typeof c === "string") {
+      const y1 = parseYearFromText(c);
+      if (y1) return y1;
+    }
+  }
+
+  // Fallback: parse from title/snippet/full_text
+  return (
+    parseYearFromText(result?.title) ||
+    parseYearFromText(result?.snippet) ||
+    parseYearFromText(result?.full_text) ||
+    null
+  );
+}
+
+/* ============================================================
+   3) Temporal slicing (era buckets)
+   - Small number of buckets to fit 8–9s runtime
+   - Descriptive eras, not causal epochs
+   ============================================================ */
+
+const DEFAULT_ERAS = Object.freeze([
+  { id: "pre_1900", label: "Pre-1900", from: 0, to: 1899 },
+  { id: "1900_1945", label: "1900–1945", from: 1900, to: 1945 },
+  { id: "1946_1970", label: "1946–1970", from: 1946, to: 1970 },
+  { id: "1971_1990", label: "1971–1990", from: 1971, to: 1990 },
+  { id: "1991_2005", label: "1991–2005", from: 1991, to: 2005 },
+  { id: "2006_now", label: "2006–present", from: 2006, to: 9999 }
+]);
+
+function bucketYear(year, eras = DEFAULT_ERAS) {
+  if (!year) return null;
+  for (const e of eras) {
+    if (year >= e.from && year <= e.to) return e.id;
+  }
+  return null;
+}
+
+/* ============================================================
+   4) Context window extraction
+   - Uses available excerpt fields; keeps it lightweight
+   ============================================================ */
+
+function extractContextWindow(result) {
+  const text =
+    result?.full_text ||
+    result?.rich_snippet ||
+    result?.snippet ||
+    "";
+
+  // Keep a bounded window for speed + UI safety
+  const s = String(text || "").trim();
+  if (s.length <= 600) return s;
+  return s.slice(0, 600) + "…";
+}
+
+/* ============================================================
+   5) Trifold lens (optional dependency)
+   - If present, used as labeling only (no scoring mandates)
+   ============================================================ */
+
+function trifoldLabel(trifoldProtocol, text) {
+  if (!trifoldProtocol || typeof trifoldProtocol.evaluateClaim !== "function") {
+    return { rigidity: false, constraint: false, inspiration: false };
+  }
+  try {
+    const r = trifoldProtocol.evaluateClaim(String(text || ""));
+    return r?.diagnostics || { rigidity: false, constraint: false, inspiration: false };
+  } catch (_) {
+    return { rigidity: false, constraint: false, inspiration: false };
+  }
+}
+
+/* ============================================================
+   6) Source adapter (pluggable)
+   - Default adapter targets your existing /api/search endpoint
+   - If your upstream later supports date filters, add them here
+   ============================================================ */
+
+function createDefaultSourceAdapter({ endpointBase = "/api/search" } = {}) {
   return Object.freeze({
-    ...scanner,
-    scan: async (args) => {
-      if (!window.Sovra.DriftGate.require(getDriftEnabled)) {
-        return Object.freeze({ ok: false, gated: true, reason: "DRIFT_DISABLED" });
+    async search({ query, timeoutMs = 8000 }) {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), clamp(timeoutMs, 1000, 9000));
+
+      try {
+        const url = `${endpointBase}?q=${encodeURIComponent(String(query || ""))}&raw=1`;
+        const res = await fetch(url, { signal: controller.signal });
+        const ct = res.headers.get("content-type") || "";
+        if (!ct.includes("application/json")) {
+          const txt = await res.text();
+          throw new Error("Non-JSON upstream: " + txt.slice(0, 120));
+        }
+        const data = await res.json();
+        const list = Array.isArray(data?.organic_results) ? data.organic_results : [];
+        return { data, results: list };
+      } finally {
+        clearTimeout(t);
       }
-      return scanner.scan(args);
     }
   });
-};
+}
+
+/* ============================================================
+   7) Drift Scanner (NFIE-compliant)
+   - Produces a timeline payload; GUI can render domain-aware text
+   ============================================================ */
+
+function createDriftScanner({
+  sourceAdapter = createDefaultSourceAdapter(),
+  trifoldProtocol = null,
+  eras = DEFAULT_ERAS,
+  recursionDelayMs = 220,          // small delay to prevent premature synthesis
+  maxDocs = 24,                    // keep bounded for 8–9s runtime
+  emitEventName = "drift:timeline"  // optional UI hook
+} = {}) {
+  async function scan({ query, domain = "UNSPECIFIED", anchorTerms = [] } = {}) {
+    const q = String(query || "").trim();
+    if (!q) {
+      return Object.freeze({
+        ok: false,
+        error: "EMPTY_QUERY",
+        query: q,
+        domain
+      });
+    }
+
+    const rdp = RECURSION_DELAY_PROTOCOL.engage("DRIFT_SCAN", { domain, query: q });
+    RECURSION_DELAY_PROTOCOL.vocalize(rdp, "Harvesting dated public artifacts…");
+
+    const { data, results } = await sourceAdapter.search({ query: q, timeoutMs: 8000 });
+
+    // Bound work
+    const docs = (results || []).slice(0, clamp(maxDocs, 6, 60));
+
+    // Build observations
+    const observations = [];
+    for (const r of docs) {
+      const year = extractYear(r);
+      const eraId = bucketYear(year, eras);
+      const context = extractContextWindow(r);
+      const tri = trifoldLabel(trifoldProtocol, context);
+
+      observations.push(Object.freeze({
+        year,
+        eraId,
+        source: Object.freeze({
+          title: String(r?.title || ""),
+          link: String(r?.link || ""),
+          host: (() => {
+            try { return r?.link ? new URL(r.link).hostname : ""; } catch (_) { return ""; }
+          })(),
+          docType: String(r?.doc_type || r?.type || "")
+        }),
+        context,
+        trifold: Object.freeze(tri)
+      }));
+    }
+
+    // Delay before synthesis (RDP)
+    await RECURSION_DELAY_PROTOCOL.release(clamp(recursionDelayMs, 0, 1200));
+    const rdp2 = RECURSION_DELAY_PROTOCOL.reEnter(rdp);
+
+    // Aggregate by era
+    const eraIndex = new Map();
+    for (const e of eras) {
+      eraIndex.set(e.id, {
+        era: e,
+        count: 0,
+        years: [],
+        trifoldCounts: { rigidity: 0, constraint: 0, inspiration: 0 },
+        tokens: []
+      });
+    }
+
+    for (const o of observations) {
+      if (!o.eraId || !eraIndex.has(o.eraId)) continue;
+      const bucket = eraIndex.get(o.eraId);
+      bucket.count += 1;
+      if (o.year) bucket.years.push(o.year);
+
+      if (o.trifold?.rigidity) bucket.trifoldCounts.rigidity += 1;
+      if (o.trifold?.constraint) bucket.trifoldCounts.constraint += 1;
+      if (o.trifold?.inspiration) bucket.trifoldCounts.inspiration += 1;
+
+      // Token sampling for co-occurrence hints (lightweight)
+      bucket.tokens.push(...tokenize(o.context).slice(0, 120));
+    }
+
+    const timeline = [];
+    for (const e of eras) {
+      const b = eraIndex.get(e.id);
+      const years = b.years.sort((a, b) => a - b);
+      const yearSpan = years.length ? { min: years[0], max: years[years.length - 1] } : null;
+
+      // Remove ultra-common noise tokens (tiny stoplist)
+      const stop = new Set(["the","and","of","to","in","a","for","is","on","that","with","as","by","or","be","are","from","at","an","this","it"]);
+      const filtered = b.tokens.filter(t => t.length > 2 && !stop.has(t));
+
+      timeline.push(Object.freeze({
+        eraId: e.id,
+        eraLabel: e.label,
+        docCount: b.count,
+        yearSpan,
+        trifoldRates: Object.freeze({
+          rigidity: b.count ? b.trifoldCounts.rigidity / b.count : 0,
+          constraint: b.count ? b.trifoldCounts.constraint / b.count : 0,
+          inspiration: b.count ? b.trifoldCounts.inspiration / b.count : 0
+        }),
+        topCooccurringTerms: Object.freeze(topNCounts(filtered, 10))
+      }));
+    }
+
+    // Compute simple “shift” hints (descriptive deltas, no thresholds)
+    const shifts = [];
+    for (let i = 1; i < timeline.length; i++) {
+      const prev = timeline[i - 1];
+      const cur = timeline[i];
+      shifts.push(Object.freeze({
+        from: prev.eraLabel,
+        to: cur.eraLabel,
+        docCountDelta: cur.docCount - prev.docCount,
+        rigidityDelta: cur.trifoldRates.rigidity - prev.trifoldRates.rigidity,
+        constraintDelta: cur.trifoldRates.constraint - prev.trifoldRates.constraint,
+        inspirationDelta: cur.trifoldRates.inspiration - prev.trifoldRates.inspiration
+      }));
+    }
+
+    const payload = Object.freeze({
+      ok: true,
+      kind: "DRIFT_TIMELINE",
+      domain: String(domain || "UNSPECIFIED"),
+      query: q,
+      anchors: Object.freeze(uniq(anchorTerms.map(String))),
+      eras: Object.freeze(eras.map(e => Object.freeze({ id: e.id, label: e.label, from: e.from, to: e.to }))),
+      timeline: Object.freeze(timeline),
+      shifts: Object.freeze(shifts),
+      samples: Object.freeze(
+        observations
+          .filter(o => o.year && o.eraId)
+          .slice(0, 8)
+          .map(o => Object.freeze({
+            year: o.year,
+            eraId: o.eraId,
+            host: o.source.host,
+            title: o.source.title,
+            link: o.source.link,
+            context: o.context
+          }))
+      ),
+      upstreamMeta: Object.freeze({
+        query_token: String(data?.query_token || ""),
+        count: Array.isArray(results) ? results.length : 0
+      })
+    });
+
+    const revealed = RECURSION_DELAY_PROTOCOL.reveal(rdp2, payload);
+
+    // Optional event emission for UI integration
+    try {
+      window.dispatchEvent(new CustomEvent(emitEventName, { detail: revealed.payload }));
+    } catch (_) {}
+
+    return revealed.payload;
+  }
+
+  return Object.freeze({ scan });
+}
+
+/* ============================================================
+   8) Export / Global hook (manual integration friendly)
+   ============================================================ */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.DriftScanner = window.Sovra.DriftScanner || Object.freeze({
+  create: createDriftScanner,
+  RDP: RECURSION_DELAY_PROTOCOL
+});
+
+window.Sovra.UnifiedDriftCore = Object.freeze({
+  create: createUnifiedDriftCore
+});
+
+/* ============================================================
+   9) Example manual invocation (commented)
+   ============================================================ */
+
+// const scanner = Sovra.DriftScanner.create({
+//   trifoldProtocol: window.TrifoldMirrorProtocol || null,
+//   recursionDelayMs: 220,
+//   maxDocs: 24,
+//   emitEventName: "drift:timeline"
+// });
+//
+// scanner.scan({
+//   query: "How has legal language changed over time in America?",
+//   domain: "Law",
+//   anchorTerms: ["legal language", "statute", "case law"]
+// }).then(console.log).catch(console.error);
 
 /* =========================
    7) Public module API (user-gated, unified DriftGate)
