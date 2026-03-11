@@ -76,72 +76,87 @@
         </div>
       </div>
 
-<!-- Diagnostic Bar (single instance — scores populate here on query) -->
-<div id="diagnostic-panel" class="diagnostic-bar hidden">
+      <!-- =====================================================
+           DIAGNOSTIC BAR — three locked columns
+           Left: Sovra Voice | Center: Field Density | Right: CDLM+ZSE
+           ===================================================== -->
+      <div id="diagnostic-panel" class="diagnostic-bar hidden">
 
-  <!-- LEFT: Sovra Voice -->
-  <div class="diag-left">
-    <div id="voice-card" class="voice-card">
-      Sovra Voice will appear here…
-    </div>
-  </div>
-
-  <!-- CENTER: Field Density (Context Layer) -->
-  <div class="diag-center">
-    <div id="field-density" class="density-wrapper hidden">
-      <div class="density-box">
-        <div class="density-item">
-          <span class="density-label">Field Mass</span>
-          <span id="density-mass" class="density-value">–</span>
+        <!-- LEFT: Sovra Voice -->
+        <div class="diag-left">
+          <div id="voice-card" class="voice-card">
+            Sovra Voice will appear here…
+          </div>
         </div>
 
-        <div class="density-item">
-          <span class="density-label">Packing</span>
-          <span id="density-packing" class="density-value">–</span>
+        <!-- CENTER: Field Density -->
+        <div class="diag-center">
+          <div id="field-density" class="density-wrapper hidden">
+            <div class="density-box">
+              <div class="density-item">
+                <span class="density-label">Field Mass</span>
+                <span id="density-mass" class="density-value">–</span>
+              </div>
+              <div class="density-item">
+                <span class="density-label">Packing</span>
+                <span id="density-packing" class="density-value">–</span>
+              </div>
+              <div class="density-item">
+                <span class="density-label">Flow</span>
+                <span id="density-flow" class="density-value">–</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="density-item">
-          <span class="density-label">Flow</span>
-          <span id="density-flow" class="density-value">–</span>
+        <!-- RIGHT: CDLM / ZSE Scores -->
+        <div class="diag-right">
+          <div class="diag-row">
+            <span class="diag-icon zse-icon"></span>
+            <span class="diag-label">
+              Zero‑Sum: <span id="score-zero-sum">–</span> / 3
+            </span>
+            <span class="diag-desc">Asymmetric Balance Indicator</span>
+          </div>
+
+          <hr>
+
+          <div class="diag-row">
+            <span class="diag-icon collapse-icon"></span>
+            <span class="diag-label">
+              Collapse: <span id="score-collapse">–</span> / 10
+            </span>
+            <span class="diag-desc">Narrative Weight Index</span>
+          </div>
+
+          <hr>
+
+          <div class="diag-row">
+            <span class="diag-icon contradiction-icon"></span>
+            <span class="diag-label">
+              Contradiction: <span id="score-contradiction">–</span> / 10
+            </span>
+            <span class="diag-desc">Claim Coherence Variance</span>
+          </div>
         </div>
+
       </div>
-    </div>
-  </div>
 
-  <!-- RIGHT: CDLM / ZSE Scores -->
-  <div class="diag-right">
-    <div class="diag-row">
-      <span class="diag-icon zse-icon"></span>
-      <span class="diag-label">
-        Zero‑Sum: <span id="score-zero-sum">–</span> / 3
-      </span>
-      <span class="diag-desc">Asymmetric Balance Indicator</span>
-    </div>
+      <!-- =====================================================
+           TEMPORAL DRIFT TIMELINE PANEL
+           Appears between diagnostic bar and results
+           Only visible when Drift Core gate is active
+           ===================================================== -->
+      <div id="drift-timeline-panel" class="drift-timeline-panel hidden">
+        <div class="drift-panel-header">
+          <span>⟦DRIFT⟧ TEMPORAL TIMELINE</span>
+          <span id="drift-query-echo" class="drift-query-echo"></span>
+        </div>
+        <div id="drift-era-row" class="drift-era-row"></div>
+        <div id="drift-shift-row" class="drift-shift-row"></div>
+      </div>
 
-    <hr>
-
-    <div class="diag-row">
-      <span class="diag-icon collapse-icon"></span>
-      <span class="diag-label">
-        Collapse: <span id="score-collapse">–</span> / 10
-      </span>
-      <span class="diag-desc">Narrative Weight Index</span>
-    </div>
-
-    <hr>
-
-    <div class="diag-row">
-      <span class="diag-icon contradiction-icon"></span>
-      <span class="diag-label">
-        Contradiction: <span id="score-contradiction">–</span> / 10
-      </span>
-      <span class="diag-desc">Claim Coherence Variance</span>
-    </div>
-  </div>
-
-</div>
-
-
+    </section>
 
     <!-- =========================================================
          SOVRA ANALYSIS CONNECTORS
@@ -165,6 +180,11 @@
          data-analysis="ready">
     </div>
 
+    <!-- =====================================================
+         RESULTS — two-column layout
+         Left: empty (drift block prepended when gate fires)
+         Right: search result cards
+         ===================================================== -->
     <main id="results" class="results-container" aria-live="polite">
       <div class="results-left"></div>
       <div class="results-right"></div>
