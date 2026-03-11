@@ -587,3 +587,174 @@ html, body {
   letter-spacing: 0.05em;
   margin-bottom: 8px;
 }
+
+/* ============================================================
+   RESULTS TWO-COLUMN LAYOUT
+   Left: drift timeline sidebar | Right: search result cards
+   ============================================================ */
+
+.results-container {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 20px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+}
+
+.results-left {
+  flex: 0 0 260px;
+  min-width: 0;
+}
+
+.results-right {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.6;
+}
+
+/* Hide left column when empty */
+.results-left:empty {
+  display: none;
+}
+
+/* ============================================================
+   TEMPORAL DRIFT TIMELINE PANEL
+   Sits between diagnostic bar and results
+   Gated — hidden until Drift Core fires
+   ============================================================ */
+
+.drift-timeline-panel {
+  background: #0a0a14;
+  border: 1px solid #1e1e3a;
+  border-top: 2px solid #818cf8;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #9a9ab8;
+}
+
+.drift-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #6a6a8a;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.drift-query-echo {
+  color: #c8c8e8;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Era blocks — horizontal scroll row */
+.drift-era-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.drift-era-block {
+  background: #12121e;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  min-width: 110px;
+  flex: 1;
+}
+
+.drift-era-label {
+  color: #c8c8e8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.drift-era-meta {
+  color: #6a6a8a;
+  font-size: 0.68rem;
+  margin-bottom: 0.25rem;
+}
+
+.drift-era-terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  margin-bottom: 0.2rem;
+}
+
+.drift-term {
+  display: inline-block;
+  background: #1e1e2e;
+  color: #8a8aaa;
+  padding: 0 0.25rem;
+  border-radius: 2px;
+  font-size: 0.67rem;
+}
+
+.drift-no-terms {
+  color: #3a3a5a;
+  font-size: 0.67rem;
+}
+
+/* Trifold flags per era */
+.drift-trifold-flags {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 0.2rem;
+}
+
+.trifold-flag {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 2px;
+}
+
+.trifold-r { background: #3a1a1a; color: #f87171; }
+.trifold-c { background: #1a2a3a; color: #60a5fa; }
+.trifold-i { background: #1a3a1a; color: #4ade80; }
+
+/* Shift delta row */
+.drift-shift-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  color: #6a6a8a;
+  padding-top: 0.4rem;
+  border-top: 1px solid #1e1e3a;
+}
+
+.drift-shift-block {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.drift-shift-span {
+  color: #8a8aaa;
+}
+
+.drift-shift-delta.pos { color: #4ade80; }
+.drift-shift-delta.neg { color: #f87171; }
+
+.drift-shift-flag {
+  color: #818cf8;
+  font-size: 0.68rem;
+}
