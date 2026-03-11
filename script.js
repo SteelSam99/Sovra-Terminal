@@ -2940,7 +2940,7 @@ const provBtn = e.target.closest
 function renderZSEStandalone(result) {
   if (!result.detected) return;
 
-  const container = document.querySelector(".results-left");
+  const container = document.querySelector(".results-right");
   if (!container) return;
 
   const block = document.createElement("section");
@@ -3482,7 +3482,7 @@ console.log("GATE SNAPSHOT", {
 });
 
 window.searchSovra = async function () {
-  const results = document.querySelector(".results-left");
+  const results = document.querySelector(".results-right");
   try {
     let query = (document.getElementById("query")?.value || "").trim();
     const compareRaw = document.getElementById("toggleRaw")?.checked || false;
@@ -3572,47 +3572,60 @@ if (SOVRA_GATES.zeroSum() && data.zse) {
 function renderDriftTimeline(payload) {
   if (!payload || !payload.ok || payload.kind !== "DRIFT_TIMELINE") return;
 
-  const container = document.querySelector(".results-left");
-  if (!container) return;
+  const panel = document.getElementById("drift-timeline-panel");
+  const eraRow = document.getElementById("drift-era-row");
+  const shiftRow = document.getElementById("drift-shift-row");
+  const queryEcho = document.getElementById("drift-query-echo");
 
-  // FIX 3: Remove existing drift block before prepending new one
-  const existing = container.querySelector(".drift-block");
-  if (existing) existing.remove();
+  if (!panel || !eraRow || !shiftRow) return;
 
-  const block = document.createElement("section");
-  block.className = "drift-block";
+  panel.classList.remove("hidden");
+  if (queryEcho) queryEcho.textContent = payload.query;
 
-  const rows = (payload.timeline || [])
-    .filter(t => (t.docCount || 0) > 0)
-    .map(t => {
-      const span = t.yearSpan ? `${t.yearSpan.min}–${t.yearSpan.max}` : "—";
-      const top = (t.topCooccurringTerms || [])
-        .slice(0, 5)
-        .map(x => x.term)
-        .join(", ");
+  const activeTiers = (payload.timeline || []).filter(t => (t.docCount || 0) > 0);
 
-      return `
-        <div class="drift-era">
-          <strong>${t.eraLabel}</strong> (${span}) — docs: ${t.docCount}
-          <div class="drift-terms">
-            ${top ? `Top terms: ${escapeHtml(top)}` : ""}
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+  eraRow.innerHTML = activeTiers.length
+    ? activeTiers.map(t => {
+        const span = t.yearSpan ? `${t.yearSpan.min}–${t.yearSpan.max}` : "—";
+        const terms = (t.topCooccurringTerms || [])
+          .slice(0, 5)
+          .map(x => `<span class="drift-term">${escapeHtml(x.term)}</span>`)
+          .join("");
+        const trifoldFlags = [
+          t.trifoldRates.rigidity > 0 ? `<span class="trifold-flag trifold-r">R</span>` : "",
+          t.trifoldRates.constraint > 0 ? `<span class="trifold-flag trifold-c">C</span>` : "",
+          t.trifoldRates.inspiration > 0 ? `<span class="trifold-flag trifold-i">I</span>` : ""
+        ].join("");
+        return `
+          <div class="drift-era-block">
+            <div class="drift-era-label">${escapeHtml(t.eraLabel)}</div>
+            <div class="drift-era-meta">${span} · ${t.docCount} doc${t.docCount !== 1 ? "s" : ""}</div>
+            <div class="drift-era-terms">${terms || "<span class=\'drift-no-terms\'>—</span>"}</div>
+            ${trifoldFlags ? `<div class="drift-trifold-flags">${trifoldFlags}</div>` : ""}
+          </div>`;
+      }).join("")
+    : `<div class="empty">No dated artifacts surfaced.</div>`;
 
-  block.innerHTML = `
-    <h3>Temporal Drift Timeline</h3>
-    <div class="drift-meta">
-      Domain: ${escapeHtml(payload.domain)} | Query: ${escapeHtml(payload.query)}
-    </div>
-    <div class="drift-eras">
-      ${rows || "<div class='empty'>No dated artifacts surfaced.</div>"}
-    </div>
-  `;
+  const activeShifts = (payload.shifts || []).filter(s =>
+    s.docCountDelta !== 0 ||
+    Math.abs(s.rigidityDelta) > 0.1 ||
+    Math.abs(s.constraintDelta) > 0.1
+  );
 
-  container.prepend(block);
+  shiftRow.innerHTML = activeShifts.length
+    ? activeShifts.map(s => `
+        <div class="drift-shift-block">
+          <span class="drift-shift-span">${escapeHtml(s.from)} → ${escapeHtml(s.to)}</span>
+          <span class="drift-shift-delta ${s.docCountDelta >= 0 ? "pos" : "neg"}">
+            docs ${s.docCountDelta >= 0 ? "+" : ""}${s.docCountDelta}
+          </span>
+          ${Math.abs(s.rigidityDelta) > 0.1
+            ? `<span class="drift-shift-flag">rigidity ${s.rigidityDelta > 0 ? "↑" : "↓"}</span>` : ""}
+          ${Math.abs(s.constraintDelta) > 0.1
+            ? `<span class="drift-shift-flag">constraint ${s.constraintDelta > 0 ? "↑" : "↓"}</span>` : ""}
+        </div>`)
+      .join("")
+    : "";
 }
 
 results.innerHTML = `<div class="section-label">Search results</div>`;
@@ -3856,4 +3869,3 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
-
