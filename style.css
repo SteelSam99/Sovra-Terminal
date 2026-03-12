@@ -767,7 +767,7 @@ html, body {
 .center-panel {
   background: #0a0a14;
   border: 1px solid #1e1e3a;
-  border-top: 2px solid #818cf8;
+  border-top: 2px solid #4a4a6a;
   border-radius: 6px;
   padding: 0.6rem 0.8rem;
   font-family: monospace;
@@ -840,7 +840,7 @@ html, body {
 .center-score-num {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #818cf8;
+  color: #c8c8e8;
   line-height: 1;
 }
 
