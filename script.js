@@ -3818,6 +3818,31 @@ console.log("GATE SNAPSHOT", {
   speaks: SOVRA_GATES.sovraSpeaks()
 });
 
+/* ============================================================
+   SEMANTIC INDICATOR REGISTRATION
+   Reads current gate states and reflects them in the diagnostic bar.
+   Called on each search — registers what is active, not what was found.
+   NFIE compliant — observational display only, no gating.
+   ============================================================ */
+function toggleSemanticIndicators() {
+  const indicator = document.getElementById("gate-indicator-row");
+  if (!indicator) return;
+
+  const gateMap = [
+    { id: "rawData",        label: "Raw"      },
+    { id: "collapseContra", label: "Contra"   },
+    { id: "driftCore",      label: "Drift"    },
+    { id: "zeroSum",        label: "Zero-Sum" },
+    { id: "welsingFuller",  label: "W-F"      },
+    { id: "sovraSpeaks",    label: "Speaks"   }
+  ];
+
+  indicator.innerHTML = gateMap.map(g => {
+    const active = !!document.getElementById(g.id)?.checked;
+    return `<span class="gate-indicator ${active ? "gate-on" : "gate-off"}">${g.label}</span>`;
+  }).join("");
+}
+
 window.searchSovra = async function () {
   const results = document.querySelector(".results-right");
   try {
@@ -4053,6 +4078,9 @@ if (SOVRA_GATES.sovraSpeaks()) {
     if (panel) panel.classList.remove("hidden");
   }
 })();
+
+// Register active gate states in diagnostic bar
+toggleSemanticIndicators();
 
      // FIX 1: VDU block only renders when Contra/Collapse gate is active
 if (SOVRA_GATES.contraCollapse()) {
