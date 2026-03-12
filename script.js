@@ -1448,8 +1448,6 @@ function synthesizeExplanationAtoms({ query, domain, driftTimelinePayload, calcu
      - No intent inference, no "why", no prescriptions
    ============================================================ */
 
-"use strict";
-
 /* ============================================================
    0) Recursion Delay Protocol (RDP)
    - Delays synthesis until enough temporal evidence exists
