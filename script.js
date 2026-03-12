@@ -3726,8 +3726,7 @@ emitCDLMScores(scores);
 // Emit combined payload for center panel (Quad Core Field Summary)
 (function emitCenterPanel() {
   const tokens = narrativeText.trim().split(/\s+/).filter(Boolean);
-  const lines = narrativeText.split(/
-/);
+  const lines = narrativeText.split('\n');
   const nonEmpty = lines.filter(l => l.trim().length > 0);
   const avgLineLen = nonEmpty.length
     ? Math.round(nonEmpty.join("").length / nonEmpty.length) : 0;
