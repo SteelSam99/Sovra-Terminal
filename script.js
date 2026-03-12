@@ -2468,15 +2468,15 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="center-scores-row">
         <div class="center-score-item">
-          <span class="center-score-num">${scores.collapseScore}</span>
+          <span class="center-score-num">${scores.collapse ?? "–"}</span>
           <span class="center-score-label">Collapse</span>
         </div>
         <div class="center-score-item">
-          <span class="center-score-num">${scores.contradictionScore}</span>
+          <span class="center-score-num">${scores.contradiction ?? "–"}</span>
           <span class="center-score-label">Contradiction</span>
         </div>
         <div class="center-score-item">
-          <span class="center-score-num">${scores.zeroSumScore}</span>
+          <span class="center-score-num">${scores.zeroSum ?? "–"}</span>
           <span class="center-score-label">Zero-Sum</span>
         </div>
       </div>
