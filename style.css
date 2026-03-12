@@ -652,9 +652,11 @@ html, body {
   font-size: 0.72rem;
   letter-spacing: 0;
   max-width: 60%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 1;
 }
 
 /* Era blocks — horizontal scroll row */
