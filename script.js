@@ -4160,6 +4160,24 @@ list.forEach((r, i) => {
 
       <pre class="raw-excerpt" tabindex="0">${escapeHtml(excerptText)}</pre>
 
+    ${i === 0 && SOVRA_GATES.contraCollapse() ? `
+    <div class="card-score-strip">
+      <span class="card-score-item">
+        <span class="card-score-label">Collapse</span>
+        <span class="card-score-val">${scores.collapse ?? "–"}/10</span>
+      </span>
+      <span class="card-score-sep">·</span>
+      <span class="card-score-item">
+        <span class="card-score-label">Contradiction</span>
+        <span class="card-score-val">${scores.contradiction ?? "–"}/10</span>
+      </span>
+      <span class="card-score-sep">·</span>
+      <span class="card-score-item">
+        <span class="card-score-label">Zero-Sum</span>
+        <span class="card-score-val">${scores.zeroSum ?? "–"}/3</span>
+      </span>
+    </div>` : ""}
+
     <footer class="card-foot">
       <div class="mirrors">
         Mirrors: <span class="mirrors-count">${escapeHtml(String(r.mirrors || 0))}</span>
