@@ -4402,6 +4402,68 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
       }
     });
 
+    // --------------------------------------------------------
+    // STEP 2 — Score Reinforcement
+    // When contraCollapse is active and PTF succeeded, PTF scores
+    // add weight to snippet-based scores up to ceiling.
+    // Direction: additive only. PTF depth reinforces snippet breadth.
+    // NFIE: no score can be forced down — only reinforced upward.
+    // --------------------------------------------------------
+    if (SOVRA_GATES.contraCollapse() && ptfRecord.ok) {
+      const reinforced = {
+        collapse:     Math.min(10, scores.collapse     + Math.round(ptfScores.collapse     * 0.4)),
+        contradiction: Math.min(10, scores.contradiction + Math.round(ptfScores.contradiction * 0.4)),
+        zeroSum:      Math.min(3,  scores.zeroSum      + Math.round(ptfScores.zeroSum      * 0.4))
+      };
+
+      // Only re-emit if reinforcement changed anything
+      if (
+        reinforced.collapse     !== scores.collapse     ||
+        reinforced.contradiction !== scores.contradiction ||
+        reinforced.zeroSum      !== scores.zeroSum
+      ) {
+        emitCDLMScores(reinforced);
+
+        // Re-emit center panel with reinforced scores
+        window.dispatchEvent(new CustomEvent("sovra:center-panel", {
+          detail: {
+            field: {
+              massHint:     Math.min(1, narrativeText.trim().split(/\s+/).length / 2000),
+              densityHint:  Math.min(1, narrativeText.split("\n").filter(l => l.trim()).join("").length /
+                            Math.max(1, narrativeText.split("\n").filter(l => l.trim()).length) / 120),
+              deltaPresent: false
+            },
+            scores: reinforced,
+            gates: {
+              rawData:        SOVRA_GATES.rawData(),
+              driftCore:      SOVRA_GATES.driftCore(),
+              contraCollapse: SOVRA_GATES.contraCollapse(),
+              zeroSum:        SOVRA_GATES.zeroSum(),
+              welsingFuller:  SOVRA_GATES.welsingFuller(),
+              sovraSpeaks:    SOVRA_GATES.sovraSpeaks()
+            }
+          }
+        }));
+
+        // Update first card score strip in place
+        const strip = document.querySelector(".card-score-strip");
+        if (strip) {
+          strip.querySelector(".card-score-item:nth-child(1) .card-score-val").textContent =
+            `${reinforced.collapse}/10`;
+          strip.querySelector(".card-score-item:nth-child(3) .card-score-val").textContent =
+            `${reinforced.contradiction}/10`;
+          strip.querySelector(".card-score-item:nth-child(5) .card-score-val").textContent =
+            `${reinforced.zeroSum}/3`;
+        }
+
+        SovraSyncTrigger.send({
+          kind: "PTF_REINFORCEMENT",
+          before: { collapse: scores.collapse, contradiction: scores.contradiction, zeroSum: scores.zeroSum },
+          after:  reinforced
+        });
+      }
+    }
+
   } catch (_) {
     // Silent — NFIE, no forced state change on fetch failure
   }
