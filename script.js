@@ -2166,6 +2166,72 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ============================================================
+   CENTER PANEL UI SINK — Quad Core Field Summary
+   Renders into diag-center between Sovra Voice and CDLM scores
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("sovra:center-panel", (ev) => {
+    const { field, scores, gates } = ev.detail || {};
+    const panel = document.getElementById("center-panel");
+    if (!panel) return;
+
+    const massLabel =
+      (field.massHint || 0) < 0.3 ? "Light" :
+      (field.massHint || 0) < 0.7 ? "Moderate" : "Heavy";
+
+    const densityLabel =
+      (field.densityHint || 0) < 0.3 ? "Diffuse" :
+      (field.densityHint || 0) < 0.7 ? "Compact" : "Compressed";
+
+    const gateNames = {
+      rawData: "Raw", driftCore: "Drift",
+      contraCollapse: "Contra", zeroSum: "Zero-Sum",
+      welsingFuller: "W-F", sovraSpeaks: "Speaks"
+    };
+    const activeGates = Object.entries(gates || {})
+      .filter(([, v]) => v)
+      .map(([k]) => `<span class="gate-active">${gateNames[k] || k}</span>`)
+      .join("");
+
+    panel.innerHTML = `
+      <div class="center-panel-header">&#10214;FIELD&#10215; QUAD-CORE DENSITY</div>
+      <div class="center-field-row">
+        <div class="center-field-item">
+          <span class="center-field-label">Mass</span>
+          <span class="center-field-value">${massLabel}</span>
+          <span class="center-field-raw">${(field.massHint||0).toFixed(2)}</span>
+        </div>
+        <div class="center-field-item">
+          <span class="center-field-label">Density</span>
+          <span class="center-field-value">${densityLabel}</span>
+          <span class="center-field-raw">${(field.densityHint||0).toFixed(2)}</span>
+        </div>
+        <div class="center-field-item">
+          <span class="center-field-label">Flow</span>
+          <span class="center-field-value">${field.deltaPresent ? "Shifting" : "Static"}</span>
+        </div>
+      </div>
+      <div class="center-scores-row">
+        <div class="center-score-item">
+          <span class="center-score-num">${scores.collapseScore}</span>
+          <span class="center-score-label">Collapse</span>
+        </div>
+        <div class="center-score-item">
+          <span class="center-score-num">${scores.contradictionScore}</span>
+          <span class="center-score-label">Contradiction</span>
+        </div>
+        <div class="center-score-item">
+          <span class="center-score-num">${scores.zeroSumScore}</span>
+          <span class="center-score-label">Zero-Sum</span>
+        </div>
+      </div>
+      ${activeGates ? `<div class="center-gates-row">${activeGates}</div>` : ""}
+    `;
+    panel.classList.remove("hidden");
+  });
+});
+
+/* ============================================================
    CDLM UI Sink (DESCRIPTIVE ONLY)
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
@@ -3656,7 +3722,37 @@ const diagnostics = {
 
 const scores = synthesizeCDLMScores(diagnostics);
 emitCDLMScores(scores);
-     
+
+// Emit combined payload for center panel (Quad Core Field Summary)
+(function emitCenterPanel() {
+  const tokens = narrativeText.trim().split(/\s+/).filter(Boolean);
+  const lines = narrativeText.split(/
+/);
+  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  const avgLineLen = nonEmpty.length
+    ? Math.round(nonEmpty.join("").length / nonEmpty.length) : 0;
+  const massHint = Math.min(1, tokens.length / 2000);
+  const densityHint = Math.min(1, avgLineLen / 120);
+  window.dispatchEvent(new CustomEvent("sovra:center-panel", {
+    detail: {
+      field: { massHint, densityHint, deltaPresent: false },
+      scores: {
+        collapseScore:      scores.collapse,
+        contradictionScore: scores.contradiction,
+        zeroSumScore:       scores.zeroSum
+      },
+      gates: {
+        rawData:        SOVRA_GATES.rawData(),
+        driftCore:      SOVRA_GATES.driftCore(),
+        contraCollapse: SOVRA_GATES.contraCollapse(),
+        zeroSum:        SOVRA_GATES.zeroSum(),
+        welsingFuller:  SOVRA_GATES.welsingFuller(),
+        sovraSpeaks:    SOVRA_GATES.sovraSpeaks()
+      }
+    }
+  }));
+})();
+
      // Single field observation — NFIE compliant, no per-card force
 if (SOVRA_GATES.sovraSpeaks()) {
   applySovraVoice(narrativeText);
