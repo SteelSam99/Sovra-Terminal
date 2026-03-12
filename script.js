@@ -4042,9 +4042,9 @@ emitCDLMScores(scores);
     detail: {
       field: { massHint, densityHint, deltaPresent: false },
       scores: {
-        collapseScore:      scores.collapse,
-        contradictionScore: scores.contradiction,
-        zeroSumScore:       scores.zeroSum
+        collapse:     scores.collapse,
+        contradiction: scores.contradiction,
+        zeroSum:      scores.zeroSum
       },
       gates: {
         rawData:        SOVRA_GATES.rawData(),
