@@ -868,3 +868,142 @@ html, body {
   font-size: 0.6rem;
   letter-spacing: 0.5px;
 }
+
+/* ============================================================
+   PTF PANEL — Primary Source Scan (F.I.D.A.R.C.H.)
+   Gated behind rawData — appears above drift timeline
+   ============================================================ */
+
+.ptf-panel {
+  background: #0a0a14;
+  border: 1px solid #1e1e3a;
+  border-top: 2px solid #4a4a6a;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 0.5rem 0;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #9a9ab8;
+}
+
+.ptf-header {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: #6a6a8a;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.ptf-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid #0f0f1a;
+}
+
+.ptf-label {
+  color: #6a6a8a;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ptf-value {
+  color: #c8c8e8;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+/* ============================================================
+   PTF SUMMATION — inside provenance panel on first card only
+   Hidden until Provenance button clicked (panel is hidden by default)
+   ============================================================ */
+
+.ptf-summation {
+  background: #0a0a14;
+  border: 1px solid #1e1e3a;
+  border-top: 2px solid #4a4a6a;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #9a9ab8;
+}
+
+.ptf-summ-header {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: #6a6a8a;
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.ptf-summ-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.12rem 0;
+  border-bottom: 1px solid #0f0f1a;
+}
+
+.ptf-summ-label {
+  color: #6a6a8a;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ptf-summ-value {
+  color: #c8c8e8;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.ptf-summ-signal {
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #1e1e3a;
+  color: #9a9ab8;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   GATE INDICATOR ROW
+   Sits at bottom of diagnostic bar — registers active gates
+   ============================================================ */
+
+.gate-indicator-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid #d1d5db;
+  justify-content: center;
+}
+
+.gate-indicator {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.gate-on {
+  background: #1e1e2e;
+  border: 1px solid #4a4a6a;
+  color: #c8c8e8;
+}
+
+.gate-off {
+  background: #f1f5f9;
+  border: 1px solid #d1d5db;
+  color: #9ca3af;
+}
