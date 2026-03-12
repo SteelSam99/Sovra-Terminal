@@ -406,55 +406,39 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
       return Object.freeze({ ok: false, error: "INVALID_URL", url });
     }
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-
     try {
-      const res = await fetch(url, {
-        signal: controller.signal,
-        headers: { "User-Agent": "Sovra/1.0 (F.I.D.A.R.C.H.)" }
-      });
+      // Route through server-side relay to bypass browser CORS restrictions
+      // Relay is read-only, public URLs only — NFIE compliant
+      const relayUrl = "/api/fetch-source?url=" + encodeURIComponent(url);
+      const res = await fetch(relayUrl);
 
       if (!res.ok) {
-        return Object.freeze({ ok: false, error: "HTTP_" + res.status, url });
-      }
-      if (!contentTypeIsText(res)) {
-        return Object.freeze({ ok: false, error: "NON_TEXT_CONTENT", url });
+        return Object.freeze({ ok: false, error: "RELAY_HTTP_" + res.status, url });
       }
 
-      const reader = res.body.getReader();
-      let received = 0;
-      const chunks = [];
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        received += value.byteLength;
-        if (received > 1_200_000) {
-          return Object.freeze({ ok: false, error: "CONTENT_TOO_LARGE", url });
-        }
-        chunks.push(value);
+      const data = await res.json();
+
+      if (!data.ok) {
+        return Object.freeze({ ok: false, error: data.error, url });
       }
 
-      const html = new TextDecoder("utf-8").decode(
-        new Uint8Array(chunks.flatMap(c => Array.from(c)))
-      );
-
-      if (looksPaywalled(html)) {
-        return Object.freeze({ ok: false, error: "PAYWALL_OR_LOGIN_DETECTED", url });
-      }
-
-      const readable = extractReadableText(html);
+      // Extract and slice — same pipeline as before
+      const readable = extractReadableText(data.html);
       const text = sliceFirstWords(readable, 1200);
       const wordCount = text.trim().split(/\s+/).length;
 
-      return Object.freeze({ ok: true, url, text, wordCount,
-        host: (() => { try { return new URL(url).hostname; } catch (_) { return ""; } })()
+      return Object.freeze({
+        ok: true,
+        url,
+        text,
+        wordCount,
+        host: data.host || (() => {
+          try { return new URL(url).hostname; } catch (_) { return ""; }
+        })()
       });
 
     } catch (e) {
       return Object.freeze({ ok: false, error: "FETCH_FAILED", url });
-    } finally {
-      clearTimeout(timer);
     }
   }
 
