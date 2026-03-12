@@ -4243,6 +4243,20 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
         url: firstResult.link,
         reason: fetched.error
       });
+      // Surface fetch status to user — structural observation, not error message
+      const ptfPanel = document.getElementById("ptf-panel");
+      if (ptfPanel) {
+        let host = "";
+        try { host = new URL(firstResult.link).hostname; } catch (_) {}
+        ptfPanel.innerHTML = `
+          <div class="ptf-header">&#10214;PTF&#10215; PRIMARY SOURCE · ${host}</div>
+          <div class="ptf-summ-signal">
+            Primary source not admissible to PTF pipeline · ${fetched.error}
+            · Analysis based on search excerpt only.
+          </div>
+        `;
+        ptfPanel.classList.remove("hidden");
+      }
       return;
     }
 
