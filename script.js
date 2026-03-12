@@ -3974,18 +3974,33 @@ function renderDriftTimeline(payload) {
     Math.abs(s.constraintDelta) > 0.1
   );
 
+  // Arrow points toward the period with more documents (quantity indicator only)
+  const docArrow = (delta) => {
+    if (delta > 0) return "→"; // later period has more — arrow points right
+    if (delta < 0) return "←"; // earlier period had more — arrow points left
+    return null;               // no change — handled separately
+  };
+
   shiftRow.innerHTML = activeShifts.length
-    ? activeShifts.map(s => `
+    ? activeShifts.map(s => {
+        const arrow = docArrow(s.docCountDelta);
+        const docSpan = arrow
+          ? `<span class="drift-shift-arrow">${arrow}</span>
+             <span class="drift-shift-delta ${s.docCountDelta >= 0 ? "pos" : "neg"}">
+               docs ${s.docCountDelta >= 0 ? "+" : ""}${s.docCountDelta}
+             </span>`
+          : `<span class="drift-shift-flat">docs unchanged</span>`;
+
+        return `
         <div class="drift-shift-block">
-          <span class="drift-shift-span">${escapeHtml(s.from)} → ${escapeHtml(s.to)}</span>
-          <span class="drift-shift-delta ${s.docCountDelta >= 0 ? "pos" : "neg"}">
-            docs ${s.docCountDelta >= 0 ? "+" : ""}${s.docCountDelta}
-          </span>
+          <span class="drift-shift-span">${escapeHtml(s.from)} · ${escapeHtml(s.to)}</span>
+          ${docSpan}
           ${Math.abs(s.rigidityDelta) > 0.1
-            ? `<span class="drift-shift-flag">rigidity ${s.rigidityDelta > 0 ? "↑" : "↓"}</span>` : ""}
+            ? `<span class="drift-shift-flag">rigidity Δ${Math.abs(s.rigidityDelta).toFixed(2)}</span>` : ""}
           ${Math.abs(s.constraintDelta) > 0.1
-            ? `<span class="drift-shift-flag">constraint ${s.constraintDelta > 0 ? "↑" : "↓"}</span>` : ""}
-        </div>`)
+            ? `<span class="drift-shift-flag">constraint Δ${Math.abs(s.constraintDelta).toFixed(2)}</span>` : ""}
+        </div>`;
+      })
       .join("")
     : "";
 }
