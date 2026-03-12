@@ -1268,7 +1268,7 @@ function topTerms(texts, n = 10) {
 /* =========================
    3) Optional Trifold protocol hook (labeling only)
    ========================= */
-
+// How did racism get here?
 function trifoldLabel(trifoldProtocol, text) {
   if (!trifoldProtocol || typeof trifoldProtocol.evaluateClaim !== "function") {
     return { rigidity: false, constraint: false, inspiration: false };
