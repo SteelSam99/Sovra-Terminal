@@ -1007,3 +1007,18 @@ html, body {
   border: 1px solid #d1d5db;
   color: #9ca3af;
 }
+
+/* Drift shift arrow — quantity direction indicator */
+.drift-shift-arrow {
+  color: #9a9ab8;
+  font-size: 0.85rem;
+  margin: 0 0.2rem;
+}
+
+/* Flat line — no document count change between periods */
+.drift-shift-flat {
+  color: #4a4a6a;
+  font-size: 0.7rem;
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
