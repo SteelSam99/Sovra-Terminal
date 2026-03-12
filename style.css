@@ -1024,3 +1024,36 @@ html, body {
   font-style: italic;
   letter-spacing: 0.5px;
 }
+
+/* First card score strip — structural read, first source only */
+.card-score-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8f8fc;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+.card-score-item {
+  display: flex;
+  gap: 0.25rem;
+  align-items: baseline;
+}
+
+.card-score-label {
+  color: #6a6a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-score-val {
+  color: #1e1e2e;
+  font-weight: 600;
+}
+
+.card-score-sep {
+  color: #c8c8e8;
+}
