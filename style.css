@@ -758,3 +758,113 @@ html, body {
   color: #818cf8;
   font-size: 0.68rem;
 }
+
+/* ============================================================
+   CENTER PANEL — Quad Core Field Summary
+   Sits in diag-center between Sovra Voice and CDLM scores
+   ============================================================ */
+
+.center-panel {
+  background: #0a0a14;
+  border: 1px solid #1e1e3a;
+  border-top: 2px solid #818cf8;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #9a9ab8;
+  text-align: left;
+  width: 100%;
+}
+
+.center-panel-header {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: #6a6a8a;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #1e1e3a;
+  text-align: center;
+}
+
+.center-field-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.center-field-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.center-field-label {
+  font-size: 0.62rem;
+  color: #6a6a8a;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.center-field-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c8c8e8;
+}
+
+.center-field-raw {
+  font-size: 0.6rem;
+  color: #4a4a6a;
+}
+
+.center-scores-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.center-score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.center-score-num {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #818cf8;
+  line-height: 1;
+}
+
+.center-score-label {
+  font-size: 0.6rem;
+  color: #6a6a8a;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.center-gates-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.gate-active {
+  display: inline-block;
+  background: #1e1e2e;
+  border: 1px solid #3a3a5a;
+  color: #8a8aaa;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.6rem;
+  letter-spacing: 0.5px;
+}
