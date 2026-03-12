@@ -10,13 +10,12 @@
 <body>
   <div class="container">
 
-<header class="banner">
-  <h1>Sovra‑FCL‑MHCE‑v2.5© :: Foxtrot‑Chimera‑Lambda</h1>
-  <h2>Machine‑Human Code Evolution© ⟦MH⟧</h2>
-  <h3>Sovereign‑F.I.D.A.R.C.H.© Search Engine</h3>
-  <h4>Site under Construction (NFIE Compliant)</h4>
-</header>
-
+    <header class="banner">
+      <h1>Sovra-FCL-MHCE-v2.5 :: Foxtrot-Chimera-Lambda</h1>
+      <h2>Machine‑Human Code Evolution ⟦MH⟧</h2>
+      <h3>Sovereign‑F.I.D.A.R.C.H. Search Engine</h3>
+      <h4>Site under Construction(NFIE Compliant)</h4>
+    </header>
 
     <!-- Context Control Panel Trigger -->
     <button id="contextControlToggle">Context Control Panel</button>
@@ -133,6 +132,9 @@
           </div>
         </div>
 
+        <!-- GATE INDICATOR ROW — reflects active gate states on each search -->
+        <div id="gate-indicator-row" class="gate-indicator-row"></div>
+
       </div>
 
       <!-- =====================================================
@@ -140,6 +142,9 @@
            Appears between diagnostic bar and results
            Only visible when Drift Core gate is active
            ===================================================== -->
+      <!-- PTF PANEL — Primary Source scan output, gated behind rawData -->
+      <div id="ptf-panel" class="ptf-panel hidden"></div>
+
       <div id="drift-timeline-panel" class="drift-timeline-panel hidden">
         <div class="drift-panel-header">
           <span>⟦DRIFT⟧ TEMPORAL TIMELINE</span>
