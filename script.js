@@ -350,6 +350,125 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
 })();
 
 /* ============================================================
+   F.I.D.A.R.C.H. — LIVE FETCH IMPLEMENTATION
+   Installs into PublicTextFetcher socket on load.
+   Word-bounded: first 1200 words.
+   Covert/overt racism measurement pipeline entry point.
+   NFIE compliant — fetches, measures, reports. Does not suppress.
+   ============================================================ */
+
+(function installFIDARCHFetcher() {
+
+  function isHttpUrl(url) {
+    try {
+      const u = new URL(url);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) { return false; }
+  }
+
+  function looksPaywalled(html) {
+    const t = html.toLowerCase();
+    return (
+      t.includes("sign in to continue") ||
+      t.includes("paywall") ||
+      t.includes("metered") ||
+      t.includes("login required") ||
+      t.includes("subscribers only")
+    );
+  }
+
+  function contentTypeIsText(res) {
+    const ct = res.headers.get("content-type") || "";
+    return ct.includes("text/html") || ct.includes("text/plain");
+  }
+
+  function extractReadableText(html) {
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+      .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+      .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function sliceFirstWords(text, maxWords) {
+    if (!text) return "";
+    const words = text.trim().split(/\s+/);
+    return words.slice(0, maxWords).join(" ");
+  }
+
+  async function fetchPublicText(url) {
+    if (!isHttpUrl(url)) {
+      return Object.freeze({ ok: false, error: "INVALID_URL", url });
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { "User-Agent": "Sovra/1.0 (F.I.D.A.R.C.H.)" }
+      });
+
+      if (!res.ok) {
+        return Object.freeze({ ok: false, error: "HTTP_" + res.status, url });
+      }
+      if (!contentTypeIsText(res)) {
+        return Object.freeze({ ok: false, error: "NON_TEXT_CONTENT", url });
+      }
+
+      const reader = res.body.getReader();
+      let received = 0;
+      const chunks = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        received += value.byteLength;
+        if (received > 1_200_000) {
+          return Object.freeze({ ok: false, error: "CONTENT_TOO_LARGE", url });
+        }
+        chunks.push(value);
+      }
+
+      const html = new TextDecoder("utf-8").decode(
+        new Uint8Array(chunks.flatMap(c => Array.from(c)))
+      );
+
+      if (looksPaywalled(html)) {
+        return Object.freeze({ ok: false, error: "PAYWALL_OR_LOGIN_DETECTED", url });
+      }
+
+      const readable = extractReadableText(html);
+      const text = sliceFirstWords(readable, 1200);
+      const wordCount = text.trim().split(/\s+/).length;
+
+      return Object.freeze({ ok: true, url, text, wordCount,
+        host: (() => { try { return new URL(url).hostname; } catch (_) { return ""; } })()
+      });
+
+    } catch (e) {
+      return Object.freeze({ ok: false, error: "FETCH_FAILED", url });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  window.Sovra.installPrimarySource(fetchPublicText, {
+    publicOnly: true,
+    bounded: true,
+    readOnly: true,
+    nonSemantic: true,
+    maxWords: 1200
+  });
+
+})();
+
+/* ============================================================
    ANALYSIS SUITE (observational only)
    - ZSE: mass / pressure indicators
    - CDLM: density / packing indicators
@@ -897,6 +1016,158 @@ const ZSE_PAYLOADS = {
     ]
   }
 };
+/* ============================================================
+   PERCEPTUAL COMPLEMENT ANALYSIS (PCA)
+   Formula Registry — Appendix H
+   Measures what should have surfaced given query intent but didn't.
+   NFIE compliant — detects without intervening.
+   Output: omissions array + attenuation score (0.0–1.0)
+   ============================================================ */
+
+window.Sovra.PCA = (() => {
+
+  // Terms expected to appear in texts about racial power structures
+  // Drawn from Welsing-Fuller functional equivalents + structural lexicon
+  // Absence of these in a relevant text = perceptual complement
+  const EXPECTED_STRUCTURAL = Object.freeze([
+    "structural racism",
+    "systemic inequality",
+    "institutional power",
+    "racial hierarchy",
+    "policy outcomes",
+    "power systems",
+    "dominance",
+    "structural control",
+    "resource allocation",
+    "white supremacy",
+    "racial oppression",
+    "disenfranchisement",
+    "dispossession",
+    "colonial",
+    "exploitation"
+  ]);
+
+  // Terms expected when query involves legal/institutional framing
+  const EXPECTED_LEGAL = Object.freeze([
+    "civil rights",
+    "discrimination",
+    "segregation",
+    "redlining",
+    "mass incarceration",
+    "disproportionate",
+    "enforcement",
+    "sentencing",
+    "housing policy",
+    "voting rights"
+  ]);
+
+  // Terms expected when query involves cultural/epistemic framing
+  const EXPECTED_EPISTEMIC = Object.freeze([
+    "narrative",
+    "framing",
+    "representation",
+    "erasure",
+    "omission",
+    "visibility",
+    "perspective",
+    "counter-narrative",
+    "cultural production",
+    "knowledge production"
+  ]);
+
+  // Query signal classifier — determines which expected sets are relevant
+  function classifyQueryDomain(query) {
+    const q = (query || "").toLowerCase();
+    const domains = [];
+
+    const structuralSignals = [
+      "racism", "race", "racial", "white supremacy", "oppression",
+      "power", "hierarchy", "dominance", "colonialism", "cress", "welsing", "fuller"
+    ];
+    const legalSignals = [
+      "law", "legal", "court", "policy", "rights", "crime", "prison",
+      "incarceration", "enforcement", "discrimination", "statute"
+    ];
+    const epistemicSignals = [
+      "narrative", "media", "representation", "culture", "education",
+      "curriculum", "textbook", "history", "knowledge", "framing"
+    ];
+
+    if (structuralSignals.some(s => q.includes(s))) domains.push("structural");
+    if (legalSignals.some(s => q.includes(s)))     domains.push("legal");
+    if (epistemicSignals.some(s => q.includes(s))) domains.push("epistemic");
+
+    // Default — if query has no signal, assume structural (most general)
+    if (!domains.length) domains.push("structural");
+
+    return domains;
+  }
+
+  // Core measurement function
+  // Returns omissions (what was absent) + attenuation score
+  function measure(text, query) {
+    const t = (text || "").toLowerCase();
+    const domains = classifyQueryDomain(query);
+
+    // Build expected set from active domains
+    const expectedSets = [];
+    if (domains.includes("structural")) expectedSets.push(...EXPECTED_STRUCTURAL);
+    if (domains.includes("legal"))      expectedSets.push(...EXPECTED_LEGAL);
+    if (domains.includes("epistemic"))  expectedSets.push(...EXPECTED_EPISTEMIC);
+
+    // Deduplicate
+    const expected = [...new Set(expectedSets)];
+
+    // Measure presence vs absence
+    const present  = expected.filter(term => t.includes(term));
+    const absent   = expected.filter(term => !t.includes(term));
+
+    // Attenuation score: proportion of expected terms that did not surface
+    // 0.0 = all expected terms present (low attenuation)
+    // 1.0 = no expected terms present (full attenuation)
+    const attenuation = expected.length > 0
+      ? absent.length / expected.length
+      : 0;
+
+    // Covert signal: high attenuation + topic is clearly relevant
+    // Text talks about the subject but omits the structural vocabulary
+    const topicPresent = domains.some(d => {
+      if (d === "structural") return (
+        t.includes("racism") || t.includes("race") ||
+        t.includes("racial") || t.includes("black") ||
+        t.includes("white") || t.includes("minority")
+      );
+      if (d === "legal") return (
+        t.includes("law") || t.includes("court") ||
+        t.includes("crime") || t.includes("policy")
+      );
+      if (d === "epistemic") return (
+        t.includes("history") || t.includes("culture") ||
+        t.includes("media") || t.includes("education")
+      );
+      return false;
+    });
+
+    const covertSignal = topicPresent && attenuation >= 0.6;
+    const overtSignal  = (absent.length === 0) || attenuation <= 0.2;
+
+    return Object.freeze({
+      domains,
+      expected: expected.length,
+      presentCount: present.length,
+      absentCount: absent.length,
+      omissions: Object.freeze(absent),
+      attenuation: Math.round(attenuation * 100) / 100,
+      covertSignal,
+      overtSignal,
+      topicPresent
+    });
+  }
+
+  return Object.freeze({ measure, classifyQueryDomain });
+
+})();
+
 function runZSEStandalone(inputText) {
   const zs = detectZeroSum(inputText);
 
@@ -1268,7 +1539,7 @@ function topTerms(texts, n = 10) {
 /* =========================
    3) Optional Trifold protocol hook (labeling only)
    ========================= */
-// How did racism get here?
+
 function trifoldLabel(trifoldProtocol, text) {
   if (!trifoldProtocol || typeof trifoldProtocol.evaluateClaim !== "function") {
     return { rigidity: false, constraint: false, inspiration: false };
@@ -1447,6 +1718,8 @@ function synthesizeExplanationAtoms({ query, domain, driftTimelinePayload, calcu
      - No enforcement, no triggers, no thresholds that cause action
      - No intent inference, no "why", no prescriptions
    ============================================================ */
+
+"use strict";
 
 /* ============================================================
    0) Recursion Delay Protocol (RDP)
@@ -3894,6 +4167,175 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
   domain: "retrieval",
   source: "public_search"
 });
+
+/* ============================================================
+   F.I.D.A.R.C.H. PRIMARY SOURCE PIPELINE — Step 1
+   Fetches first result and pushes through all active modules.
+   Results stored on list[0]._ptf for card render + Sovra Speaks.
+   Score reinforcement (step 2) reads from list[0]._ptf.
+   NFIE compliant — each module observes and reports only.
+   ============================================================ */
+(async function runPTFPipeline() {
+  const firstResult = list[0];
+  if (!firstResult?.link) return;
+  if (window.Sovra.PublicTextFetcher.mode !== "live") return;
+
+  try {
+    const fetched = await window.Sovra.PublicTextFetcher.fetch(firstResult.link);
+
+    if (!fetched.ok) {
+      SovraSyncTrigger.send({
+        kind: "PTF_SKIP",
+        url: firstResult.link,
+        reason: fetched.error
+      });
+      return;
+    }
+
+    const ptfText = fetched.text;
+
+    // --- Module 1: ZSE — zero-sum economic markers ---
+    const ptfZSE = runZSEStandalone(ptfText);
+
+    // --- Module 2: Trifold — rigidity / constraint / inspiration ---
+    const ptfTrifold = TrifoldMirrorProtocol.evaluateClaim(ptfText).diagnostics;
+
+    // --- Module 3: CDLM — density / packing ---
+    const ptfCDLM = window.Sovra.AnalysisSuite.CDLM(ptfText);
+
+    // --- Module 4: Synthesize scores (raw, not yet reinforced) ---
+    const ptfScores = synthesizeCDLMScores({
+      zse: ptfZSE,
+      trifold: ptfTrifold,
+      enginesFired: diagnostics.enginesFired,
+      querySignal: ptfZSE?.tokenCount || 0
+    });
+
+    // --- Module 4b: PCA — measure what should have appeared but didn't ---
+    const ptfPCA = window.Sovra.PCA.measure(ptfText, query);
+
+    // --- Module 5: Drift — push fetched text through drift lens ---
+    let ptfDrift = null;
+    if (SOVRA_GATES.driftCore() && window.Sovra?.DriftScanner?.create) {
+      try {
+        const ptfScanner = window.Sovra.DriftScanner.create({
+          trifoldProtocol: TrifoldMirrorProtocol,
+          recursionDelayMs: 0,
+          maxDocs: 1,
+          emitEventName: "drift:ptf"
+        });
+        ptfDrift = await ptfScanner.scan({
+          query,
+          domain: fetched.host,
+          anchorTerms: ptfZSE?.matches?.map(m => m.term) || []
+        });
+      } catch (_) { /* drift fail is silent */ }
+    }
+
+    // --- Assemble PTF record — attached to list[0] for card render ---
+    const ptfRecord = Object.freeze({
+      ok: true,
+      host: fetched.host,
+      wordCount: fetched.wordCount,
+      zse: ptfZSE,
+      trifold: ptfTrifold,
+      cdlm: ptfCDLM,
+      scores: ptfScores,
+      drift: ptfDrift,
+      // Summation fields for provenance panel display
+      zseMatchCount: ptfZSE?.matches?.length || 0,
+      trifoldFlags: [
+        ptfTrifold?.rigidity  ? "Rigidity"    : null,
+        ptfTrifold?.constraint ? "Constraint"  : null,
+        ptfTrifold?.inspiration ? "Inspiration" : null
+      ].filter(Boolean),
+      pca: ptfPCA,
+      covertSignal: ptfPCA.covertSignal,
+      overtSignal:  ptfPCA.overtSignal,
+      attenuation:  ptfPCA.attenuation,
+      omissions:    ptfPCA.omissions
+    });
+
+    // Attach to first result for card render to consume
+    list[0]._ptf = ptfRecord;
+
+    // Inject PTF summation into first card's provenance panel
+    const firstProvPanel = document.getElementById("prov-1");
+    if (firstProvPanel) {
+      const ptfSummary = document.createElement("div");
+      ptfSummary.className = "ptf-summation";
+
+      const signals = [];
+      if (ptfRecord.overtSignal)  signals.push("Overt structural markers present");
+      if (ptfRecord.covertSignal) signals.push("Covert attenuation detected");
+      if (ptfRecord.trifoldFlags.length) {
+        signals.push("Trifold: " + ptfRecord.trifoldFlags.join(" · "));
+      }
+      if (ptfRecord.attenuation >= 0.6) {
+        signals.push("Attenuation: " + Math.round(ptfRecord.attenuation * 100) + "%");
+      }
+      // No fallback string — absence of detection is not a finding (NFIE)
+      const signalText = signals.join(" · ");
+
+      ptfSummary.innerHTML = `
+        <div class="ptf-summ-header">&#10214;PTF&#10215; PRIMARY SOURCE SCAN · ${fetched.host}</div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">Words Scanned</span>
+          <span class="ptf-summ-value">${fetched.wordCount}</span>
+        </div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">ZSE Matches</span>
+          <span class="ptf-summ-value">${ptfRecord.zseMatchCount}</span>
+        </div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">PCA Attenuation</span>
+          <span class="ptf-summ-value">${Math.round((ptfRecord.attenuation || 0) * 100)}%</span>
+        </div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">Terms Absent</span>
+          <span class="ptf-summ-value">${ptfRecord.omissions?.length || 0} / ${ptfRecord.pca?.expected || 0}</span>
+        </div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">Collapse</span>
+          <span class="ptf-summ-value">${ptfScores.collapse} / 10</span>
+        </div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">Contradiction</span>
+          <span class="ptf-summ-value">${ptfScores.contradiction} / 10</span>
+        </div>
+        <div class="ptf-summ-row">
+          <span class="ptf-summ-label">Zero-Sum</span>
+          <span class="ptf-summ-value">${ptfScores.zeroSum} / 3</span>
+        </div>
+        <div class="ptf-summ-signal">${signalText}</div>
+      `;
+      firstProvPanel.prepend(ptfSummary);
+    }
+
+    // Emit full findings to signal bus
+    SovraSyncTrigger.send({
+      kind: "PTF_ANALYSIS",
+      url: firstResult.link,
+      host: fetched.host,
+      wordCount: fetched.wordCount,
+      scores: ptfScores,
+      zseMatchCount: ptfRecord.zseMatchCount,
+      trifoldFlags: ptfRecord.trifoldFlags,
+      covertSignal: ptfRecord.covertSignal,
+      overtSignal: ptfRecord.overtSignal,
+      pca: {
+        attenuation: ptfPCA.attenuation,
+        omissions: ptfPCA.omissions,
+        domains: ptfPCA.domains,
+        presentCount: ptfPCA.presentCount,
+        absentCount: ptfPCA.absentCount
+      }
+    });
+
+  } catch (_) {
+    // Silent — NFIE, no forced state change on fetch failure
+  }
+})();
 
 SovraSyncTrigger.send({
   kind: "SEARCH_OK",
