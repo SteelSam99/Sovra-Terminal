@@ -3914,10 +3914,21 @@ if (SOVRA_GATES.driftCore() && window.Sovra?.DriftScanner?.create) {
       emitEventName: "drift:timeline"
     });
 
+    // When WFE is active, anchor the drift scan to its functional vocabulary
+    // so the temporal timeline reflects how those structural terms shift over time
+    const wfeAnchorTerms = SOVRA_GATES.welsingFuller() && wfeMeta
+      ? [
+          "power systems", "dominance maintenance", "structural control",
+          "resource allocation", "population management",
+          "structural racism", "systemic inequality", "institutional power",
+          "racial hierarchy", "policy outcomes"
+        ]
+      : [];
+
     const driftPayload = await scanner.scan({
       query,
-      domain: "UNSPECIFIED",
-      anchorTerms: []
+      domain: wfeMeta ? "Welsing-Fuller" : "UNSPECIFIED",
+      anchorTerms: wfeAnchorTerms
     });
 
     renderDriftTimeline(driftPayload);
