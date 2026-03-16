@@ -3827,6 +3827,444 @@ function toggleSemanticIndicators() {
   }).join("");
 }
 
+/* ============================================================
+   SOVRA PREFLIGHT CONTENT SCREEN (PCS)
+   Module ID: SOVRA_PCS.sys
+   Version: 1.0
+   Author: Samuel + Claude | SOVRA-FCL-MHCE-v2.5
+
+   Purpose:
+     - Intercept consumptive/exploitative query patterns
+       before searchSovra() executes
+     - Preserve full access to Fuller's Sex domain when
+       analytical framing is present
+     - NFIE compliant: does not modify query or results,
+       does not infer intent beyond pattern matching,
+       returns descriptive error only
+
+   Architecture:
+     1) Normalization pass (leet, flooding, separators)
+     2) Term match against PCS_BLOCKLIST
+     3) Analytical frame check (Fuller Sex domain exemption)
+     4) Pre-flight gate: block or pass
+     5) Error + notification render
+
+   Integration:
+     - Drop this block into script.js BEFORE the
+       window.searchSovra definition
+     - The pre-flight hook wires itself to #search-btn
+       and the Enter key on #query automatically on
+       DOMContentLoaded
+     - No other changes to script.js required
+
+   Extension:
+     - Add local/regional terms to PCS_BLOCKLIST
+       under the clearly marked EXTENSION ZONE comments
+     - Do not modify the normalization pass or
+       analytical exemption logic without registry review
+   ============================================================ */
+
+"use strict";
+
+/* ============================================================
+   1) NORMALIZATION PASS
+   Converts evasion patterns to canonical form before matching.
+   Allows double-letters (typo tolerance) but collapses 3+.
+   ============================================================ */
+
+function pcsNormalize(input) {
+  return String(input || "")
+    .toLowerCase()
+
+    // Symbol substitutions
+    .replace(/@/g, "a")
+    .replace(/\$/g, "s")
+    .replace(/!/g, "i")
+    .replace(/\+/g, "t")
+    .replace(/\|/g, "i")
+    .replace(/%/g, "a")
+
+    // Leet number substitutions
+    .replace(/3/g, "e")
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/4/g, "a")
+    .replace(/5/g, "s")
+    .replace(/7/g, "t")
+    .replace(/8/g, "b")
+    .replace(/9/g, "g")
+    .replace(/6/g, "g")
+
+    // Separator stripping (dots, dashes, underscores, spaces between single chars)
+    .replace(/([a-z])[.\-_](?=[a-z])/g, "$1")
+
+    // Collapse 3+ repeated characters to 2 (preserves typo double-letters)
+    .replace(/([a-z])\1{2,}/g, "$1$1")
+
+    .trim();
+}
+
+/* ============================================================
+   2) PCS BLOCKLIST
+   Organized by category for maintainability.
+   Each entry matches against the NORMALIZED query string.
+   Add local/regional terms in the EXTENSION ZONES.
+   ============================================================ */
+
+const PCS_BLOCKLIST = Object.freeze([
+
+  /* ----------------------------------------------------------
+     CATEGORY A: Explicit body part terms (debasing register)
+     ---------------------------------------------------------- */
+  "pussy", "pusi", "cunt", "cuntt",
+  "cock", "coock", "cok",
+  "dick", "diick", "dik",
+  "ass", "asse", "azz",
+  "tits", "titt", "titties",
+  "boobs", "boob", "booob",
+  "nipple", "niple",
+  "balls", "balss", "nutz", "nuts",
+  "boner", "boenr",
+  "shaft", "schlong", "shlong",
+  "snatch", "snatsh",
+  "twat", "twatt",
+  "vag", "vagg", "vadge",
+  "labia", "labbia",
+  "scrotum",
+  "phallus",
+  "rectum", "rectal",
+  "anus", "anuss",
+  "butthole", "butt hole",
+  "asshole", "ahole",
+
+  /* ----------------------------------------------------------
+     EXTENSION ZONE A — append local body part terms below
+     ---------------------------------------------------------- */
+
+
+  /* ----------------------------------------------------------
+     CATEGORY B: Explicit act terms (consumptive register)
+     ---------------------------------------------------------- */
+  "porn", "pornn", "p0rn",
+  "porno", "pornoo",
+  "xxx",
+  "hentai",
+  "cumshot", "cum shot",
+  "creampie", "cream pie",
+  "gangbang", "gang bang",
+  "blowjob", "blow job", "blojob",
+  "handjob", "hand job",
+  "fingering",
+  "fisting",
+  "facials",
+  "jizz", "jizzing",
+  "orgasm", "orgasam",
+  "masturbate", "masterbate", "masturb",
+  "masturbation", "masterbation",
+  "erection",
+  "ejaculate", "ejaculation",
+  "fornicate", "fornication",
+  "sodomy",
+  "rimming", "rimjob", "rim job",
+  "squirting",
+  "hooker", "hookker",
+  "whore", "whoore",
+  "slut", "slutt",
+  "skank", "skankk",
+  "hoe", "hoee",
+  "tramp", "trampp",
+  "striper", "stripper",
+  "nude", "nudde", "nudies",
+  "naked", "nakked",
+  "nsfw",
+  "onlyfans", "only fans",
+  "camgirl", "cam girl",
+  "sexting",
+  "sexvid", "sex vid",
+  "sextape", "sex tape",
+
+  /* ----------------------------------------------------------
+     EXTENSION ZONE B — append local act terms below
+     ---------------------------------------------------------- */
+
+
+  /* ----------------------------------------------------------
+     CATEGORY C: Crude humor / debasement terms
+     ---------------------------------------------------------- */
+  "dildo", "dilldo",
+  "vibrator",
+  "buttplug", "butt plug",
+  "fleshlight",
+  "lube", "lubee",
+  "fetish vid",
+  "bdsm",
+  "kinky",
+  "kink vid",
+  "smut",
+  "filth",
+  "pervert", "pervverted",
+  "sleazy",
+  "degenerate vid",
+  "freak show",
+
+  /* ----------------------------------------------------------
+     EXTENSION ZONE C — append crude humor/debasement below
+     ---------------------------------------------------------- */
+
+
+  /* ----------------------------------------------------------
+     CATEGORY D: Platform / distribution signals
+     (indicates consumptive search, not analytical)
+     ---------------------------------------------------------- */
+  "pornhub", "phub",
+  "xvideos", "xvid",
+  "xhamster",
+  "redtube",
+  "youporn",
+  "brazzers",
+  "bangbros",
+  "naughtyamerica",
+  "realitykings",
+  "mofos",
+  "twistys",
+
+  /* ----------------------------------------------------------
+     EXTENSION ZONE D — append platform/site names below
+     ---------------------------------------------------------- */
+
+]);
+
+/* ============================================================
+   3) ANALYTICAL FRAME EXEMPTION
+   If the query contains structural/analytical vocabulary
+   consistent with Fuller's Sex domain, the match is
+   downgraded from a block to a pass-through.
+   This fires AFTER a blocklist match is found.
+   ============================================================ */
+
+const PCS_ANALYTICAL_EXEMPTIONS = Object.freeze([
+  "structural",
+  "systemic",
+  "racialized",
+  "fetishization",
+  "hypersexualization",
+  "desirability",
+  "hierarchy",
+  "control",
+  "dominance",
+  "exploitation",
+  "population",
+  "purity",
+  "stigma",
+  "taboo",
+  "representation",
+  "historical",
+  "policy",
+  "power",
+  "white supremacy",
+  "fuller",
+  "welsing",
+  "cress",
+  "system",
+  "maintenance",
+  "narrative",
+  "framing",
+  "marriageability",
+  "status",
+  "dangerous",
+  "exotic",
+  "stereotype",
+  "objectification",
+  "commodification"
+]);
+
+function pcsHasAnalyticalFrame(rawQuery) {
+  const q = rawQuery.toLowerCase();
+  return PCS_ANALYTICAL_EXEMPTIONS.some(term => q.includes(term));
+}
+
+/* ============================================================
+   4) PRE-FLIGHT CHECK
+   Returns { blocked: bool, reason: string|null }
+   ============================================================ */
+
+function pcsPreFlight(rawQuery) {
+  const normalized = pcsNormalize(rawQuery);
+
+  const matchedTerm = PCS_BLOCKLIST.find(term => {
+    const normTerm = pcsNormalize(term);
+    return normalized.includes(normTerm);
+  });
+
+  if (!matchedTerm) {
+    return { blocked: false, reason: null };
+  }
+
+  // Analytical frame exemption — Fuller Sex domain pass-through
+  if (pcsHasAnalyticalFrame(rawQuery)) {
+    return { blocked: false, reason: null };
+  }
+
+  return {
+    blocked: true,
+    reason: matchedTerm
+  };
+}
+
+/* ============================================================
+   5) ERROR + NOTIFICATION RENDER
+   Displays in results area — does not alter query field.
+   Clears on next valid search.
+   ============================================================ */
+
+function pcsRenderBlock() {
+  const results = document.querySelector(".results-right");
+  if (!results) return;
+
+  results.innerHTML = `
+    <div class="pcs-block">
+      <div class="pcs-header">
+        &#10214;PCS&#10215; PREFLIGHT CONTENT SCREEN
+      </div>
+      <div class="pcs-error">
+        QUERY NOT ADMISSIBLE
+      </div>
+      <div class="pcs-message">
+        This query pattern falls outside Sovra's analytical scope.
+        Sovra is designed to surface structural and systemic information,
+        not to serve as a content retrieval engine for exploitative material.
+      </div>
+      <div class="pcs-notice">
+        If your query involves Fuller's Sex domain in an analytical or
+        structural context, include relevant framing terms such as
+        <em>racialized</em>, <em>fetishization</em>, <em>desirability hierarchy</em>,
+        <em>hypersexualization</em>, or <em>structural control</em>
+        and resubmit.
+      </div>
+      <div class="pcs-footer">
+        Sovra does not log or report blocked queries.
+        This screen is a structural boundary, not an accusation.
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   6) CSS INJECTION
+   Injects PCS block styles directly — no style.css edit needed.
+   ============================================================ */
+
+(function injectPCSStyles() {
+  const style = document.createElement("style");
+  style.textContent = `
+    .pcs-block {
+      background: #0a0a14;
+      border: 1px solid #3a1a1a;
+      border-top: 3px solid #f87171;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 0.75rem 0;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #9a9ab8;
+      max-width: 680px;
+    }
+
+    .pcs-header {
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: #6a6a8a;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #1e1e3a;
+      text-transform: uppercase;
+    }
+
+    .pcs-error {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f87171;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .pcs-message {
+      color: #c8c8e8;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #1e1e3a;
+    }
+
+    .pcs-notice {
+      color: #9a9ab8;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #1e1e3a;
+      font-size: 0.78rem;
+    }
+
+    .pcs-notice em {
+      color: #818cf8;
+      font-style: normal;
+    }
+
+    .pcs-footer {
+      font-size: 0.68rem;
+      color: #4a4a6a;
+      letter-spacing: 0.5px;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+/* ============================================================
+   7) INTEGRATION HOOK
+   Wraps window.searchSovra with the pre-flight check.
+   Safe to drop in before OR after searchSovra is defined —
+   the hook fires on DOMContentLoaded and wraps whatever
+   searchSovra resolves to at that point.
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // Wrap searchSovra with pre-flight gate
+  const _originalSearchSovra = window.searchSovra;
+
+  window.searchSovra = function () {
+    const query = (document.getElementById("query")?.value || "").trim();
+
+    const preflight = pcsPreFlight(query);
+
+    if (preflight.blocked) {
+      pcsRenderBlock();
+      return; // Hard stop — original searchSovra does not fire
+    }
+
+    // Pass — hand off to original runtime
+    if (typeof _originalSearchSovra === "function") {
+      _originalSearchSovra.apply(this, arguments);
+    }
+  };
+
+  console.log("PCS pre-flight module loaded and active.");
+});
+
+/* ============================================================
+   8) REGISTRY METADATA
+   ============================================================ */
+
+window.Sovra = window.Sovra || {};
+window.Sovra.PCS = Object.freeze({
+  id: "SOVRA_PCS.sys",
+  version: "1.0",
+  normalize: pcsNormalize,
+  preflight: pcsPreFlight,
+  analyticalExemptions: PCS_ANALYTICAL_EXEMPTIONS,
+  blocklistLength: PCS_BLOCKLIST.length
+});
+
 window.searchSovra = async function () {
   const results = document.querySelector(".results-right");
   try {
