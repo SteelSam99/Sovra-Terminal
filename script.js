@@ -831,21 +831,28 @@ registerModule("SIGNAL_THREAT_MONITOR.sys", SignalThreatMonitor);
    DOM MUTATION SENTINEL
    Module ID: DOM_MUTATION_SENTINEL.sys
    Purpose:
-     - Detect unexpected DOM changes
-     - Escalate posture on suspicious mutations
+     - Detect unexpected script/link injection into document head
+     - Does NOT watch results area — Sovra renders cards there intentionally
    ============================================================ */
 const DOMMutationSentinel = (() => {
   const observer = new MutationObserver(mutations => {
     for (const mutation of mutations) {
-      if (mutation.addedNodes.length > 0) {
-        SecurityPostureManager.escalate(2, "Unexpected DOM mutation detected");
-        break;
+      for (const node of mutation.addedNodes) {
+        // Only escalate on script/link injection — not normal UI renders
+        if (node.nodeType === 1 &&
+            (node.tagName === "SCRIPT" || node.tagName === "LINK") &&
+            !node.id?.startsWith("sds-")) {
+          SecurityPostureManager.escalate(2, "Unexpected script/link injection detected");
+          break;
+        }
       }
     }
   });
 
   const start = () => {
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Watch head only — body mutations are Sovra's own render output
+    const target = document.head || document.documentElement;
+    observer.observe(target, { childList: true, subtree: false });
   };
 
   return { start };
@@ -1798,11 +1805,15 @@ function _sdsEscapeHtml(str) {
 
 window.Sovra = window.Sovra || {};
 
+/* ============================================================
+   12 + 13) MODULE REGISTRATION + REGISTRY METADATA
+   registry merged inside freeze — cannot assign to frozen object after
+   ============================================================ */
+
 window.Sovra.SDSDriftAdapter = Object.freeze({
   id:      "SDS_DriftGate_Lens",
   version: "1.0",
   run:     runSDSDriftLens,
-  // Expose internals for testing only
   _internal: Object.freeze({
     gate:          sdsDriftGateActive,
     scanId:        buildScanId,
@@ -1810,26 +1821,21 @@ window.Sovra.SDSDriftAdapter = Object.freeze({
     renderPanel:   _renderVerbiageDriftPanel,
     renderFail:    _renderFailureState,
     emitEvents:    _emitWitnessEvents
+  }),
+  registry: Object.freeze({
+    id:              "SDS_DriftGate_Lens",
+    version:         "1.0",
+    authors:         "Samuel Paul Peacock + Max Headroom + Claude",
+    copyright:       "Samuel Paul Peacock, March 2026",
+    framework:       "SOVRA©-FCL-MHCE-v2.5",
+    constraint:      "Verbiage drift lens only. No verdicts. No force.",
+    nfie:            "O_f = 0. Witness only.",
+    admissionSignal: "USER_QUERY_SUBMISSION — the query IS the corridor admission event",
+    attachesTo:      "runPTFPipeline() after Module 4b (PCA)",
+    feeds:           ["drift-timeline-panel", "sovra:sds event", "fidarch:drift-lens event", "CDLM contradiction"],
+    forbidden:       "Verdicts, recommendations, warnings, calls to action, corrective framing, good/bad labels",
+    outputCharacter: "A microscope. A weather report. A lens. Shows movement, not meaning."
   })
-});
-
-/* ============================================================
-   13) REGISTRY METADATA
-   ============================================================ */
-
-window.Sovra.SDSDriftAdapter.registry = Object.freeze({
-  id:              "SDS_DriftGate_Lens",
-  version:         "1.0",
-  authors:         "Samuel Paul Peacock + Max Headroom + Claude",
-  copyright:       "Samuel Paul Peacock, March 2026",
-  framework:       "SOVRA©-FCL-MHCE-v2.5",
-  constraint:      "Verbiage drift lens only. No verdicts. No force.",
-  nfie:            "O_f = 0. Witness only.",
-  admissionSignal: "USER_QUERY_SUBMISSION — the query IS the corridor admission event",
-  attachesTo:      "runPTFPipeline() after Module 4b (PCA)",
-  feeds:           ["drift-timeline-panel", "sovra:sds event", "fidarch:drift-lens event", "CDLM contradiction"],
-  forbidden:       "Verdicts, recommendations, warnings, calls to action, corrective framing, good/bad labels",
-  outputCharacter: "A microscope. A weather report. A lens. Shows movement, not meaning."
 });
 
 console.log("[SDS_DriftGate_Lens v1.0] Verbiage drift adapter loaded. NFIE compliant. O_f = 0.");
