@@ -1787,7 +1787,6 @@ window.Sovra.SDSDriftAdapter = Object.freeze({
   _internal: Object.freeze({
     gate:          sdsDriftGateActive,
     scanId:        buildScanId,
-    sourceType:    _inferSourceType,
     renderPanel:   _renderVerbiageDriftPanel,
     renderFail:    _renderFailureState,
     emitEvents:    _emitWitnessEvents
