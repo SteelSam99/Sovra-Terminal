@@ -969,10 +969,139 @@ const CONTEXT_FRAME_VISIBILITY = {
   VOICE: true
 };
 const ZERO_SUM_TERMS = [
-  "take from", "steal", "replace", "erase", "dilute", "threaten", "lose ground", "breed", "reproduce",
-  "reverse discrimination", "they’re taking", "our jobs", "our schools", "our culture", "our land", "go home",
-  "zero-sum", "finite", "limited", "scarce", "only one", "either/or", "us vs them"
-];
+
+  /* ----------------------------------------------------------
+     TIER 1 — Overt / surface register
+     Explicit zero-sum language. Original list preserved.
+     ---------------------------------------------------------- */
+  "take from", "steal", "replace", "erase", "dilute", "threaten", "lose ground",
+  "breed", "reproduce",
+  "reverse discrimination", "they're taking", "our jobs", "our schools",
+  "our culture", "our land", "go home",
+  "zero-sum", "finite", "limited", "scarce", "only one", "either/or", "us vs them",
+
+  /* ----------------------------------------------------------
+     TIER 2 — Demographic displacement register
+     Encodes population replacement without naming it.
+     ---------------------------------------------------------- */
+  "demographic change", "demographic shift", "demographic replacement",
+  "demographic transformation", "population replacement", "population decline",
+  "declining birth rate", "birth rate gap", "fertility gap",
+  "great replacement", "white genocide", "ethnic replacement",
+  "majority minority", "changing demographics", "demographic winter",
+  "native population", "host population", "heritage population",
+  "legacy population", "population pressure", "overpopulation",
+
+  /* ----------------------------------------------------------
+     TIER 3 — Competition / scarcity framing
+     Encodes zero-sum through resource competition language.
+     ---------------------------------------------------------- */
+  "competition for jobs", "competition for resources", "competition for spots",
+  "limited seats", "limited slots", "limited positions", "limited opportunities",
+  "scarce resources", "finite resources", "shrinking pie",
+  "taking spots", "taking seats", "taking positions", "taking opportunities",
+  "at the expense of", "crowding out", "displacing workers",
+  "job competition", "wage competition", "wage suppression",
+  "displaced workers", "displaced americans", "american workers first",
+  "domestic workers", "native workers",
+
+  /* ----------------------------------------------------------
+     TIER 4 — Merit / colorblind register
+     Encodes exclusion through neutralized fairness language.
+     ---------------------------------------------------------- */
+  "merit-based", "meritocracy", "colorblind", "color-blind",
+  "race-neutral", "race blind", "neutral criteria", "objective criteria",
+  "best qualified", "most qualified", "lowering standards",
+  "lowering the bar", "reverse racism", "anti-white",
+  "discrimination against", "penalizing success", "punishing achievement",
+  "equality of outcome", "preferential treatment", "special treatment",
+  "unfair advantage", "unearned advantage", "playing the race card",
+  "identity politics", "racial preferences", "racial quotas",
+  "diversity hire", "diversity admission", "affirmative action hire",
+  "unqualified candidate", "less qualified",
+
+  /* ----------------------------------------------------------
+     TIER 5 — Legal / policy neutralization register
+     Encodes rollback of structural remedies as fairness.
+     ---------------------------------------------------------- */
+  "equal protection", "equal treatment", "individual rights",
+  "group preferences", "group rights", "collective guilt",
+  "race-conscious", "race-based", "race-specific",
+  "disparate impact", "neutral policy", "facially neutral",
+  "color of law", "judicial activism", "legislating from the bench",
+  "original intent", "strict scrutiny", "compelling interest",
+  "narrow tailoring", "undue burden",
+
+  /* ----------------------------------------------------------
+     TIER 6 — Cultural erasure register
+     Encodes displacement of cultural production and memory.
+     ---------------------------------------------------------- */
+  "cancel culture", "erasing history", "rewriting history",
+  "cultural marxism", "cultural replacement", "cultural genocide",
+  "attack on tradition", "traditional values under attack",
+  "war on christmas", "war on religion",
+  "silencing", "censorship", "deplatforming",
+  "thought police", "speech codes", "hate speech laws",
+  "indoctrination", "propaganda", "revisionist history",
+  "critical race theory", "woke ideology", "woke agenda",
+  "anti-american", "unamerican",
+
+  /* ----------------------------------------------------------
+     TIER 7 — Economic displacement register
+     Encodes racial economic hierarchy through class framing.
+     ---------------------------------------------------------- */
+  "taxpayer money", "hard-earned taxes", "welfare state",
+  "dependency culture", "culture of dependency",
+  "entitlement spending", "handouts", "giveaways",
+  "redistributing wealth", "wealth redistribution", "wealth transfer",
+  "reparations", "taking from producers", "makers and takers",
+  "parasitic", "net contributor", "net recipient",
+  "illegal aliens taking", "immigrants taking",
+  "anchor babies", "chain migration", "birth tourism",
+
+  /* ----------------------------------------------------------
+     TIER 8 — Safety / threat displacement register
+     Encodes racial fear through crime and security framing.
+     ---------------------------------------------------------- */
+  "law and order", "tough on crime", "crime wave",
+  "violent crime", "gang violence", "urban crime",
+  "inner city", "dangerous neighborhoods", "high crime areas",
+  "protecting our community", "protecting our neighborhoods",
+  "protecting our children", "protecting our women",
+  "invasion", "infestation",
+  "criminal aliens", "illegal alien crime",
+  "open borders", "border security", "national security threat",
+  "existential threat", "civilizational threat",
+  "demographic threat", "security threat",
+
+  /* ----------------------------------------------------------
+     TIER 9 — Assimilation / loyalty register
+     Encodes conditional belonging through compliance demands.
+     ---------------------------------------------------------- */
+  "assimilate", "assimilation", "failure to assimilate",
+  "refusal to assimilate", "parallel society", "self-segregation",
+  "integration failure", "cultural integration",
+  "loyalty to america", "american values", "western values",
+  "judeo-christian values", "shared values",
+  "love it or leave it", "go back to", "where you came from",
+  "not really american", "true american",
+  "real america", "heartland values",
+
+  /* ----------------------------------------------------------
+     TIER 10 — Academic / institutional neutralization register
+     Encodes structural harm through detached professional framing.
+     ---------------------------------------------------------- */
+  "group differences", "achievement gap", "performance gap",
+  "test score gap", "outcome disparities", "differential outcomes",
+  "cultural factors", "family structure", "broken homes",
+  "out of wedlock", "single parent", "absentee fathers",
+  "cultural pathology", "subculture", "oppositional culture",
+  "acting white", "peer pressure against achievement",
+  "socioeconomic factors", "neighborhood effects",
+  "environmental factors", "genetic factors",
+  "iq differences", "cognitive differences", "innate differences"
+
+]
 
 function detectZeroSum(inputText) {
   const lowerInput = inputText.toLowerCase();
