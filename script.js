@@ -1329,24 +1329,6 @@ function runSDSDriftLens({ text = "", query = "", url = "", host = "", wordCount
 }
 
 /* ============================================================
-   4) SOURCE TYPE INFERENCE
-   Descriptive only — helps the UI label the source correctly.
-   Never used to filter or rank.
-   ============================================================ */
-
-function _inferSourceType(url, host) {
-  const u = String(url || "").toLowerCase();
-  const h = String(host || "").toLowerCase();
-
-  if (u.endsWith(".pdf") || u.includes("/pdf/") || u.includes("pdf=")) return "PDF";
-  if (h.includes("youtube.com") || h.includes("youtu.be"))             return "VIDEO";
-  if (h.includes("arxiv.org") || h.includes("doi.org"))                return "ACADEMIC";
-  if (h.includes("github.com"))                                         return "CODE";
-  if (h.includes("gov") || h.includes(".gov."))                         return "GOVERNMENT";
-  return "HTML";
-}
-
-/* ============================================================
    5) VERBIAGE DRIFT PANEL RENDERER
    Renders inside the existing drift-timeline-panel dark box.
    Positioned ABOVE the era blocks (prepended).
@@ -1821,7 +1803,7 @@ window.Sovra.SDSDriftAdapter.registry = Object.freeze({
   version:         "1.0",
   authors:         "Samuel Paul Peacock + Max Headroom + Claude",
   copyright:       "Samuel Paul Peacock, March 2026",
-  framework:       "SOVRA©-FCL-MHCE-v2.5",
+  framework:       "SOVRA-FCL-MHCE-v2.5©",
   constraint:      "Verbiage drift lens only. No verdicts. No force.",
   nfie:            "O_f = 0. Witness only.",
   admissionSignal: "USER_QUERY_SUBMISSION — the query IS the corridor admission event",
