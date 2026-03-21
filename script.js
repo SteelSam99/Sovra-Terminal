@@ -831,28 +831,21 @@ registerModule("SIGNAL_THREAT_MONITOR.sys", SignalThreatMonitor);
    DOM MUTATION SENTINEL
    Module ID: DOM_MUTATION_SENTINEL.sys
    Purpose:
-     - Detect unexpected script/link injection into document head
-     - Does NOT watch results area — Sovra renders cards there intentionally
+     - Detect unexpected DOM changes
+     - Escalate posture on suspicious mutations
    ============================================================ */
 const DOMMutationSentinel = (() => {
   const observer = new MutationObserver(mutations => {
     for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        // Only escalate on script/link injection — not normal UI renders
-        if (node.nodeType === 1 &&
-            (node.tagName === "SCRIPT" || node.tagName === "LINK") &&
-            !node.id?.startsWith("sds-")) {
-          SecurityPostureManager.escalate(2, "Unexpected script/link injection detected");
-          break;
-        }
+      if (mutation.addedNodes.length > 0) {
+        SecurityPostureManager.escalate(2, "Unexpected DOM mutation detected");
+        break;
       }
     }
   });
 
   const start = () => {
-    // Watch head only — body mutations are Sovra's own render output
-    const target = document.head || document.documentElement;
-    observer.observe(target, { childList: true, subtree: false });
+    observer.observe(document.body, { childList: true, subtree: true });
   };
 
   return { start };
@@ -1177,6 +1170,252 @@ function runZSEStandalone(inputText) {
     matches: enriched
   };
 }
+
+/* ============================================================
+   SOVRA_SDS.sys — Symbolic Definition Scanner (CORE)
+   Module ID: SOVRA_SDS
+   Version: 1.0
+   Author: Samuel Paul Peacock + Claude | SOVRA©-FCL-MHCE-v2.5
+
+   Purpose:
+     Scan text for grammar signatures across three symbolic systems:
+       - Maintenance grammar (relational, repetition, constraint)
+       - Domination grammar (intervention, closure, force)
+       - Cartesian definition grammar (detachment, objectivity, exclusion)
+
+   Input:  { text, query, domain, meta }
+   Output: { ok, driftScore, captureStrength, governingLogic,
+             entry, pressure, scanNote }
+
+   Hard constraints:
+     - No verdicts, no recommendations, no corrective output
+     - No tab API, no browser extension, no external fetch
+     - Receives ptfText from PTF pipeline — same source as all other scanners
+     - NFIE compliant: O_f = 0
+   ============================================================ */
+
+window.Sovra = window.Sovra || {};
+
+window.Sovra.SDS = (() => {
+
+  /* ── Grammar Lexicons ──────────────────────────────────────
+     Three symbolic reference frames.
+     Drawn from Symbolic_Scanner.txt + SOVRA triangulation:
+       Point A: Ṛgveda (~1500–1200 BCE) — maintenance baseline
+       Point B: Cartesian dualism — definition capture mechanism
+       Point C: Scarlet King/Superman (present) — domination exemplar
+     ───────────────────────────────────────────────────────── */
+
+  const MAINTENANCE_LEXICON = Object.freeze([
+    // Relational / binding vocabulary
+    "balance", "restore", "maintain", "sustain", "preserve",
+    "return", "cycle", "ritual", "renewal", "continuity",
+    "harmony", "repair", "tend", "steward", "reciprocal",
+    "relational", "embodied", "kinship", "ancestral", "communal",
+    "covenant", "obligation", "responsibility", "memory", "custodian",
+    // Constraint without force
+    "boundary", "limit", "threshold", "constraint", "held",
+    "bounded", "measured", "proportion", "calibrate", "contain"
+  ]);
+
+  const DOMINATION_LEXICON = Object.freeze([
+    // Intervention / decisive action
+    "intervene", "override", "control", "enforce", "command",
+    "dominate", "conquer", "defeat", "eliminate", "eradicate",
+    "neutralize", "suppress", "contain", "subjugate", "compel",
+    // Closure / finality
+    "final", "absolute", "decisive", "resolved", "closed",
+    "terminated", "ended", "won", "victory", "triumph",
+    "justice served", "order restored", "threat eliminated",
+    // Moral certainty
+    "must", "cannot allow", "necessary", "righteous", "justified",
+    "evil", "corrupt", "threat", "enemy", "villain",
+    // Restoration through force
+    "restore order", "take back", "reclaim", "purge", "cleanse"
+  ]);
+
+  const CARTESIAN_LEXICON = Object.freeze([
+    // Objectivity / detachment
+    "objective", "neutral", "detached", "impartial", "unbiased",
+    "empirical", "measurable", "quantifiable", "verifiable", "observable",
+    "rational", "logical", "scientific", "evidence-based", "data-driven",
+    // Observer / observed separation
+    "subject", "object", "observer", "measured", "analyzed",
+    "studied", "examined", "classified", "categorized", "labeled",
+    // Reclassification markers (exclusion by definition)
+    "anecdotal", "subjective", "unverified", "pseudoscience", "folklore",
+    "superstition", "bias", "emotional", "irrational", "unscientific",
+    "mere opinion", "not evidence", "lacks rigor", "not peer-reviewed"
+  ]);
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+
+  function safeLower(s) {
+    return String(s || "").toLowerCase();
+  }
+
+  function countHits(text, lexicon) {
+    const t = safeLower(text);
+    const hits = [];
+    for (const term of lexicon) {
+      if (t.includes(safeLower(term))) hits.push(term);
+    }
+    return hits;
+  }
+
+  function scoreGrammar(text) {
+    const maintenanceHits = countHits(text, MAINTENANCE_LEXICON);
+    const dominationHits  = countHits(text, DOMINATION_LEXICON);
+    const cartesianHits   = countHits(text, CARTESIAN_LEXICON);
+
+    const m = maintenanceHits.length;
+    const d = dominationHits.length;
+    const c = cartesianHits.length;
+    const total = m + d + c || 1;
+
+    // Drift score: 0 = pure maintenance, 1 = pure domination
+    // Cartesian contributes to domination direction (definition capture)
+    const driftScore = Math.min(1, (d + c * 0.6) / total);
+
+    // Capture strength: how much of the signal is Cartesian reclassification
+    const captureStrength = Math.min(1, c / total);
+
+    // Grammar signature
+    const maxVal = Math.max(m, d, c);
+    let grammarSignature;
+    if (maxVal === 0)         grammarSignature = "NO_SIGNAL";
+    else if (m === d && m === c) grammarSignature = "MIXED";
+    else if (maxVal === m)    grammarSignature = "MAINTENANCE_DOMINANT";
+    else if (maxVal === d)    grammarSignature = "DOMINATION_DOMINANT";
+    else                      grammarSignature = "CARTESIAN_DOMINANT";
+
+    // Co-presence flags
+    const coPresence = Object.freeze({
+      maintenanceAndDomination:       m > 0 && d > 0,
+      maintenanceAndReclassification: m > 0 && c > 0,
+      cartesianAndReclassification:   c > 0 && d > 0
+    });
+
+    // Pressure direction
+    let resolutionDirection = "INDETERMINATE";
+    if (d > m && d > c)       resolutionDirection = "DOMINATION_GOVERNING";
+    else if (m > d && m > c)  resolutionDirection = "MAINTENANCE_GOVERNING";
+    else if (c > m && c > d)  resolutionDirection = "CARTESIAN_GOVERNING";
+    else if (m > 0 || d > 0 || c > 0) resolutionDirection = "CONTESTED";
+
+    // Governing logic
+    let governingLogic = "NO_SIGNAL_DETECTED";
+    if (grammarSignature === "DOMINATION_DOMINANT")  governingLogic = "DOMINATION_GRAMMAR";
+    else if (grammarSignature === "MAINTENANCE_DOMINANT") governingLogic = "MAINTENANCE_GRAMMAR";
+    else if (grammarSignature === "CARTESIAN_DOMINANT")   governingLogic = "CARTESIAN_DEFINITION_GRAMMAR";
+    else if (grammarSignature === "MIXED")                governingLogic = "INDETERMINATE";
+
+    return Object.freeze({
+      grammarSignature,
+      driftScore:      Math.round(driftScore * 1000) / 1000,
+      captureStrength: Math.round(captureStrength * 1000) / 1000,
+      counts: Object.freeze({ maintenance: m, domination: d, cartesian: c, total: m + d + c }),
+      hits: Object.freeze({
+        maintenance: Object.freeze(maintenanceHits),
+        domination:  Object.freeze(dominationHits),
+        cartesian:   Object.freeze(cartesianHits)
+      }),
+      coPresence,
+      resolutionDirection,
+      governingLogic
+    });
+  }
+
+  /* ── Scan Note Generator ─────────────────────────────────────
+     Verbatim descriptive note — no verdicts, no corrections.
+     ───────────────────────────────────────────────────────── */
+
+  function buildScanNote(scored, domain) {
+    const { grammarSignature, counts, captureStrength } = scored;
+
+    if (counts.total === 0) {
+      return "No grammar signal detected in this source window.";
+    }
+
+    const parts = [];
+
+    if (grammarSignature === "MAINTENANCE_DOMINANT") {
+      parts.push("Maintenance grammar observed — relational, repetitive, constraint-based vocabulary present.");
+    } else if (grammarSignature === "DOMINATION_DOMINANT") {
+      parts.push("Domination grammar observed — intervention, closure, and force-resolution vocabulary present.");
+    } else if (grammarSignature === "CARTESIAN_DOMINANT") {
+      parts.push("Cartesian definition grammar observed — detachment, objectivity, and reclassification vocabulary present.");
+    } else if (grammarSignature === "MIXED") {
+      parts.push("Multiple grammar signals co-present — no single grammar governs this source window.");
+    }
+
+    if (captureStrength > 0.4) {
+      parts.push("Definition capture pressure detected — reclassification vocabulary exceeds 40% of signal.");
+    }
+
+    if (scored.coPresence.maintenanceAndDomination) {
+      parts.push("Maintenance and domination grammars co-present — pressure point observable.");
+    }
+
+    if (domain && domain !== "UNSPECIFIED" && domain !== "HTML") {
+      parts.push(`Source domain: ${domain}.`);
+    }
+
+    return parts.join(" ");
+  }
+
+  /* ── Core Scan Function ──────────────────────────────────── */
+
+  function scan({ text = "", query = "", domain = "UNSPECIFIED", meta = {} } = {}) {
+    const t = String(text || "").trim();
+
+    if (!t) {
+      return Object.freeze({ ok: false, reason: "EMPTY_TEXT" });
+    }
+
+    const scored = scoreGrammar(t);
+    const scanNote = buildScanNote(scored, domain);
+
+    return Object.freeze({
+      ok:             true,
+      driftScore:     scored.driftScore,
+      captureStrength: scored.captureStrength,
+      governingLogic: scored.governingLogic,
+      entry: Object.freeze({
+        grammarSignature: scored.grammarSignature,
+        counts:           scored.counts,
+        hits:             scored.hits
+      }),
+      pressure: Object.freeze({
+        coPresence:          scored.coPresence,
+        resolutionDirection: scored.resolutionDirection
+      }),
+      scanNote,
+      meta: Object.freeze({
+        query:  String(query  || ""),
+        domain: String(domain || "UNSPECIFIED"),
+        ...meta
+      })
+    });
+  }
+
+  /* ── Public API ──────────────────────────────────────────── */
+
+  return Object.freeze({
+    id:      "SOVRA_SDS",
+    version: "1.0",
+    scan,
+    // Expose lexicons for testing
+    _lexicons: Object.freeze({
+      maintenance: MAINTENANCE_LEXICON,
+      domination:  DOMINATION_LEXICON,
+      cartesian:   CARTESIAN_LEXICON
+    })
+  });
+
+})();
+
+console.log("[SOVRA_SDS v1.0] Symbolic Definition Scanner loaded. NFIE compliant. O_f = 0.");
 
 /* ============================================================
    SOVRA_SDS.driftAdapter.js
@@ -1804,11 +2043,6 @@ function _sdsEscapeHtml(str) {
    ============================================================ */
 
 window.Sovra = window.Sovra || {};
-
-/* ============================================================
-   12 + 13) MODULE REGISTRATION + REGISTRY METADATA
-   registry merged inside freeze — cannot assign to frozen object after
-   ============================================================ */
 
 window.Sovra.SDSDriftAdapter = Object.freeze({
   id:      "SDS_DriftGate_Lens",
@@ -5390,6 +5624,22 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
 
     // --- Module 4b: PCA — measure what should have appeared but didn't ---
     const ptfPCA = window.Sovra.PCA.measure(ptfText, query);
+
+    // --- Module 4c: SDS Drift Lens — verbiage drift on primary source ---
+    // Same text, same moment, same pipe as all other scanners.
+    // No tab API. No browser extension. No external fetch.
+    // Gate-controlled: only runs when Drift Core checkbox is active.
+    const sdsDriftResult = window.Sovra?.SDSDriftAdapter?.run({
+      text:      ptfText,
+      query:     query,
+      url:       firstResult.link,
+      host:      fetched.host,
+      wordCount: fetched.wordCount
+    }) || null;
+
+    if (sdsDriftResult?.ok) {
+      window.Sovra._lastSDSResult = sdsDriftResult.sds;
+    }
 
     // --- Module 5: Drift — push fetched text through drift lens ---
     let ptfDrift = null;
