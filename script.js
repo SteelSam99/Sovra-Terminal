@@ -1791,11 +1791,6 @@ function _sdsEscapeHtml(str) {
     .replace(/'/g, "&#39;");
 }
 
-// Use global escapeHtml if available, otherwise use local
-const escapeHtml = typeof window.escapeHtml === "function"
-  ? window.escapeHtml
-  : _sdsEscapeHtml;
-
 /* ============================================================
    12) MODULE REGISTRATION
    ============================================================ */
