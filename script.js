@@ -1545,6 +1545,598 @@ window.Sovra.SDS = (() => {
 })();
 
 console.log("[SOVRA_SDS v1.0] Symbolic Definition Scanner loaded. NFIE compliant. O_f = 0.");
+/* ============================================================
+   C-4 × PWS PHASE CLASSIFIER
+   Module ID: SOVRA_C4_PWS
+   Version: 1.0
+   Author: Samuel Paul Peacock + Claude | SOVRA-FCL-MHCE-v2.5
+   Date: March 2026
+
+   Purpose:
+     - Classify query results into the correct PWS phase
+       using C-4 stage detection
+     - Sits upstream of the display layer
+     - Reads finished module results BEFORE rendering
+     - Outputs phase signal to PTF panel and SDS panel
+     - No scan interference — observational classifier only
+
+   C-4 Stages mapped to Fuller's PWS Phases:
+     Phase 1 — Establishment    → COMMAND
+     Phase 2 — Maintenance      → COERCE
+     Phase 3 — Expansion        → CONTROL
+     Phase 4 — Refinement       → COMPLIANCE_ENGINEERED
+     Phase 5 — Consolidation    → COMPLIANCE_SELF_SUSTAINING
+
+   Terminology note:
+     Fuller's framework uses "areas" not "domains"
+     Nine Areas of People Activity:
+     Economics, Education, Entertainment, Labor, Law,
+     Politics, Religion, Sex, War
+
+   Gate behavior:
+     - DRIFT gate active: single-line phase output
+     - W-F gate active: full five-phase attenuation profile
+     - Both off: module runs silently, no display
+
+   NFIE compliant: O_f = 0
+   Descriptive only. No verdicts. No force.
+   ============================================================ */
+
+/* ============================================================
+   1) PCA EXPANDED LEXICON V2.0 — C-4 × PWS PHASE REGISTERS
+   230 terms across five phase registers
+   Source: ZSE tiers 1-10 + SDS lexicons
+   Terminology: Fuller's "areas" preserved throughout
+   ============================================================ */
+
+const PCA_LEXICON_V2 = Object.freeze({
+
+  version: "2.0",
+  architecture: "C-4 × PWS Phase",
+
+  PHASE_1_ESTABLISHMENT: Object.freeze({
+    c4_stage: "COMMAND",
+    label: "Phase 1 — Establishment",
+    period: "600 BCE – 1452 CE",
+    grammar_signature: "DOMINATION_DOMINANT",
+    expected_terms: Object.freeze([
+      // Divine mandate / chosen-group logic
+      "divine mandate", "chosen people", "covenant", "holy war",
+      "civilizing mission", "christian dominion", "papal authority",
+      "terra nullius", "infidel", "heathen", "pagan lands",
+      "god-given right", "sacred authority", "doctrinal command",
+      // Conquest / invasion vocabulary
+      "conquest", "invasion", "subjugation", "dominion",
+      "vanquish", "subdue", "overthrow", "seize",
+      "territorial claim", "right of discovery", "first possession",
+      // Command grammar markers
+      "command", "decree", "mandate", "edict", "proclamation",
+      "sovereign authority", "absolute rule", "supreme power",
+      // Exclusion boundary
+      "non-christian", "non-white", "savage", "uncivilized",
+      "barbarian", "primitive", "inferior race", "lesser people",
+      // Pre-phase origin — Old Testament command grammar
+      "curse of ham", "servants obey masters", "divine order",
+      "chosen nation", "promised land", "manifest destiny origin",
+      "canon selection", "priestly class", "scriptural authority"
+    ])
+  }),
+
+  PHASE_2_MAINTENANCE: Object.freeze({
+    c4_stage: "COERCE",
+    label: "Phase 2 — Maintenance",
+    period: "1452 – 1865",
+    grammar_signature: "DOMINATION_DOMINANT",
+    expected_terms: Object.freeze([
+      // Legal enforcement of racial hierarchy
+      "slave code", "black code", "racial classification law",
+      "property law", "chattel", "human property", "legal bondage",
+      "doctrine of discovery", "plenary power", "colonial charter",
+      "indigenous title denial", "johnson v mcintosh",
+      // Labor extraction vocabulary
+      "forced labor", "unpaid labor", "coerced labor",
+      "labor extraction", "plantation system", "convict leasing",
+      "indentured servitude", "debt bondage",
+      // Mobility control
+      "pass system", "mobility restriction", "travel permit",
+      "geographic containment", "reservation system",
+      "curfew", "vagrancy law", "sundown town",
+      // Coerce grammar markers
+      "punishment", "lashing", "enforcement", "fugitive",
+      "recapture", "discipline", "penalty",
+      "compliance or else", "submit or face",
+      // Surveillance apparatus
+      "overseer", "patrol", "surveillance system",
+      "watched", "monitored", "controlled movement",
+      "permission required", "subject to approval",
+      // Economic coercion
+      "economic dependency", "wage suppression",
+      "resource denial", "credit denial", "land denial",
+      "wealth prevention", "asset stripping"
+    ])
+  }),
+
+  PHASE_3_EXPANSION: Object.freeze({
+    c4_stage: "CONTROL",
+    label: "Phase 3 — Expansion",
+    period: "1865 – 1960",
+    grammar_signature: "CARTESIAN_DOMINANT",
+    expected_terms: Object.freeze([
+      // Institutional embedding across nine areas
+      "institutional racism", "systemic racism", "structural racism",
+      "policy outcomes", "disparate impact", "disproportionate",
+      "racial hierarchy", "power asymmetry", "resource allocation",
+      // Scientific racial classification (phase-specific)
+      "scientific racial classification", "eugenic", "genetic inferiority",
+      "intelligence testing", "cognitive difference", "innate difference",
+      "scientific racism", "racial science", "anthropometry",
+      // Legal proceduralization
+      "separate but equal", "plessy v ferguson", "jim crow",
+      "redlining", "restrictive covenant", "racial zoning",
+      "discriminatory enforcement", "two-tiered justice",
+      // Nine areas expansion markers (Fuller terminology)
+      "educational segregation", "economic exclusion",
+      "labor discrimination", "political disenfranchisement",
+      "housing discrimination", "entertainment exclusion",
+      "religious segregation", "sexual control", "military segregation",
+      // Control grammar markers
+      "administrative control", "bureaucratic exclusion",
+      "procedural barrier", "systemic barrier", "structural barrier",
+      "institutional gate", "normalized inequality",
+      "embedded hierarchy", "invisible enforcement"
+    ])
+  }),
+
+  PHASE_4_REFINEMENT: Object.freeze({
+    c4_stage: "COMPLIANCE_ENGINEERED",
+    label: "Phase 4 — Refinement",
+    period: "1960 – present",
+    grammar_signature: "CARTESIAN_DOMINANT",
+    expected_terms: Object.freeze([
+      // Colorblind / post-racial framing
+      "colorblind", "race-neutral", "post-racial",
+      "meritocracy", "level playing field", "equal opportunity",
+      "diversity", "inclusion", "representation without power",
+      "diversity hire", "token representation",
+      // Compliance engineering vocabulary
+      "unconscious bias", "implicit bias", "microaggression",
+      "sensitivity training", "diversity initiative",
+      "equity program", "inclusion effort", "belonging",
+      // Neutralization of structural vocabulary
+      "cancel culture", "reverse racism", "anti-white discrimination",
+      "identity politics", "woke agenda", "critical race theory attack",
+      "color of law reversal", "equal protection weaponized",
+      // Non-white legitimization of system (Fuller Phase 4 marker)
+      "black faces in high places", "symbolic representation",
+      "diversity without redistribution", "inclusion without power transfer",
+      "multicultural maintenance", "managed diversity",
+      // Lambda speciation markers
+      "judeo-christian values", "western civilization",
+      "traditional values", "natural law", "heritage",
+      "colorblind constitution", "neutral criteria"
+    ])
+  }),
+
+  PHASE_5_CONSOLIDATION: Object.freeze({
+    c4_stage: "COMPLIANCE_SELF_SUSTAINING",
+    label: "Phase 5 — Consolidation",
+    period: "present",
+    grammar_signature: "MAINTENANCE_DOMINANT",
+    expected_terms: Object.freeze([
+      // Self-sustaining compliance markers
+      "naturalized hierarchy", "invisible structure",
+      "ambient control", "structural persistence",
+      "systemic continuity", "normalized servitude",
+      "racialized labor", "domestic servitude",
+      "emotional labor", "unpaid service",
+      // Phase 5 specific — total system
+      "worldwide system", "global white supremacy",
+      "total domination", "self-enforcing system",
+      "no overt violence required", "structure as enforcement",
+      "compliance without command", "internalized hierarchy",
+      // Micro-scale Phase 5 markers (from Gautier document)
+      "surveillance of labor", "identity denial",
+      "mobility permission", "bodily control",
+      "service without acknowledgment", "invisibility as discipline",
+      "racial empathy gap", "labor without recognition",
+      "social disposability", "functional presence",
+      // Nine areas consolidation (Fuller terminology)
+      "economic consolidation", "educational consolidation",
+      "entertainment consolidation", "labor consolidation",
+      "legal consolidation", "political consolidation",
+      "religious consolidation", "sexual control consolidation",
+      "military consolidation",
+      // Academic attenuation markers
+      "achievement gap", "outcome disparities",
+      "cultural factors", "socioeconomic factors",
+      "neighborhood effects", "family structure"
+    ])
+  })
+
+});
+
+/* ============================================================
+   2) C-4 PHASE CLASSIFIER — CORE FUNCTION
+   Reads assembled module results.
+   Runs five-phase PCA attenuation measurement.
+   Returns: active phase, C-4 stage, attenuation profile.
+   Called AFTER all scans complete, BEFORE display renders.
+   ============================================================ */
+
+window.Sovra = window.Sovra || {};
+
+window.Sovra.C4Classifier = (() => {
+
+  /* -- Phase attenuation measurement -- */
+  function measurePhaseAttenuation(text) {
+    const t = (text || "").toLowerCase();
+    const profile = {};
+
+    Object.entries(PCA_LEXICON_V2)
+      .filter(([k]) => k.startsWith("PHASE_"))
+      .forEach(([key, phase]) => {
+        const present = phase.expected_terms
+          .filter(term => t.includes(term.toLowerCase()));
+        const absent = phase.expected_terms
+          .filter(term => !t.includes(term.toLowerCase()));
+        const attenuation = Math.round(
+          (absent.length / phase.expected_terms.length) * 100
+        );
+        profile[key] = Object.freeze({
+          label:       phase.label,
+          c4_stage:    phase.c4_stage,
+          period:      phase.period,
+          attenuation,
+          presentCount: present.length,
+          absentCount:  absent.length,
+          total:        phase.expected_terms.length,
+          present:      Object.freeze(present)
+        });
+      });
+
+    return Object.freeze(profile);
+  }
+
+  /* -- Active phase detection --
+     The active phase is the one with the LOWEST attenuation
+     (most terms present = document written closest to that phase).
+     Minimum threshold: at least 1 term must be present.
+     If all phases are 100% attenuated, return null (no signal).
+  -- */
+  function detectActivePhase(profile) {
+    let lowest = 101;
+    let activeKey = null;
+
+    Object.entries(profile).forEach(([key, data]) => {
+      if (data.presentCount > 0 && data.attenuation < lowest) {
+        lowest = data.attenuation;
+        activeKey = key;
+      }
+    });
+
+    return activeKey ? profile[activeKey] : null;
+  }
+
+  /* -- Core classify function --
+     Input: assembled text from PTF + search results
+     Output: { activePhase, profile, signal }
+  -- */
+  function classify(text) {
+    if (!text || typeof text !== "string") {
+      return Object.freeze({
+        ok: false,
+        reason: "EMPTY_TEXT"
+      });
+    }
+
+    const profile = measurePhaseAttenuation(text);
+    const activePhase = detectActivePhase(profile);
+
+    // Signal line — single descriptive output for display
+    const signal = activePhase
+      ? `${activePhase.label} · C-4: ${activePhase.c4_stage.replace(/_/g, " ")} · Attenuation ${activePhase.attenuation}%`
+      : "NO PHASE SIGNAL DETECTED";
+
+    const result = Object.freeze({
+      ok: true,
+      signal,
+      activePhase: activePhase || null,
+      profile
+    });
+
+    // Store for display layer access
+    window.Sovra._c4Result = result;
+
+    // Emit for any listeners
+    try {
+      window.dispatchEvent(
+        new CustomEvent("sovra:c4-phase", { detail: result })
+      );
+    } catch (_) {}
+
+    return result;
+  }
+
+  /* -- Public API -- */
+  return Object.freeze({
+    id:       "SOVRA_C4_PWS",
+    version:  "1.0",
+    classify,
+    lexicon:  PCA_LEXICON_V2
+  });
+
+})();
+
+/* ============================================================
+   3) PTF PANEL INSERTION — renderC4PhaseRow()
+   Inserts the C-4 phase signal into the PTF Primary Source
+   Scan panel. Called after PTF panel is built.
+
+   PLACEMENT: call renderC4PhaseRow() immediately after the
+   line that reads:
+     firstProvPanel.prepend(ptfSummary);
+   ============================================================ */
+
+function renderC4PhaseRow(ptfSummaryEl, c4Result) {
+  if (!ptfSummaryEl || !c4Result || !c4Result.ok) return;
+  if (!c4Result.activePhase) return;
+
+  // Single-line row — matches existing PTF panel row style
+  const row = document.createElement("div");
+  row.className = "ptf-summ-row ptf-c4-row";
+
+  const phase = c4Result.activePhase;
+
+  row.innerHTML = `
+    <span class="ptf-summ-label">PWS PHASE</span>
+    <span class="ptf-summ-value ptf-c4-signal">
+      ${escapeHtml(phase.label)} · ${escapeHtml(phase.c4_stage.replace(/_/g, " "))}
+    </span>
+  `;
+
+  // W-F gate: expand to full five-phase attenuation profile
+  if (
+    typeof SOVRA_GATES !== "undefined" &&
+    typeof SOVRA_GATES.welsingFuller === "function" &&
+    SOVRA_GATES.welsingFuller()
+  ) {
+    const profileBlock = document.createElement("div");
+    profileBlock.className = "ptf-c4-profile";
+    profileBlock.innerHTML = `
+      <div class="ptf-c4-profile-header">
+        ⟦ C-4 ⟧ FULLER PWS · FIVE-AREA ATTENUATION PROFILE
+      </div>
+      ${Object.values(c4Result.profile).map(p => `
+        <div class="ptf-c4-profile-row ${p.c4_stage === phase.c4_stage ? 'ptf-c4-active' : ''}">
+          <span class="ptf-c4-phase-label">${escapeHtml(p.label)}</span>
+          <span class="ptf-c4-stage">${escapeHtml(p.c4_stage.replace(/_/g, " "))}</span>
+          <span class="ptf-c4-bar">
+            <span class="ptf-c4-bar-fill"
+              style="width:${100 - p.attenuation}%"></span>
+          </span>
+          <span class="ptf-c4-pct">${p.attenuation}%</span>
+          <span class="ptf-c4-period">${escapeHtml(p.period)}</span>
+        </div>
+      `).join("")}
+      <div class="ptf-c4-note">
+        Fuller's Nine Areas of People Activity:
+        Economics · Education · Entertainment · Labor ·
+        Law · Politics · Religion · Sex · War
+      </div>
+    `;
+    ptfSummaryEl.appendChild(row);
+    ptfSummaryEl.appendChild(profileBlock);
+  } else {
+    ptfSummaryEl.appendChild(row);
+  }
+}
+
+/* ============================================================
+   4) SDS PANEL INSERTION — renderC4ScanNote()
+   Appends the C-4 stage line beneath the SDS scan note.
+   Called after SDS drift lens renders.
+
+   PLACEMENT: The SDS panel is built inside
+   _renderVerbiageDriftPanel(). Find the line that reads:
+     panel.prepend(block);
+   Add immediately BEFORE it:
+     renderC4ScanNote(block, window.Sovra._c4Result);
+   ============================================================ */
+
+function renderC4ScanNote(sdsBlock, c4Result) {
+  if (!sdsBlock || !c4Result || !c4Result.ok) return;
+
+  // Only render if DRIFT gate is active
+  if (
+    typeof SOVRA_GATES === "undefined" ||
+    typeof SOVRA_GATES.driftCore !== "function" ||
+    !SOVRA_GATES.driftCore()
+  ) return;
+
+  const existing = sdsBlock.querySelector(".sds-c4-line");
+  if (existing) existing.remove();
+
+  const line = document.createElement("div");
+  line.className = "sds-c4-line";
+  line.innerHTML = `
+    <span class="sds-c4-label">⟦ C-4 ⟧</span>
+    <span class="sds-c4-signal">${escapeHtml(c4Result.signal)}</span>
+  `;
+
+  // Append after scan note, before footer
+  const footer = sdsBlock.querySelector(".sds-lens-footer");
+  if (footer) {
+    sdsBlock.insertBefore(line, footer);
+  } else {
+    sdsBlock.appendChild(line);
+  }
+}
+
+/* ============================================================
+   5) CSS — C-4 display styles
+   Injected once. Matches existing dark palette.
+   ============================================================ */
+
+(function injectC4Styles() {
+  if (document.getElementById("c4-pwsphase-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "c4-pwsphase-styles";
+  style.textContent = `
+
+    /* ── PTF single-line row ── */
+    .ptf-c4-row {
+      border-top: 1px solid #2a2a3a;
+      margin-top: 4px;
+      padding-top: 4px;
+    }
+
+    .ptf-c4-signal {
+      color: #818cf8;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── W-F five-phase profile block ── */
+    .ptf-c4-profile {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #0a0a18;
+      border: 0.5px solid #2a2a3a;
+      border-left: 2px solid #534AB7;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+    }
+
+    .ptf-c4-profile-header {
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: #534AB7;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 0.5px solid #1e1e3a;
+    }
+
+    .ptf-c4-profile-row {
+      display: grid;
+      grid-template-columns: 180px 160px 80px 36px 1fr;
+      gap: 6px;
+      align-items: center;
+      padding: 3px 0;
+      border-bottom: 0.5px solid #12121e;
+      color: #6a6a8a;
+    }
+
+    .ptf-c4-profile-row:last-of-type {
+      border-bottom: none;
+    }
+
+    /* Active phase highlighted */
+    .ptf-c4-active {
+      color: #c8c8e8;
+      background: #0f0f20;
+    }
+
+    .ptf-c4-phase-label {
+      font-size: 0.68rem;
+    }
+
+    .ptf-c4-stage {
+      font-size: 0.62rem;
+      color: #534AB7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ptf-c4-active .ptf-c4-stage {
+      color: #818cf8;
+    }
+
+    /* Attenuation bar */
+    .ptf-c4-bar {
+      display: inline-block;
+      width: 60px;
+      height: 3px;
+      background: #1e1e3a;
+      vertical-align: middle;
+      position: relative;
+    }
+
+    .ptf-c4-bar-fill {
+      display: block;
+      height: 100%;
+      background: #534AB7;
+      transition: width 0.4s ease;
+    }
+
+    .ptf-c4-active .ptf-c4-bar-fill {
+      background: #818cf8;
+    }
+
+    .ptf-c4-pct {
+      font-size: 0.65rem;
+      color: #534AB7;
+      text-align: right;
+    }
+
+    .ptf-c4-active .ptf-c4-pct {
+      color: #818cf8;
+    }
+
+    .ptf-c4-period {
+      font-size: 0.6rem;
+      color: #3a3a5a;
+    }
+
+    .ptf-c4-note {
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 0.5px solid #1e1e3a;
+      font-size: 0.6rem;
+      color: #3a3a5a;
+      line-height: 1.5;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── SDS panel C-4 line ── */
+    .sds-c4-line {
+      padding: 5px 8px;
+      background: #0a0a14;
+      border-left: 2px solid #534AB7;
+      border-top: 0.5px solid #1e1e3a;
+      margin-bottom: 6px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .sds-c4-label {
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: #534AB7;
+      white-space: nowrap;
+    }
+
+    .sds-c4-signal {
+      font-size: 0.68rem;
+      color: #9a9ab8;
+      line-height: 1.4;
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
+
+/* ============================================================
+   6) MODULE REGISTRATION
+   ============================================================ */
+
+console.log(
+  "[SOVRA_C4_PWS v1.0] C-4 × PWS Phase Classifier loaded. " +
+  "Fuller terminology: Nine Areas of People Activity. " +
+  "NFIE compliant. O_f = 0."
+);
 
 /* ============================================================
    SOVRA_SDS.driftAdapter.js
@@ -1855,7 +2447,9 @@ function _renderVerbiageDriftPanel(sds, meta) {
   // Inject CSS if not already present
   _injectSDSStyles();
 
-  // Prepend — lens sits above temporal scanner era blocks
+  renderC4ScanNote(block, window.Sovra._c4Result);
+   
+   // Prepend — lens sits above temporal scanner era blocks
   panel.prepend(block);
 }
 
@@ -5866,6 +6460,7 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
         <div class="ptf-summ-signal">${signalText}</div>
       `;
       firstProvPanel.prepend(ptfSummary);
+       renderC4PhaseRow(ptfSummary, window.Sovra.C4Classifier.classify(ptfText + " " + narrativeText));
     }
 
     // Emit full findings to signal bus
