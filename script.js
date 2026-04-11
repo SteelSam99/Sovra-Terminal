@@ -5755,56 +5755,155 @@ function renderVoiceCard(text) {
 
 
 /* ============================================================
-   Welsing–Fuller Query Rewrite (METHOD-LEVEL, IMMUTABLE)
+   applyWFEQueryRewrite — V2 (Domain-Aware, Grid-Activated)
+   
+   ARCHITECTURE:
+   The query is the object in flight over the 9×9 grid.
+   rankDomainsV2() determines which grid points it passes over.
+   Each activated grid point contributes its column content
+   as expansion terms attached to the outbound query.
+   The refined query carries the grid's structural vocabulary
+   on the way out to the search API.
+   
+   Author: Samuel Paul Peacock | SOVRA-FCL-MHCE-v2.5
+   Date: April 11, 2026
+   NFIE Compliant · O_f = 0
    ============================================================ */
 
 function applyWFEQueryRewrite(originalQuery) {
-  // Core query remains intact
   const core = originalQuery;
 
-  // Functional index expansion (library drawer widening)
-  const functionalScopes = [
-    "power systems",
-    "dominance maintenance",
-    "structural control",
-    "resource allocation",
-    "population management"
-  ];
+  // ── STEP 1: FLY THE QUERY OVER THE GRID ──────────────────
+  // rankDomainsV2 scores the query against all 9 areas × 9 columns
+  // Returns ranked list of grid activation with column hits
+  const ranked = (typeof rankDomainsV2 === "function")
+    ? rankDomainsV2(core)
+    : [];
 
-  // Cross-index traversal (misfiled cards)
-  const crossDomains = [
-    "law",
-    "economics",
-    "education",
-    "criminal justice",
-    "housing policy",
-    "language policy"
-  ];
+  // ── STEP 2: COLLECT ACTIVATED GRID POINTS ────────────────
+  // Only use areas that actually scored — the plane flew over them
+  // Threshold: score > 0 means at least one column was touched
+  const activated = ranked.filter(d => d.score > 0);
 
-  // Language normalization (dominant-code bypass)
-  const functionalEquivalents = [
-    "structural racism",
-    "systemic inequality",
-    "institutional power",
-    "racial hierarchy",
-    "policy outcomes"
-  ];
+  // ── STEP 3: EXTRACT COLUMN CONTENT FROM HIT GRID POINTS ──
+  // For each activated area, pull content from the columns that fired
+  // This is the content that attaches to the query on the way out
+  const expansionTerms = [];
+  const activatedAreas = [];
+  const columnHitLog = [];
+
+  for (const domain of activated) {
+    const area = domain.domain;
+    const grid = (SOVRA_9X9 && SOVRA_9X9.columnGrid)
+      ? SOVRA_9X9.columnGrid[area]
+      : null;
+
+    if (!grid) continue;
+    activatedAreas.push(area);
+
+    // Pull key phrases from each column that fired on this area
+    const colsHit = domain.colHits || {};
+
+    for (const [col, matchedTerms] of Object.entries(colsHit)) {
+      // Add the matched terms themselves (what the query touched)
+      expansionTerms.push(...matchedTerms.slice(0, 3));
+
+      // Add the column's structural content as expansion context
+      // Extract the most diagnostic phrases from that cell
+      const cellContent = grid[col] || "";
+      const keyPhrases = extractKeyPhrases(cellContent);
+      expansionTerms.push(...keyPhrases.slice(0, 2));
+
+      columnHitLog.push({ area, col, matched: matchedTerms, phrases: keyPhrases.slice(0, 2) });
+    }
+
+    // Also add resources and routingCues from activated area
+    // These are the structural vocabulary of that area
+    if (grid.routingCues) {
+      // Only add cues that don't already appear in the query
+      const q = core.toLowerCase();
+      const newCues = grid.routingCues.filter(c => !q.includes(c.toLowerCase()));
+      expansionTerms.push(...newCues.slice(0, 3));
+    }
+  }
+
+  // ── STEP 4: FALLBACK IF NO GRID POINTS HIT ───────────────
+  // Query flew over empty terrain — no structural vocabulary attached
+  // In this case use a minimal structural framing only
+  const hasFired = activated.length > 0;
+
+  if (!hasFired) {
+    // Silent pass — no grid activation, no rewrite force
+    // Return core query with minimal WFE framing
+    return {
+      rewrittenQuery: core,
+      meta: {
+        method: "Welsing-Fuller",
+        scope: "pass-through",
+        depth: "no-activation",
+        languageMode: "neutral",
+        activatedAreas: [],
+        columnHits: [],
+        note: "Query did not activate any 9x9 grid points. Core query returned unmodified."
+      }
+    };
+  }
+
+  // ── STEP 5: BUILD THE REFINED OUTBOUND QUERY ─────────────
+  // Deduplicate expansion terms
+  const unique = [...new Set(
+    expansionTerms
+      .map(t => (t || "").trim().toLowerCase())
+      .filter(t => t.length > 2)
+  )];
+
+  // The refined query: core + grid-activated content
+  // Joined with | so the search engine treats them as OR expansions
+  const rewrittenQuery = [core, ...unique].join(" | ");
 
   return {
-    rewrittenQuery: [
-      core,
-      ...functionalScopes,
-      ...crossDomains,
-      ...functionalEquivalents
-    ].join(" | "),
+    rewrittenQuery,
     meta: {
-      method: "Welsing–Fuller",
-      scope: "expanded",
-      depth: "full-drawer",
-      languageMode: "functional"
+      method: "Welsing-Fuller",
+      scope: "grid-activated",
+      depth: "column-expansion",
+      languageMode: "functional",
+      activatedAreas,
+      columnHits: columnHitLog,
+      expansionCount: unique.length,
     }
   };
 }
+
+
+/* ── HELPER: Extract key diagnostic phrases from cell content ── */
+function extractKeyPhrases(cellText) {
+  if (!cellText) return [];
+  const text = cellText.toLowerCase();
+
+  // Pull quoted terms first (highest signal)
+  const quoted = (text.match(/'([^']{3,40})'/g) || [])
+    .map(q => q.replace(/'/g, "").trim());
+
+  // Pull significant noun phrases (skip stop words)
+  const stops = new Set(["the","and","are","for","via","with","that","this",
+    "from","has","have","into","been","they","their","also","when","what",
+    "who","how","its","not","but","all","more","each","over","only","just",
+    "very","our","your","toward","across","through","within","without","along"]);
+
+  const words = (text.match(/\b[a-z][a-z\-]{3,}\b/g) || [])
+    .filter(w => !stops.has(w));
+
+  // Build bigrams from meaningful words
+  const bigrams = words.slice(0,-1)
+    .map((w,i) => `${w} ${words[i+1]}`)
+    .filter(b => !b.split(" ").every(w => stops.has(w)));
+
+  // Prefer quoted terms, then bigrams, then single words
+  return [...new Set([...quoted, ...bigrams.slice(0,4), ...words.slice(0,4)])];
+}
+
+console.log("[WFE Rewrite v2.0] Domain-aware grid-activated query rewrite loaded.");
 
 /* ============================================================
    VDU Module (Minimal Stub)
