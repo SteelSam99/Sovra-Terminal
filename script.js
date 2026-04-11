@@ -5770,95 +5770,320 @@ function renderVoiceCard(text) {
    NFIE Compliant · O_f = 0
    ============================================================ */
 
-function applyWFEQueryRewrite(originalQuery) {
-  const core = originalQuery;
+/* ============================================================
+   applyWFEQueryRewrite — V3
+   
+   ARCHITECTURE: Three-layer query-to-grid bridge
+   
+   Layer 1 — SUBJECT BRIDGE
+     Maps natural language subject matter to Fuller areas.
+     "martial artist" → Entertainment + Labor
+     "church" → Religion
+     "racism" → all areas (structural signal)
+   
+   Layer 2 — LEXICAL MATCH (rankDomainsV2)
+     Scores query terms against grid column lexicons.
+     Adds precision where subject bridge adds recall.
+   
+   Layer 3 — GRID CONTENT EXTRACTION
+     Pulls structural vocabulary from activated cells.
+     Attaches to outbound query as expansion terms.
+   
+   The query is the object in flight over the 9×9 grid.
+   Subject bridge gives it altitude to see terrain it
+   would otherwise fly over without touching.
+   
+   Author: Samuel Paul Peacock | SOVRA-FCL-MHCE-v2.5
+   NFIE Compliant · O_f = 0 · Descriptive only
+   ============================================================ */
 
-  // ── STEP 1: FLY THE QUERY OVER THE GRID ──────────────────
-  // rankDomainsV2 scores the query against all 9 areas × 9 columns
-  // Returns ranked list of grid activation with column hits
-  const ranked = (typeof rankDomainsV2 === "function")
-    ? rankDomainsV2(core)
-    : [];
+/* ── LAYER 1: SUBJECT-TO-AREA BRIDGE ────────────────────────── */
+/* Maps natural language subject vocabulary to Fuller areas.
+   Each entry: query term → array of areas it routes to.
+   Terms are matched case-insensitively as substrings.        */
 
-  // ── STEP 2: COLLECT ACTIVATED GRID POINTS ────────────────
-  // Only use areas that actually scored — the plane flew over them
-  // Threshold: score > 0 means at least one column was touched
-  const activated = ranked.filter(d => d.score > 0);
+const WFE_SUBJECT_BRIDGE = Object.freeze({
 
-  // ── STEP 3: EXTRACT COLUMN CONTENT FROM HIT GRID POINTS ──
-  // For each activated area, pull content from the columns that fired
-  // This is the content that attaches to the query on the way out
-  const expansionTerms = [];
-  const activatedAreas = [];
-  const columnHitLog = [];
+  /* Religion */
+  church:        ["Religion"],
+  churches:      ["Religion"],
+  religion:      ["Religion"],
+  religious:     ["Religion"],
+  faith:         ["Religion"],
+  theology:      ["Religion"],
+  christian:     ["Religion"],
+  christianity:  ["Religion"],
+  pastor:        ["Religion"],
+  clergy:        ["Religion"],
+  sermon:        ["Religion"],
+  bible:         ["Religion"],
+  god:           ["Religion"],
+  spiritual:     ["Religion"],
+  mosque:        ["Religion"],
+  islam:         ["Religion"],
+  jewish:        ["Religion"],
+  synagogue:     ["Religion"],
+  buddhist:      ["Religion"],
 
-  for (const domain of activated) {
-    const area = domain.domain;
-    const grid = (SOVRA_9X9 && SOVRA_9X9.columnGrid)
-      ? SOVRA_9X9.columnGrid[area]
-      : null;
+  /* Entertainment */
+  "martial artist":  ["Entertainment","Labor"],
+  "martial arts":    ["Entertainment","Labor"],
+  athlete:           ["Entertainment","Labor"],
+  athletes:          ["Entertainment","Labor"],
+  sport:             ["Entertainment","Labor"],
+  sports:            ["Entertainment","Labor"],
+  film:              ["Entertainment"],
+  movie:             ["Entertainment"],
+  actor:             ["Entertainment","Labor"],
+  actress:           ["Entertainment","Labor"],
+  music:             ["Entertainment","Labor"],
+  musician:          ["Entertainment","Labor"],
+  rapper:            ["Entertainment","Labor"],
+  singer:            ["Entertainment","Labor"],
+  artist:            ["Entertainment","Labor"],
+  comedian:          ["Entertainment","Labor"],
+  television:        ["Entertainment"],
+  hollywood:         ["Entertainment"],
+  media:             ["Entertainment","Politics"],
+  streaming:         ["Entertainment"],
+  capoeira:          ["Entertainment","Labor","War"],
+  boxing:            ["Entertainment","Labor"],
+  mma:               ["Entertainment","Labor"],
+  wrestling:         ["Entertainment","Labor"],
+  "battle ginga":    ["Entertainment","Labor"],
+  "ginga":           ["Entertainment","Labor"],
 
-    if (!grid) continue;
-    activatedAreas.push(area);
+  /* Labor */
+  job:               ["Labor","Economics"],
+  jobs:              ["Labor","Economics"],
+  work:              ["Labor","Economics"],
+  worker:            ["Labor","Economics"],
+  workers:           ["Labor","Economics"],
+  employment:        ["Labor","Economics"],
+  hiring:            ["Labor"],
+  fired:             ["Labor"],
+  wage:              ["Labor","Economics"],
+  wages:             ["Labor","Economics"],
+  salary:            ["Labor","Economics"],
+  union:             ["Labor","Politics"],
+  contractor:        ["Labor","Economics"],
 
-    // Pull key phrases from each column that fired on this area
-    const colsHit = domain.colHits || {};
+  /* Economics */
+  wealth:            ["Economics"],
+  money:             ["Economics"],
+  bank:              ["Economics"],
+  banking:           ["Economics"],
+  loan:              ["Economics"],
+  housing:           ["Economics","Law"],
+  mortgage:          ["Economics"],
+  investment:        ["Economics"],
+  poverty:           ["Economics"],
+  income:            ["Economics"],
+  tax:               ["Economics","Politics"],
 
-    for (const [col, matchedTerms] of Object.entries(colsHit)) {
-      // Add the matched terms themselves (what the query touched)
-      expansionTerms.push(...matchedTerms.slice(0, 3));
+  /* Law */
+  police:            ["Law"],
+  policing:          ["Law"],
+  prison:            ["Law","Economics"],
+  incarceration:     ["Law","Economics"],
+  arrest:            ["Law"],
+  court:             ["Law","Politics"],
+  judge:             ["Law","Politics"],
+  sentencing:        ["Law"],
+  crime:             ["Law"],
+  criminal:          ["Law"],
+  law:               ["Law","Politics"],
+  legal:             ["Law"],
+  justice:           ["Law","Politics"],
+  rights:            ["Law","Politics"],
 
-      // Add the column's structural content as expansion context
-      // Extract the most diagnostic phrases from that cell
-      const cellContent = grid[col] || "";
-      const keyPhrases = extractKeyPhrases(cellContent);
-      expansionTerms.push(...keyPhrases.slice(0, 2));
+  /* Politics */
+  election:          ["Politics","Law"],
+  vote:              ["Politics","Law"],
+  voting:            ["Politics","Law"],
+  voter:             ["Politics","Law"],
+  president:         ["Politics"],
+  government:        ["Politics","Economics"],
+  policy:            ["Politics","Economics"],
+  congress:          ["Politics"],
+  senator:           ["Politics"],
+  democrat:          ["Politics"],
+  republican:        ["Politics"],
+  political:         ["Politics"],
 
-      columnHitLog.push({ area, col, matched: matchedTerms, phrases: keyPhrases.slice(0, 2) });
-    }
+  /* Education */
+  school:            ["Education"],
+  schools:           ["Education"],
+  college:           ["Education","Labor"],
+  university:        ["Education","Labor"],
+  student:           ["Education"],
+  teacher:           ["Education"],
+  curriculum:        ["Education"],
+  classroom:         ["Education"],
+  graduation:        ["Education","Labor"],
+  degree:            ["Education","Labor"],
+  education:         ["Education"],
 
-    // Also add resources and routingCues from activated area
-    // These are the structural vocabulary of that area
-    if (grid.routingCues) {
-      // Only add cues that don't already appear in the query
-      const q = core.toLowerCase();
-      const newCues = grid.routingCues.filter(c => !q.includes(c.toLowerCase()));
-      expansionTerms.push(...newCues.slice(0, 3));
+  /* Sex */
+  beauty:            ["Sex","Entertainment"],
+  dating:            ["Sex"],
+  marriage:          ["Sex"],
+  sexual:            ["Sex"],
+  gender:            ["Sex","Politics"],
+  women:             ["Sex","Labor","Politics"],
+  men:               ["Sex","Labor"],
+  purity:            ["Sex","Religion"],
+  desirability:      ["Sex","Entertainment"],
+
+  /* War */
+  war:               ["War"],
+  military:          ["War","Politics"],
+  soldier:           ["War"],
+  veteran:           ["War","Labor","Economics"],
+  terrorism:         ["War","Politics"],
+  invasion:          ["War","Politics"],
+  weapon:            ["War"],
+  violence:          ["War","Law"],
+
+  /* Cross-cutting structural signals — activate most-relevant area
+     based on co-occurring subject terms */
+  racism:            ["Economics","Education","Entertainment","Labor","Law","Politics","Religion","Sex","War"],
+  racist:            ["Economics","Education","Entertainment","Labor","Law","Politics","Religion","Sex","War"],
+  racial:            ["Economics","Education","Entertainment","Labor","Law","Politics","Religion","Sex","War"],
+  discrimination:    ["Labor","Law","Politics","Education","Economics"],
+  inequality:        ["Economics","Education","Law","Politics"],
+  segregation:       ["Economics","Education","Law","Politics"],
+  privilege:         ["Economics","Education","Entertainment","Labor"],
+  oppression:        ["Law","Politics","Economics","War"],
+  diversity:         ["Labor","Education","Politics","Entertainment"],
+  inclusion:         ["Labor","Education","Politics"],
+  representation:    ["Politics","Entertainment","Education"],
+});
+
+/* ── BRIDGE SCORER ─────────────────────────────────────────── */
+function bridgeScore(query) {
+  const q = query.toLowerCase();
+  const areaScores = {};
+
+  for (const [term, areas] of Object.entries(WFE_SUBJECT_BRIDGE)) {
+    if (q.includes(term)) {
+      // Multi-word terms score higher (more specific)
+      const weight = term.includes(" ") ? 3 : 1;
+      for (const area of areas) {
+        areaScores[area] = (areaScores[area] || 0) + weight;
+      }
     }
   }
 
-  // ── STEP 4: FALLBACK IF NO GRID POINTS HIT ───────────────
-  // Query flew over empty terrain — no structural vocabulary attached
-  // In this case use a minimal structural framing only
-  const hasFired = activated.length > 0;
+  return Object.entries(areaScores)
+    .sort((a,b) => b[1] - a[1])
+    .map(([area, score]) => ({ area, score }));
+}
 
-  if (!hasFired) {
-    // Silent pass — no grid activation, no rewrite force
-    // Return core query with minimal WFE framing
+/* ── LAYER 3: KEY PHRASE EXTRACTOR ────────────────────────── */
+function extractKeyPhrases(cellText) {
+  if (!cellText) return [];
+  const text = cellText.toLowerCase();
+  const quoted = (text.match(/'([^']{3,40})'/g) || [])
+    .map(q => q.replace(/'/g,"").trim());
+  const stops = new Set(["the","and","are","for","via","with","that","this",
+    "from","has","have","into","been","they","their","also","when","what",
+    "who","how","its","not","but","all","more","each","over","only","just",
+    "very","our","your","toward","across","through","within","without","along"]);
+  const words = (text.match(/\b[a-z][a-z\-]{3,}\b/g) || [])
+    .filter(w => !stops.has(w));
+  const bigrams = words.slice(0,-1)
+    .map((w,i) => `${w} ${words[i+1]}`)
+    .filter(b => !b.split(" ").every(w => stops.has(w)));
+  return [...new Set([...quoted, ...bigrams.slice(0,4), ...words.slice(0,4)])];
+}
+
+/* ── MAIN REWRITE FUNCTION ─────────────────────────────────── */
+function applyWFEQueryRewrite(originalQuery) {
+  const core = originalQuery;
+
+  // ── LAYER 1: Subject bridge ───────────────────────────────
+  const bridged = bridgeScore(core);
+
+  // ── LAYER 2: Lexical grid match ───────────────────────────
+  const lexical = (typeof rankDomainsV2 === "function")
+    ? rankDomainsV2(core).filter(d => d.score > 0)
+    : [];
+
+  // ── MERGE: combine bridge + lexical, deduplicate by area ──
+  const areaMap = {};
+  for (const { area, score } of bridged) {
+    areaMap[area] = (areaMap[area] || 0) + score * 2; // bridge weighted higher
+  }
+  for (const d of lexical) {
+    areaMap[d.domain] = (areaMap[d.domain] || 0) + d.score;
+  }
+
+  const activatedAreas = Object.entries(areaMap)
+    .sort((a,b) => b[1] - a[1])
+    .map(([area]) => area);
+
+  // ── NO ACTIVATION: pass through ───────────────────────────
+  if (activatedAreas.length === 0) {
     return {
       rewrittenQuery: core,
       meta: {
         method: "Welsing-Fuller",
         scope: "pass-through",
         depth: "no-activation",
-        languageMode: "neutral",
         activatedAreas: [],
-        columnHits: [],
-        note: "Query did not activate any 9x9 grid points. Core query returned unmodified."
+        note: "No subject or lexical grid activation. Core query returned."
       }
     };
   }
 
-  // ── STEP 5: BUILD THE REFINED OUTBOUND QUERY ─────────────
-  // Deduplicate expansion terms
+  // ── LAYER 3: Extract grid content from activated areas ────
+  const expansionTerms = [];
+  const columnHitLog = [];
+
+  // For cross-cutting signals (racism etc.) — use top 2 areas only
+  // to avoid flooding the query with all 9 areas
+  const areasToExpand = activatedAreas.slice(0, 3);
+
+  for (const area of areasToExpand) {
+    const grid = (typeof SOVRA_9X9 !== "undefined" && SOVRA_9X9.columnGrid)
+      ? SOVRA_9X9.columnGrid[area]
+      : null;
+    if (!grid) continue;
+
+    // Column priority: outputSymptom and defensiveReaction are most
+    // search-relevant — they describe what we actually see and how
+    // the system responds. These produce the best search differentiation.
+    const priorityCols = [
+      "outputSymptom",
+      "defensiveReaction",
+      "memeticReplication",
+      "flowBehavior",
+      "branchingPattern",
+    ];
+
+    for (const col of priorityCols) {
+      const cellContent = grid[col] || "";
+      const phrases = extractKeyPhrases(cellContent);
+      expansionTerms.push(...phrases.slice(0, 3));
+      if (phrases.length) columnHitLog.push({ area, col, phrases: phrases.slice(0,3) });
+    }
+
+    // Add routing cues from activated area
+    if (grid.routingCues) {
+      const q = core.toLowerCase();
+      const newCues = grid.routingCues.filter(c => !q.includes(c.toLowerCase()));
+      expansionTerms.push(...newCues.slice(0, 2));
+    }
+  }
+
+  // ── DEDUPLICATE AND BUILD OUTBOUND QUERY ──────────────────
   const unique = [...new Set(
     expansionTerms
       .map(t => (t || "").trim().toLowerCase())
-      .filter(t => t.length > 2)
+      .filter(t => t.length > 3 && !core.toLowerCase().includes(t))
   )];
 
-  // The refined query: core + grid-activated content
-  // Joined with | so the search engine treats them as OR expansions
   const rewrittenQuery = [core, ...unique].join(" | ");
 
   return {
@@ -5869,41 +6094,13 @@ function applyWFEQueryRewrite(originalQuery) {
       depth: "column-expansion",
       languageMode: "functional",
       activatedAreas,
-      columnHits: columnHitLog,
       expansionCount: unique.length,
+      columnHits: columnHitLog,
     }
   };
 }
 
-
-/* ── HELPER: Extract key diagnostic phrases from cell content ── */
-function extractKeyPhrases(cellText) {
-  if (!cellText) return [];
-  const text = cellText.toLowerCase();
-
-  // Pull quoted terms first (highest signal)
-  const quoted = (text.match(/'([^']{3,40})'/g) || [])
-    .map(q => q.replace(/'/g, "").trim());
-
-  // Pull significant noun phrases (skip stop words)
-  const stops = new Set(["the","and","are","for","via","with","that","this",
-    "from","has","have","into","been","they","their","also","when","what",
-    "who","how","its","not","but","all","more","each","over","only","just",
-    "very","our","your","toward","across","through","within","without","along"]);
-
-  const words = (text.match(/\b[a-z][a-z\-]{3,}\b/g) || [])
-    .filter(w => !stops.has(w));
-
-  // Build bigrams from meaningful words
-  const bigrams = words.slice(0,-1)
-    .map((w,i) => `${w} ${words[i+1]}`)
-    .filter(b => !b.split(" ").every(w => stops.has(w)));
-
-  // Prefer quoted terms, then bigrams, then single words
-  return [...new Set([...quoted, ...bigrams.slice(0,4), ...words.slice(0,4)])];
-}
-
-console.log("[WFE Rewrite v2.0] Domain-aware grid-activated query rewrite loaded.");
+console.log("[WFE Rewrite v3.0] Subject bridge + grid activation loaded. NFIE compliant. O_f = 0.");
 
 /* ============================================================
    VDU Module (Minimal Stub)
