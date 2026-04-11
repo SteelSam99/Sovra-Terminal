@@ -4781,6 +4781,17 @@ console.log("[SOVRA_9X9 v2.0] Welsing-Fuller gate integration loaded. NFIE compl
    - Collects scanner observations only
    - No aggregation, no scoring, no UI, no side effects
    ============================================================ */
+const CDLM_SCANNERS = Object.freeze({
+  BranchingPattern:          scanBranchingPattern,
+  ConnectionDensity:         scanConnectionDensity,
+  RoutingTopology:           scanRoutingTopology,
+  FlowBehavior:              scanFlowBehavior,
+  OutputSymptom:             scanOutputSymptom,
+  DefensiveReaction:         scanDefensiveReaction,
+  MemeReplication:           scanMemeReplication,
+  CulturalEvolutionPressure: scanCulturalEvolutionPressure,
+  NetworkContagionDynamics:  scanNetworkContagionDynamics,
+});
 
 function runCDLMGroup(inputText, map9x9, caller = "core_diagnostic_map") {
   if (!caller) return null;
@@ -4839,33 +4850,14 @@ function traverseCDLM(text, caller = "core_diagnostic_map") {
    ============================================================ */
 
 function traverseCDLM9x9(text, caller = "core_diagnostic_map") {
-  const map = CDLM_MAP_9x9;
   const results = [];
-
-  for (let r = 0; r < map.rows.length; r++) {
-    const rowName = map.rows[r];
-
-    for (let c = 0; c < map.cols.length; c++) {
-      const colName = map.cols[c];
-      const scanner = CDLM_SCANNERS[colName];
-
-      let observation = { count: 0 };
-      try {
-        observation = scanner(text, map);
-      } catch (_) {}
-
-      results.push({
-        row: rowName,
-        col: colName,
-        observation
-      });
+  for (const rowName of SOVRA_9X9.areas) {
+    for (const colName of SOVRA_9X9.columns) {
+      const observation = scanColumnV2(colName, text);
+      results.push({ row: rowName, col: colName, observation });
     }
   }
-
-  return Object.freeze({
-    caller,
-    grid: Object.freeze(results)
-  });
+  return Object.freeze({ caller, grid: Object.freeze(results) });
 }
 /* ============================================================
    9×9 TOPOLOGY BINDER (NFIE-compliant, descriptive-only)
