@@ -4229,7 +4229,7 @@ function emitCDLMScores(scores) {
    ============================================================ */
 function runCDLMAnalysis({ text, zse, trifold, enginesFired }) {
   // 1) 9×9 placement (DESCRIPTIVE ONLY)
-  Sovra.Topology9x9.bind({
+  Sovra.Topology9x9.bindTo9x9V2({
     text,
     zse,
     cdlm: traverseCDLM9x9(text),
@@ -4252,95 +4252,529 @@ function runCDLMAnalysis({ text, zse, trifold, enginesFired }) {
 
 
 /* ============================================================
-   CDLM 9×9 CANONICAL MAP (NFIE non-force, inert topology)
+   SOVRA 9×9 — WELSING-FULLER GATE INTEGRATION PATCH
+   Version: 2.0
+   Date: April 11, 2026
+   Author: Samuel Paul Peacock | SOVRA-FCL-MHCE-v2.5
+   
+   WHAT THIS PATCH DOES:
+   1. Replaces TOPOLOGY_9X9 (V1 — 2 columns) with SOVRA_9X9 (V2 — 9 columns)
+   2. Gates all 9×9 scanning behind SOVRA_GATES.welsingFuller()
+   3. Replaces rankDomains() with rankDomainsV2() — full column scoring
+   4. Populates all CDLM scanner stubs with actual column lexicons
+   5. Adds Object B (cross-domain matrix) to the topology payload
+   6. Adds WFE-specific 9×9 output panel to the UI
+   
+   NFIE Compliant · O_f = 0 · Descriptive only
+   Attribution: 9×9 areas framework — Dr. Neely Fuller, Jr.
    ============================================================ */
-
-const CDLM_MAP_9x9 = Object.freeze({
-  version: "0.1",
-  shape: Object.freeze({ rows: 9, cols: 9 }),
-
-  rows: Object.freeze([
-    "Economics",
-    "Education",
-    "Entertainment",
-    "Labor",
-    "Law",
-    "Politics",
-    "Religion",
-    "Sex",
-    "War"
+ 
+/* ── STEP 1: REPLACE TOPOLOGY_9X9 WITH SOVRA_9X9 V2 ────────── */
+/* Drop this immediately after the existing TOPOLOGY_9X9 block.
+   The existing TOPOLOGY_9X9 const can remain for backward compat —
+   SOVRA_9X9 is the authoritative object going forward.            */
+ 
+const SOVRA_9X9 = Object.freeze({
+ 
+  id: "SOVRA_9X9_TOPOLOGY_V2",
+  version: "2.0",
+ 
+  /* ── OBJECT A: Column Analysis Grid (9 Areas × 9 Columns) ── */
+  columnGrid: Object.freeze({
+ 
+    Economics: Object.freeze({
+      resources:   Object.freeze(["money","credit","wealth","jobs","housing","loans","interest","assets"]),
+      routingCues: Object.freeze(["bank","lender","mortgage","credit score","interest rate","underwriting","investment"]),
+      branchingPattern:          "Roles, value, and 'deservingness' branch along race lines",
+      connectionDensity:         "Very high in hiring, lending, pay, and ownership networks",
+      routingTopology:           "Banks, employers, and investors as primary hubs",
+      flowBehavior:              "Money, credit, and opportunity flow preferentially toward whiteness",
+      outputSymptom:             "Racial wealth gap, redlined neighborhoods, 'professionalism' dress codes",
+      defensiveReaction:         "'It's just the market,' 'Work harder,' denial of structural bias as explanation",
+      memeticReplication:        "Stereotypes about work ethic, financial risk, and trustworthiness replicate through hiring",
+      culturalEvolutionPressure: "Policies and norms that reward white asset accumulation are selected and preserved",
+      networkContagionDynamics:  "Spreads via firms, financial markets, HR vendor networks, and 'best fit' hiring narratives",
+    }),
+ 
+    Education: Object.freeze({
+      resources:   Object.freeze(["access","placement","grades","discipline","funding","curriculum","credentials"]),
+      routingCues: Object.freeze(["tracking","gifted","AP","discipline","suspension","standardized","accreditation"]),
+      branchingPattern:          "Tracking, discipline, and expectations branch by race",
+      connectionDensity:         "High in curriculum design, discipline systems, and institutional access",
+      routingTopology:           "Teachers, administrators, and accrediting institutions as hubs",
+      flowBehavior:              "Information, praise, and advancement opportunity flow toward white students",
+      outputSymptom:             "Gifted placement gaps, discipline disparities, Eurocentric curriculum canon",
+      defensiveReaction:         "'We treat everyone the same,' 'It's about behavior, not race'",
+      memeticReplication:        "Myths of meritocracy, 'model student' archetype, 'at-risk' labeling persist in institutions",
+      culturalEvolutionPressure: "Systems that reward conformity to white academic and behavioral norms survive",
+      networkContagionDynamics:  "Spreads via textbooks, pedagogical training, standardized testing, and accreditation",
+    }),
+ 
+    Entertainment: Object.freeze({
+      resources:   Object.freeze(["visibility","roles","platform","reach","brand","franchise","algorithmic distribution"]),
+      routingCues: Object.freeze(["casting","studio","agent","box office","streaming","algorithm","franchise","relatable"]),
+      branchingPattern:          "Casting, narratives, and desirability branch by race",
+      connectionDensity:         "High across media formats, genres, and distribution platforms",
+      routingTopology:           "Studios, streaming platforms, and influencers as hubs",
+      flowBehavior:              "Attention, validation, and investment flow to white leads and aesthetics",
+      outputSymptom:             "White default heroes, tokenization of non-white characters, racial tropes",
+      defensiveReaction:         "'It's just what sells,' 'Audiences won't relate to non-white leads'",
+      memeticReplication:        "Archetypes — savior, thug, exotic, sidekick — replicate across franchises and platforms",
+      culturalEvolutionPressure: "Profitable, stereotype-aligned content is selected by platforms; diverse content is deprioritized",
+      networkContagionDynamics:  "Spreads via algorithmic virality, fan communities, franchise expansion, and influencer culture",
+    }),
+ 
+    Labor: Object.freeze({
+      resources:   Object.freeze(["hiring","promotion","pay","benefits","security","status"]),
+      routingCues: Object.freeze(["HR","manager","promotion","performance","culture fit","referral","pipeline"]),
+      branchingPattern:          "Job types, authority, and 'fit' branch by race",
+      connectionDensity:         "High in hiring pipelines, promotion tracks, and performance evaluation",
+      routingTopology:           "Managers, union leadership, and HR departments as hubs",
+      flowBehavior:              "Desirable jobs and career advancement flow preferentially toward whiteness",
+      outputSymptom:             "Segregated job tiers, glass ceilings, 'culture fit' screening at entry",
+      defensiveReaction:         "'We hire the best person,' 'You're just not a good fit for our culture'",
+      memeticReplication:        "Memes of 'professionalism,' 'soft skills,' 'attitude problems' circulate through management",
+      culturalEvolutionPressure: "Work cultures that center white communication and behavioral norms persist",
+      networkContagionDynamics:  "Spreads via professional referral networks, performance review lore, and management training",
+    }),
+ 
+    Law: Object.freeze({
+      resources:   Object.freeze(["rights","protection","due process","bail","sentencing","access to counsel"]),
+      routingCues: Object.freeze(["probable cause","prosecution","plea","bail","sentencing","qualified immunity"]),
+      branchingPattern:          "Suspicion, protection, and punishment branch by race",
+      connectionDensity:         "Very high in policing, prosecutorial, and sentencing networks",
+      routingTopology:           "Police, prosecutors, and judges as hubs",
+      flowBehavior:              "Surveillance and punishment flow toward non-white bodies; protection flows toward whiteness",
+      outputSymptom:             "Stop-and-frisk, sentencing disparities, differential enforcement by neighborhood",
+      defensiveReaction:         "'Don't break the law,' 'Justice is blind,' 'We follow the evidence'",
+      memeticReplication:        "Memes of 'criminality,' 'danger,' and 'law and order' replicate through media and training",
+      culturalEvolutionPressure: "Laws and enforcement practices that disproportionately target non-white groups endure",
+      networkContagionDynamics:  "Spreads via legal precedent, police training programs, and media crime narratives",
+    }),
+ 
+    Politics: Object.freeze({
+      resources:   Object.freeze(["representation","access","votes","policy","legitimacy","speech reach"]),
+      routingCues: Object.freeze(["district","ballot","turnout","PAC","pundit","platform","messaging"]),
+      branchingPattern:          "Representation, legitimacy, and threat branch by race",
+      connectionDensity:         "High across parties, donor networks, voting systems, and media",
+      routingTopology:           "Political parties, major donors, and legacy media as hubs",
+      flowBehavior:              "Power, institutional access, and political voice flow toward whiteness",
+      outputSymptom:             "Under-representation of non-white officials, voter suppression, racialized platforms",
+      defensiveReaction:         "'It's about class, not race,' 'Identity politics is divisive and counterproductive'",
+      memeticReplication:        "Memes of 'real Americans,' 'swing voters,' and 'suburban moms' shape campaign strategy",
+      culturalEvolutionPressure: "Electoral strategies that mobilize racial fear or white comfort are selected as viable",
+      networkContagionDynamics:  "Spreads via campaign messaging, political punditry, policy advocacy, and electoral strategy",
+    }),
+ 
+    Religion: Object.freeze({
+      resources:   Object.freeze(["moral authority","belonging","purity status","legitimacy"]),
+      routingCues: Object.freeze(["doctrine","sin","virtue","mission","civilizing","chosen","holy"]),
+      branchingPattern:          "Holiness, authority, and imagery branch by race",
+      connectionDensity:         "High in leadership pipelines, theological production, and iconography",
+      routingTopology:           "Clergy, denominational institutions, and sacred texts as hubs",
+      flowBehavior:              "Moral authority, divine legitimacy, and institutional trust flow toward whiteness",
+      outputSymptom:             "White depictions of divinity, missionary framing, 'civilizing' theological narratives",
+      defensiveReaction:         "'God doesn't see color,' 'We're all one in Christ,' 'Faith unites us'",
+      memeticReplication:        "Memes of 'civilized vs. heathen,' 'chosen people,' 'mission fields' persist in theology",
+      culturalEvolutionPressure: "Theologies that align with existing power structures and comfort dominant groups survive",
+      networkContagionDynamics:  "Spreads via missionary networks, sermons, religious media, and faith-based schooling",
+    }),
+ 
+    Sex: Object.freeze({
+      resources:   Object.freeze(["desirability","safety","status","pairing access","marriageability"]),
+      routingCues: Object.freeze(["preference","type","fetish","exotic","pure","protect","dangerous"]),
+      branchingPattern:          "Beauty, purity, and danger branch by race",
+      connectionDensity:         "High in dating platforms, pornography, and purity culture institutions",
+      routingTopology:           "Dating apps, pornography platforms, and peer social networks as hubs",
+      flowBehavior:              "Desirability, safety, and 'marriageability' signals flow toward whiteness",
+      outputSymptom:             "Fetishization, desexualization, 'good girl' vs. 'fast girl' tropes by race",
+      defensiveReaction:         "'It's just a personal preference,' 'I'm not attracted to [race], that's not racist'",
+      memeticReplication:        "Memes of 'exotic,' 'aggressive,' 'submissive,' and 'pure' circulate through media and apps",
+      culturalEvolutionPressure: "Norms that center white desirability as default and ideal persist through platform design",
+      networkContagionDynamics:  "Spreads via dating apps, pornography platforms, peer gossip, fashion media, and influencer culture",
+    }),
+ 
+    War: Object.freeze({
+      resources:   Object.freeze(["safety","life","territory","sovereignty","security","justification"]),
+      routingCues: Object.freeze(["enemy","threat","collateral","security","terror","occupation","doctrine"]),
+      branchingPattern:          "Enemy, ally, and threat branch by race/nation",
+      connectionDensity:         "High in propaganda systems, military doctrine, and targeting frameworks",
+      routingTopology:           "Nation-states, military commands, and war media as hubs",
+      flowBehavior:              "Military violence and its justification flow preferentially toward non-white targets",
+      outputSymptom:             "'Collateral damage' framing, dehumanization of non-white enemies, racialized threat narratives",
+      defensiveReaction:         "'We're defending freedom,' 'They're savages / terrorists / a threat to civilization'",
+      memeticReplication:        "Memes of 'civilized vs. barbaric,' 'liberation,' and 'national security' legitimize racialized war",
+      culturalEvolutionPressure: "Military strategies that normalize racialized violence are institutionalized through doctrine",
+      networkContagionDynamics:  "Spreads via news coverage, war films and games, military doctrine, and memorial culture",
+    }),
+ 
+  }),
+ 
+  /* ── OBJECT B: Cross-Domain Flow Matrix (9 Areas × 9 Areas) ── */
+  crossDomainMatrix: Object.freeze({
+    Economics: Object.freeze({
+      Economics:     "Racial wealth gap compounds: inherited assets, redlining, discriminatory lending self-reinforce",
+      Education:     "Property-tax school funding channels wealth inequality into educational inequality structurally",
+      Entertainment: "White capital controls studios, labels, and platforms; Black creative labor is extracted at discount",
+      Labor:         "Racial wealth gap forces non-white workers into lower-leverage labor positions with less exit capacity",
+      Law:           "Wealthy defendants access better legal representation; cash bail systems detain non-white defendants",
+      Politics:      "Donor class is predominantly white; campaign finance ties political access to racial wealth distribution",
+      Religion:      "White-controlled philanthropic capital funds predominantly white religious and civic institutions",
+      Sex:           "Economic precarity of non-white women increases vulnerability to exploitative sexual labor markets",
+      War:           "Defense contracts and military-industrial complex concentrate in white-majority ownership structures",
+    }),
+    Education: Object.freeze({
+      Economics:     "Credential gatekeeping built around white norms blocks non-white workers from higher-wage positions",
+      Education:     "Tracking systems replicate across generations; white teacher expectations shape outcomes recursively",
+      Entertainment: "Eurocentric literary and aesthetic canon defines what counts as culturally valuable in media",
+      Labor:         "Credential inflation and 'culture fit' screens filter out non-white applicants systematically",
+      Law:           "Civic education omits structural racism; law schools train lawyers in colorblind legal frameworks",
+      Politics:      "Curricula shape civic identity; whitewashed history education suppresses non-white political consciousness",
+      Religion:      "Missionary and colonial education framed non-white spiritual systems as inferior or illegitimate",
+      Sex:           "School-based purity culture and sex ed center white female bodies as default norm and ideal",
+      War:           "Military history taught as heroic white nation-building; decolonial perspectives systematically excluded",
+    }),
+    Entertainment: Object.freeze({
+      Economics:     "White aesthetic defaults in advertising determine which products are marketed to whom at what price",
+      Education:     "Media representations of who is 'intelligent' or 'educated' shape teacher and institutional expectations",
+      Entertainment: "Algorithmic amplification of profitable racial tropes (thug, exotic, savior) self-reinforces across platforms",
+      Labor:         "Media images of 'professionalism' and 'leadership' default to whiteness, shaping hiring expectations",
+      Law:           "Crime dramas and news coverage racialize criminality, priming juries and shaping prosecutorial instinct",
+      Politics:      "Racialized media narratives (welfare queen, illegal alien) provide raw material for political mobilization",
+      Religion:      "White Jesus and Western religious iconography in global media naturalizes racial hierarchy as divine order",
+      Sex:           "Beauty standards in media center whiteness as desirable; fetishization and desexualization replicate via platform",
+      War:           "War films dehumanize non-white enemies; 'heroic soldier' archetype defaults to white male identity",
+    }),
+    Labor: Object.freeze({
+      Economics:     "Wage suppression of non-white workers limits wealth accumulation and asset-building capacity structurally",
+      Education:     "Non-white workers locked in low-wage jobs cannot invest in children's education at equivalent rates",
+      Entertainment: "Non-white performers and creators face pay disparities and ownership exclusion in creative industries",
+      Labor:         "Referral-based hiring in white professional networks perpetuates racial homogeneity in high-status positions",
+      Law:           "Non-white workers in criminalized or informal labor sectors face heightened legal exposure and prosecution",
+      Politics:      "Non-white workers' political interests are subordinated when labor institutions are majority-white controlled",
+      Religion:      "Domestic and care labor (disproportionately non-white women) is framed as charitable or vocational calling",
+      Sex:           "Non-white women concentrated in service and domestic labor face intersecting sexual harassment and race-based pay gaps",
+      War:           "Non-white soldiers disproportionately assigned to combat roles; GI benefits historically distributed unequally",
+    }),
+    Law: Object.freeze({
+      Economics:     "Mass incarceration removes non-white workers from labor market, reducing household wealth and asset accumulation",
+      Education:     "School-to-prison pipeline removes non-white students from educational track into criminal justice system",
+      Entertainment: "IP and copyright law historically protected white artists while extracting Black musical and cultural production",
+      Labor:         "Criminal records legally bar non-white ex-offenders from licensed professions and formal employment sectors",
+      Law:           "Precedent built on racially biased cases perpetuates racially biased outcomes through doctrinal inheritance",
+      Politics:      "Felony disenfranchisement removes non-white voters from political participation at scale across jurisdictions",
+      Religion:      "Chaplaincy and religious programming in prisons shapes spiritual life of disproportionately non-white incarcerated population",
+      Sex:           "Rape laws historically protected white women while leaving non-white women without equivalent legal recourse",
+      War:           "Laws of war applied asymmetrically; non-white combatants and civilians classified as threats rather than persons",
+    }),
+    Politics: Object.freeze({
+      Economics:     "Tax policy, zoning law, and public investment decisions driven by white electoral coalitions shape wealth distribution",
+      Education:     "School board composition and curriculum policy controlled by white political majorities in most jurisdictions",
+      Entertainment: "Content regulation, FCC licensing, and platform policy shaped by political appointees reflecting dominant racial interests",
+      Labor:         "Labor law, minimum wage, and union policy shaped by political coalitions that subordinate non-white worker interests",
+      Law:           "Judicial appointments, prosecutorial elections, and police oversight shaped by racially skewed political power",
+      Politics:      "Voter suppression, gerrymandering, and racialized campaign rhetoric recursively concentrate political power in whiteness",
+      Religion:      "White Christian nationalism shapes political coalitions; non-white faith traditions marginalized in civic discourse",
+      Sex:           "Reproductive policy disproportionately restricts non-white women's bodily autonomy through targeted legislation",
+      War:           "Foreign policy and military intervention decisions driven by racial and economic interests of dominant political class",
+    }),
+    Religion: Object.freeze({
+      Economics:     "Prosperity gospel theology naturalizes racial wealth gap as divine reward and personal virtue signal",
+      Education:     "Religious schools transmit Eurocentric values as universal; non-white epistemologies framed as superstition",
+      Entertainment: "Religious institutions fund and distribute media that centers white Christian aesthetics as normative",
+      Labor:         "Religious charity frames non-white poverty as spiritual deficiency rather than structural economic outcome",
+      Law:           "Religious framing of law (natural law, divine order) historically legitimized racially discriminatory statutes",
+      Politics:      "White Christian nationalism provides moral legitimacy to racially conservative political coalitions and platforms",
+      Religion:      "Denominational hierarchies and seminary training perpetuate white theological authority across generations",
+      Sex:           "Religious purity culture assigns different sexual virtue standards to non-white women than to white women",
+      War:           "Religious justification for 'civilizing missions' and crusades has historically authorized racialized military violence",
+    }),
+    Sex: Object.freeze({
+      Economics:     "Fetishization of non-white women drives exploitative industries; desexualization limits economic visibility",
+      Education:     "Hypersexualization of non-white girls by teachers and institutions triggers harsher discipline and lower expectations",
+      Entertainment: "Racialized sexual archetypes (Jezebel, lotus blossom, mandingo) replicate through media production and distribution",
+      Labor:         "Sexual harassment of non-white women in workplaces is underreported and under-prosecuted structurally",
+      Law:           "Historical and ongoing disparities in rape prosecution based on race of victim and perpetrator are documented",
+      Politics:      "Racialized sexual threat narratives (Black man as predator, immigrant as violator) mobilize white political fear",
+      Religion:      "Religious purity hierarchies assign non-white women lower sexual virtue status within institutional frameworks",
+      Sex:           "Dating app algorithms and peer norms reinforce racial preference hierarchies that center white desirability",
+      War:           "Wartime sexual violence against non-white women treated as collateral; prosecuted asymmetrically or not at all",
+    }),
+    War: Object.freeze({
+      Economics:     "Military occupation and sanctions extract non-white national wealth; reconstruction contracts favor white firms",
+      Education:     "Veterans' GI Bill benefits historically excluded non-white veterans from educational and housing access",
+      Entertainment: "War films and games normalize racialized enemies; military entertainment complex shapes civilian perception",
+      Labor:         "Post-conflict economic reconstruction favors white or Western firms; non-white labor extracted at minimum cost",
+      Law:           "War powers expand domestic surveillance of non-white communities; emergency law applied asymmetrically",
+      Politics:      "Military intervention installs compliant governments in non-white nations; war rhetoric mobilizes domestic white fear",
+      Religion:      "Military chaplaincy and moral injury frameworks center white Christian soldiers' spiritual experience as normative",
+      Sex:           "Militarized masculinity exports racialized sexual violence; non-white women's bodies treated as war resource",
+      War:           "Arms industries profit from conflict in non-white regions; military doctrine perpetuates racialized threat framing",
+    }),
+  }),
+ 
+  areas: Object.freeze([
+    "Economics","Education","Entertainment","Labor",
+    "Law","Politics","Religion","Sex","War"
   ]),
-
-  cols: Object.freeze([
-    "BranchingPattern",
-    "ConnectionDensity",
-    "RoutingTopology",
-    "FlowBehavior",
-    "OutputSymptom",
-    "DefensiveReaction",
-    "MemeReplication",
-    "CulturalEvolutionPressure",
-    "NetworkContagionDynamics"
+ 
+  columns: Object.freeze([
+    "branchingPattern","connectionDensity","routingTopology","flowBehavior",
+    "outputSymptom","defensiveReaction","memeticReplication",
+    "culturalEvolutionPressure","networkContagionDynamics"
   ]),
-
-  grid: Object.freeze(
-    Array.from({ length: 9 }, () =>
-      Object.freeze(Array.from({ length: 9 }, () => Object.freeze({})))
-    )
-  )
+ 
 });
 
-/* ============================================================
-   CDLM SCANNER STUBS (PRE-STAGED, READ-ONLY)
-   ============================================================ */
-
-const CDLM_SCANNERS = Object.freeze({
-  BranchingPattern: scanBranchingPattern,
-  ConnectionDensity: scanConnectionDensity,
-  RoutingTopology: scanRoutingTopology,
-  FlowBehavior: scanFlowBehavior,
-  OutputSymptom: scanOutputSymptom,
-  DefensiveReaction: scanDefensiveReaction,
-  MemeReplication: scanMemeReplication,
-  CulturalEvolutionPressure: scanCulturalEvolutionPressure,
-  NetworkContagionDynamics: scanNetworkContagionDynamics
+/* ── STEP 2: V2 DOMAIN SCORER — replaces rankDomains() ─────── */
+/* Insert this after SOVRA_9X9 declaration.
+   Only fires when welsingFuller gate is active.               */
+ 
+const COL_WEIGHTS_V2 = Object.freeze({
+  branchingPattern:          3,
+  routingTopology:           3,
+  flowBehavior:              2,
+  outputSymptom:             2,
+  defensiveReaction:         2,
+  connectionDensity:         1,
+  memeticReplication:        1,
+  culturalEvolutionPressure: 1,
+  networkContagionDynamics:  1,
 });
-function scanBranchingPattern(_text, _map) {
-  return { count: 0 };
+ 
+function extractTermsV2(text) {
+  const t = (text || "").toLowerCase();
+  const quoted = (t.match(/'([^']{3,})'/g) || []).map(q => q.replace(/'/g,"").trim());
+  const stops = new Set(["the","and","are","for","via","with","that","this","from",
+    "has","have","into","been","they","their","also","when","what","who","how",
+    "its","not","but","all","more","each","over","only","just","very","our","your"]);
+  const words = (t.match(/\b[a-z][a-z\-]{2,}\b/g) || []).filter(w => !stops.has(w));
+  const bigrams = words.slice(0,-1).map((w,i) => `${w} ${words[i+1]}`);
+  return new Set([...quoted, ...words, ...bigrams]);
 }
-
-function scanConnectionDensity(_text, _map) {
-  return { count: 0 };
+ 
+// Build column lexicons from SOVRA_9X9 (runs once at load)
+const SOVRA_9X9_LEXICONS = (() => {
+  const out = {};
+  for (const area of SOVRA_9X9.areas) {
+    out[area] = {};
+    const g = SOVRA_9X9.columnGrid[area];
+    for (const col of SOVRA_9X9.columns) {
+      out[area][col] = extractTermsV2(g[col] || "");
+    }
+  }
+  return Object.freeze(out);
+})();
+ 
+function rankDomainsV2(text) {
+  const qTerms = extractTermsV2(text);
+  const ranked = [];
+  for (const area of SOVRA_9X9.areas) {
+    let total = 0;
+    const colHits = {};
+    for (const [col, weight] of Object.entries(COL_WEIGHTS_V2)) {
+      const lexicon = SOVRA_9X9_LEXICONS[area][col];
+      const matched = [...qTerms].filter(t => lexicon.has(t));
+      if (matched.length) {
+        colHits[col] = matched;
+        total += matched.length * weight;
+      }
+    }
+    // Also score V1 resources/routingCues (preserved)
+    const g = SOVRA_9X9.columnGrid[area];
+    const cueHits = (g.routingCues || []).filter(c => text.toLowerCase().includes(c.toLowerCase()));
+    const resHits = (g.resources || []).filter(r => text.toLowerCase().includes(r.toLowerCase()));
+    total += cueHits.length * 2 + resHits.length;
+    ranked.push(Object.freeze({ domain: area, score: total, colHits, cueHits, resHits }));
+  }
+  return Object.freeze(ranked.sort((a,b) => b.score - a.score));
 }
-
-function scanRoutingTopology(_text, _map) {
-  return { count: 0 };
+ 
+function crossDomainActivation(primaryArea, queryText) {
+  const qTerms = extractTermsV2(queryText);
+  const row = SOVRA_9X9.crossDomainMatrix[primaryArea] || {};
+  const activated = [];
+  for (const [dst, desc] of Object.entries(row)) {
+    if (dst === primaryArea) continue; // skip diagonal
+    const dTerms = extractTermsV2(desc);
+    const shared = [...qTerms].filter(t => dTerms.has(t));
+    if (shared.length >= 2) {
+      activated.push(Object.freeze({ destination: dst, sharedTerms: shared, description: desc }));
+    }
+  }
+  return Object.freeze(activated.sort((a,b) => b.sharedTerms.length - a.sharedTerms.length));
 }
-
-function scanFlowBehavior(_text, _map) {
-  return { count: 0 };
+ 
+ 
+/* ── STEP 3: GATE-CONNECTED bindTo9x9V2 ────────────────────── */
+/* Replace the existing Sovra.Topology9x9.bind call in
+   runCDLMAnalysis() with this gated version.                   */
+ 
+function bindTo9x9V2({ text = "", zse = null, cdlm = null, trifold = null, gates = {} } = {}) {
+ 
+  // Gate check — only runs if Welsing-Fuller is active
+  if (!SOVRA_GATES.welsingFuller()) {
+    return null; // silent — NFIE compliant, no force
+  }
+ 
+  const ranked   = rankDomainsV2(text);
+  const top      = ranked[0] || { domain: "UNSPECIFIED", score: 0 };
+  const crossAct = top.domain !== "UNSPECIFIED"
+    ? crossDomainActivation(top.domain, text)
+    : [];
+ 
+  const payload = Object.freeze({
+    ok:      true,
+    kind:    "SOVRA_9X9_V2_PAYLOAD",
+    topologyId: SOVRA_9X9.id,
+    gates:   Object.freeze({ ...gates }),
+ 
+    placement: Object.freeze({
+      primaryDomain:  top.domain,
+      primaryScore:   top.score,
+      rankedDomains:  ranked.slice(0, 5),
+      columnsHit:     top.colHits || {},
+    }),
+ 
+    crossDomain: Object.freeze({
+      source:     top.domain,
+      activated:  crossAct.slice(0, 3),
+    }),
+ 
+    metrics: Object.freeze({
+      cdlm:    cdlm    ? Object.freeze({ ...cdlm })    : null,
+      zse:     zse     ? Object.freeze({ ...zse })     : null,
+      trifold: trifold ? Object.freeze({ ...trifold }) : null,
+    }),
+  });
+ 
+  // Dispatch to sovra:topology (existing listener — backward compat)
+  try {
+    window.dispatchEvent(new CustomEvent("sovra:topology",    { detail: payload }));
+    window.dispatchEvent(new CustomEvent("sovra:topology-v2", { detail: payload }));
+  } catch (_) {}
+ 
+  // Render WFE 9×9 panel
+  renderWFE9x9Panel(payload);
+ 
+  return payload;
 }
-
-function scanOutputSymptom(_text, _map) {
-  return { count: 0 };
+ 
+ 
+/* ── STEP 4: WFE 9×9 UI PANEL RENDERER ─────────────────────── */
+/* Renders a gated output panel beneath the diagnostic bar
+   when Welsing-Fuller is active. Non-force — display only.     */
+ 
+function renderWFE9x9Panel(payload) {
+  if (!payload || !payload.ok) return;
+ 
+  const container = document.querySelector(".results-right");
+  if (!container) return;
+ 
+  // Remove any prior WFE panel
+  const prior = document.getElementById("wfe-9x9-panel");
+  if (prior) prior.remove();
+ 
+  const { primaryDomain, primaryScore, rankedDomains, columnsHit } = payload.placement;
+  const { activated } = payload.crossDomain;
+ 
+  // Column hit rows
+  const colRows = Object.entries(columnsHit || {}).map(([col, terms]) => {
+    const label = col.replace(/([A-Z])/g, " $1").trim();
+    return `<div class="wfe-col-row">
+      <span class="wfe-col-label">${label}</span>
+      <span class="wfe-col-terms">${terms.slice(0,4).join(" · ")}</span>
+    </div>`;
+  }).join("");
+ 
+  // Domain ranking rows
+  const rankRows = rankedDomains.map((d,i) =>
+    `<div class="wfe-rank-row ${i===0?"wfe-rank-primary":""}">
+      <span class="wfe-rank-pos">${i+1}</span>
+      <span class="wfe-rank-domain">${d.domain}</span>
+      <span class="wfe-rank-score">${d.score}</span>
+    </div>`
+  ).join("");
+ 
+  // Cross-domain rows
+  const crossRows = activated.map(a =>
+    `<div class="wfe-cross-row">
+      <span class="wfe-cross-arrow">→</span>
+      <span class="wfe-cross-dst">${a.destination}</span>
+      <span class="wfe-cross-desc">${a.description.slice(0,90)}…</span>
+    </div>`
+  ).join("");
+ 
+  const panel = document.createElement("div");
+  panel.id = "wfe-9x9-panel";
+  panel.className = "wfe-9x9-panel";
+  panel.innerHTML = `
+    <div class="wfe-panel-header">
+      <span class="wfe-panel-label">⟦W-F⟧ 9×9 TOPOLOGY — WELSING-FULLER ANALYSIS</span>
+      <span class="wfe-panel-domain">${primaryDomain} · score: ${primaryScore}</span>
+    </div>
+    <div class="wfe-panel-body">
+      <div class="wfe-section">
+        <div class="wfe-section-label">DOMAIN RANKING</div>
+        ${rankRows}
+      </div>
+      ${colRows ? `<div class="wfe-section">
+        <div class="wfe-section-label">COLUMNS ACTIVATED</div>
+        ${colRows}
+      </div>` : ""}
+      ${crossRows ? `<div class="wfe-section">
+        <div class="wfe-section-label">CROSS-DOMAIN ACTIVATION (Object B)</div>
+        ${crossRows}
+      </div>` : ""}
+    </div>
+    <div class="wfe-panel-footer">
+      SOVRA-FCL-MHCE-v2.5 · 9×9 Framework: Dr. Neely Fuller, Jr. · NFIE Compliant · O_f = 0
+    </div>`;
+ 
+  container.prepend(panel);
 }
-
-function scanDefensiveReaction(_text, _map) {
-  return { count: 0 };
+ 
+ 
+/* ── STEP 5: WIRE INTO runCDLMAnalysis ──────────────────────── */
+/* Replace the existing Sovra.Topology9x9.bind({...}) call
+   inside runCDLMAnalysis() with:
+ 
+   // V2 — Welsing-Fuller gated (replaces V1 bind call)
+   bindTo9x9V2({ text, zse, cdlm: traverseCDLM9x9(text), trifold, gates: enginesFired });
+ 
+   The V1 bind call (Sovra.Topology9x9.bind) can be left in place
+   or removed — V2 dispatches to the same sovra:topology event
+   for backward compatibility.                                    */
+ 
+ 
+/* ── STEP 6: POPULATE CDLM SCANNER STUBS ───────────────────── */
+/* Replace the stub functions (all returning { count: 0 })
+   with lexicon-driven scanners pulling from SOVRA_9X9.          */
+ 
+function scanColumnV2(colName, text) {
+  const t = (text || "").toLowerCase();
+  const hits = [];
+  for (const area of SOVRA_9X9.areas) {
+    const lexicon = SOVRA_9X9_LEXICONS[area][colName];
+    if (!lexicon) continue;
+    const matched = [...(extractTermsV2(t))].filter(term => lexicon.has(term));
+    if (matched.length) hits.push({ area, matched });
+  }
+  return Object.freeze({ count: hits.length, hits: Object.freeze(hits) });
 }
-
-function scanMemeReplication(_text, _map) {
-  return { count: 0 };
-}
-
-function scanCulturalEvolutionPressure(_text, _map) {
-  return { count: 0 };
-}
-
-function scanNetworkContagionDynamics(_text, _map) {
-  return { count: 0 };
-}
-
+ 
+// Override stubs with real scanners (NFIE compliant — read only)
+function scanBranchingPattern(text)          { return scanColumnV2("branchingPattern",          text); }
+function scanConnectionDensity(text)         { return scanColumnV2("connectionDensity",          text); }
+function scanRoutingTopology(text)           { return scanColumnV2("routingTopology",            text); }
+function scanFlowBehavior(text)              { return scanColumnV2("flowBehavior",               text); }
+function scanOutputSymptom(text)             { return scanColumnV2("outputSymptom",              text); }
+function scanDefensiveReaction(text)         { return scanColumnV2("defensiveReaction",          text); }
+function scanMemeReplication(text)           { return scanColumnV2("memeticReplication",         text); }
+function scanCulturalEvolutionPressure(text) { return scanColumnV2("culturalEvolutionPressure",  text); }
+function scanNetworkContagionDynamics(text)  { return scanColumnV2("networkContagionDynamics",   text); }
+ 
+console.log("[SOVRA_9X9 v2.0] Welsing-Fuller gate integration loaded. NFIE compliant. O_f = 0.");
 
 /* ============================================================
    CDLM GROUP ENTRY (PRE-STAGED, READ-ONLY)
