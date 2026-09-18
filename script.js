@@ -382,18 +382,20 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
     return ct.includes("text/html") || ct.includes("text/plain");
   }
 
-  function extractReadableText(html) {
-    return html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
-      .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
-      .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
-      .replace(/<!--[\s\S]*?-->/g, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
+ function extractReadableText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+    .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
+    .replace(/<header[\s\S]*?<\/header>/gi, " ")
+    .replace(/<[^>]+class="[^"]*(?:menu|navbar|nav-|site-header|main-header|breadcrumb)[^"]*"[\s\S]*?<\/[^>]+>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
   function sliceFirstWords(text, maxWords) {
     if (!text) return "";
