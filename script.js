@@ -1824,8 +1824,32 @@ window.Sovra.C4Classifier = (() => {
      Input: assembled text from PTF + search results
      Output: { activePhase, profile, signal }
   -- */
+  function aggregateAcrossPhases(profile) {
+    const allPresent = [];
+    let totalTerms = 0;
+    let totalPresent = 0;
+
+    Object.values(profile).forEach(phase => {
+      allPresent.push(...phase.present);
+      totalTerms += phase.total;
+      totalPresent += phase.presentCount;
+    });
+
+    const overallAttenuation = totalTerms > 0
+      ? Math.round(((totalTerms - totalPresent) / totalTerms) * 100)
+      : 100;
+
+    return Object.freeze({
+      overallAttenuation,
+      totalPresent,
+      totalTerms,
+      allPresent: Object.freeze(allPresent),
+      phaseBreakdown: profile
+    });
+  }
+
   function classify(text) {
-    if (!text || typeof text !== "string") {
+    if (!text || typeof text !== "string") { 
       return Object.freeze({
         ok: false,
         reason: "EMPTY_TEXT"
@@ -1839,11 +1863,12 @@ window.Sovra.C4Classifier = (() => {
     const signal = activePhase
       ? `${activePhase.label} · C-4: ${activePhase.c4_stage.replace(/_/g, " ")} · Attenuation ${activePhase.attenuation}%`
       : "NO PHASE SIGNAL DETECTED";
-
+    const aggregate = aggregateAcrossPhases(profile);
     const result = Object.freeze({
       ok: true,
       signal,
       activePhase: activePhase || null,
+      aggregate,
       profile
     });
 
@@ -1889,11 +1914,17 @@ function renderC4PhaseRow(ptfSummaryEl, c4Result) {
   row.className = "ptf-summ-row ptf-c4-row";
 
   const phase = c4Result.activePhase;
+  const agg = c4Result.aggregate;
 
   row.innerHTML = `
     <span class="ptf-summ-label">PWS PHASE</span>
     <span class="ptf-summ-value ptf-c4-signal">
       ${escapeHtml(phase.label)} · ${escapeHtml(phase.c4_stage.replace(/_/g, " "))}
+      <br>
+      <span class="ptf-c4-aggregate">
+        Full-registry: ${agg.totalPresent}/${agg.totalTerms} terms present
+        (${100 - agg.overallAttenuation}% coverage)
+      </span>
     </span>
   `;
 
