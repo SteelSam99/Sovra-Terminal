@@ -382,7 +382,7 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
     return ct.includes("text/html") || ct.includes("text/plain");
   }
 
- function extractReadableText(html) {
+function extractReadableText(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -393,6 +393,7 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
     .replace(/<[^>]+class="[^"]*(?:menu|navbar|nav-|site-header|main-header|breadcrumb)[^"]*"[\s\S]*?<\/[^>]+>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<[^>]+>/g, " ")
+    .replace(/skip to main content/gi, " ")   
     .replace(/\s+/g, " ")
     .trim();
 }
