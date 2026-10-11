@@ -6846,6 +6846,20 @@ const diagnostics = {
   }
 };
 
+// 1) 9×9 placement (DESCRIPTIVE ONLY)
+// Restores the V2 binding. STEP 5 of the April 2026 patch wrote this as
+// Sovra.Topology9x9.bindTo9x9V2(...), but that property was never added to the
+// frozen Topology9x9 export, which carries only V1's `ref` and `bind`.
+// bindTo9x9V2 is a top-level function — call it directly.
+// Self-gated at its first statement: returns null silently when W-F is off.
+bindTo9x9V2({
+  text:    narrativeText,
+  zse:     diagnostics.zse,
+  cdlm:    traverseCDLM9x9(narrativeText),
+  trifold: diagnostics.trifold,
+  gates:   diagnostics.enginesFired
+});
+
 const scores = synthesizeCDLMScores(diagnostics);
 emitCDLMScores(scores);
 
