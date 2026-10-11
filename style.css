@@ -1057,3 +1057,164 @@ html, body {
 .card-score-sep {
   color: #c8c8e8;
 }
+/* ============================================================
+   W-F 9×9 TOPOLOGY PANEL
+   Gated — rendered only when Welsing-Fuller is active.
+   Idiom matched to .drift-timeline-panel (container) and
+   .ptf-summ-* (rows, labels, values). No new colours introduced.
+   ============================================================ */
+
+.wfe-9x9-panel {
+  background: #0a0a14;
+  border: 1px solid #1e1e3a;
+  border-top: 2px solid #818cf8;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #c8c8e8;
+}
+
+/* ── header ───────────────────────────────────────────────── */
+
+.wfe-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid #1e1e3a;
+}
+
+.wfe-panel-label {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #6a6a8a;
+}
+
+.wfe-panel-domain {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #818cf8;
+  white-space: nowrap;
+}
+
+/* ── sections ─────────────────────────────────────────────── */
+
+.wfe-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.wfe-section-label {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6a6a8a;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid #0f0f1a;
+}
+
+/* ── area ranking ─────────────────────────────────────────── */
+
+.wfe-rank-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.12rem 0;
+  border-bottom: 1px solid #0f0f1a;
+  color: #9a9ab8;
+}
+
+.wfe-rank-primary { color: #c8c8e8; }
+.wfe-rank-primary .wfe-rank-domain { font-weight: 600; }
+.wfe-rank-primary .wfe-rank-score  { color: #818cf8; }
+
+.wfe-rank-pos {
+  min-width: 1.2rem;
+  font-size: 0.7rem;
+  color: #4a4a6a;
+  text-align: right;
+}
+
+.wfe-rank-domain { flex: 1; font-size: 0.78rem; }
+
+.wfe-rank-score {
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── columns activated ────────────────────────────────────── */
+
+.wfe-col-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.12rem 0;
+  border-bottom: 1px solid #0f0f1a;
+}
+
+.wfe-col-label {
+  flex: 0 0 11rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6a6a8a;
+}
+
+.wfe-col-terms {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: #c8c8e8;
+  overflow-wrap: anywhere;
+}
+
+/* ── cross-area activation (Object B) ─────────────────────── */
+
+.wfe-cross-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.18rem 0;
+  border-bottom: 1px solid #0f0f1a;
+  line-height: 1.45;
+}
+
+.wfe-cross-arrow { color: #4a4a6a; }
+
+.wfe-cross-dst {
+  flex: 0 0 7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #c8c8e8;
+}
+
+.wfe-cross-desc {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: #9a9ab8;
+}
+
+/* ── footer ───────────────────────────────────────────────── */
+
+.wfe-panel-footer {
+  margin-top: 0.6rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #1e1e3a;
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  color: #4a4a6a;
+}
+
+@media (max-width: 700px) {
+  .wfe-col-label  { flex-basis: 7rem; }
+  .wfe-cross-dst  { flex-basis: 5rem; }
+  .wfe-panel-header { flex-direction: column; gap: 0.25rem; }
+}
