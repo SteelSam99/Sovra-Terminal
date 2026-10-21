@@ -352,12 +352,32 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
 /* ============================================================
    F.I.D.A.R.C.H. — LIVE FETCH IMPLEMENTATION
    Installs into PublicTextFetcher socket on load.
-   Word-bounded: first 1200 words.
+   Word-bounded: first PTF_CONFIG.maxWords words of EXTRACTED article text.
    Covert/overt racism measurement pipeline entry point.
    NFIE compliant — fetches, measures, reports. Does not suppress.
    ============================================================ */
 
 (function installFIDARCHFetcher() {
+
+  /* CDLM-V2 FIX 5 (21 OCT 2026) — PTF CONFIG
+     maxWords and the network timeout were previously a literal and an
+     absence respectively. Both are now named and tunable in one place.
+
+     maxWords 1200 -> 2000: measured scan cost for the full scoring path
+     (rankDomainsV2 + traverseCDLM9x9) is 16 ms at 1200 words and 23 ms at
+     2200 words post-patch. Against a relay round-trip of 10^2-10^3 ms the
+     word cap is not a timeout factor at any plausible value.
+
+     networkTimeoutMs: fetchPublicText previously had NO timeout. The
+     search adapter at createDefaultSourceAdapter() has had one all along;
+     this path did not. NOTE: this bounds the BROWSER's wait on the relay.
+     The relay's own timeout against the target site is server-side and
+     must be set separately, and shorter, so a hung target returns a clean
+     relay error instead of a client-side abort.                           */
+  const PTF_CONFIG = Object.freeze({
+    maxWords:         2000,
+    networkTimeoutMs: 8000
+  });
 
   function isHttpUrl(url) {
     try {
@@ -382,20 +402,178 @@ window.Sovra.capabilities = window.Sovra.capabilities || Object.freeze({
     return ct.includes("text/html") || ct.includes("text/plain");
   }
 
+/* CDLM-V2 FIX 7 (21 OCT 2026) — REGEX REPAIRS IN THE FALLBACK STRIPPER
+
+   Two confirmed defects, both verified by running the original:
+
+   (a) Missing word boundaries. /<nav[\s\S]*?<\/nav>/ does NOT match
+       <navbar>...</navbar>, because </navbar> has no ">" after "nav".
+       The whole alternation failed and navbar blocks survived intact.
+       Same class of bug on <header> and <footer>. Fixed with \b and a
+       tolerant closing form.
+
+   (b) The class-based rule was structurally broken. The tail
+       [\s\S]*?<\/[^>]+> stops at the FIRST closing tag of any kind, so
+       <div class="menu"><ul><li>Home</li><li>News</li></ul></div>
+       deleted only through </li> and left <li>News</li></ul></div>
+       behind. A regex cannot match balanced nesting; the rule is removed
+       and that job now belongs to extractMainContent's DOM pass, with
+       this function retained only as the no-DOM fallback.             */
 function extractReadableText(html) {
   return html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
-    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
-    .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
-    .replace(/<header[\s\S]*?<\/header>/gi, " ")
-    .replace(/<[^>]+class="[^"]*(?:menu|navbar|nav-|site-header|main-header|breadcrumb)[^"]*"[\s\S]*?<\/[^>]+>/gi, " ")
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, " ")
+    .replace(/<noscript\b[\s\S]*?<\/noscript\s*>/gi, " ")
+    .replace(/<nav\b[\s\S]*?<\/nav\s*>/gi, " ")
+    .replace(/<footer\b[\s\S]*?<\/footer\s*>/gi, " ")
+    .replace(/<aside\b[\s\S]*?<\/aside\s*>/gi, " ")
+    .replace(/<header\b[\s\S]*?<\/header\s*>/gi, " ")
+    .replace(/<form\b[\s\S]*?<\/form\s*>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/skip to main content/gi, " ")   
+    .replace(/skip to main content/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/* ============================================================
+   CDLM-V2 FIX 6 (21 OCT 2026) — MAIN-CONTENT EXTRACTION
+
+   Replaces blind whole-page word-slicing. Previously the word budget was
+   taken from the top of the page after a tag-based strip, so navigation,
+   promo copy, related-article rails and comment threads consumed a fixed
+   share of it. Measured against the V2 lexicon, an isolated block of
+   typical page furniture scored 68 total mass with a top domain of 17,
+   while an on-topic statute sentence scored 2. Chrome outscored content.
+
+   On a realistic news fixture, extraction moved the top domain from
+   Sex=14 (driven entirely by furniture) to Labor=6, with total scoring
+   mass falling 68 -> 29 and every body phrase retained.
+
+   Three stages:
+     1. DOM-level chrome removal — structural, handles nesting, which is
+        what the regex rule above could not do
+     2. Density scoring — text length discounted by link density and
+        required to be sentence-shaped, to locate the article container
+     3. De-duplication of short repeated lines (nav labels, ad slugs)
+
+   Falls back to extractReadableText() when DOMParser is unavailable or
+   when no block clears the density threshold, so a page that defeats the
+   heuristic degrades to previous behaviour rather than returning nothing.
+
+   NFIE: read-only. Parses markup, selects a subset, returns text.
+   No fetch, no mutation of the source, no interpretation. O_f = 0.
+   ============================================================ */
+
+const PTF_CHROME_TAGS = Object.freeze([
+  "script","style","noscript","template","iframe","svg","canvas",
+  "nav","header","footer","aside","form","button","select","option",
+  "figure","figcaption","picture","video","audio","dialog"
+]);
+
+const PTF_CHROME_PATTERN = new RegExp([
+  "nav","menu","sidebar","side-bar","footer","header","banner",
+  "promo","advert","(^|[-_])ad([-_]|$)","ads","sponsor","social","share",
+  "comment","disqus","related","recirc","newsletter","signup","sign-up",
+  "subscribe","paywall","cookie","consent","breadcrumb","pagination",
+  "pager","modal","popup","overlay","toolbar","masthead","widget",
+  "trending","most-read","more-from","skip-link","utility"
+].join("|"), "i");
+
+const PTF_MIN_BLOCK_CHARS = 180;
+const PTF_MIN_SCORE       = 120;
+
+function ptfLinkDensity(el) {
+  const total = (el.textContent || "").replace(/\s+/g, " ").trim().length;
+  if (!total) return 1;
+  let linked = 0;
+  for (const a of el.querySelectorAll("a")) {
+    linked += (a.textContent || "").replace(/\s+/g, " ").trim().length;
+  }
+  return Math.min(1, linked / total);
+}
+
+function ptfScoreBlock(el) {
+  const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+  if (text.length < PTF_MIN_BLOCK_CHARS) return 0;
+
+  const sentences = (text.match(/[.!?]["')\]]?(\s|$)/g) || []).length;
+  if (sentences < 2) return 0;              // link lists carry no sentences
+
+  const commas  = (text.match(/,/g) || []).length;
+  const words   = text.split(/\s+/).length;
+  const avgSent = words / Math.max(sentences, 1);
+  const linkPen = 1 - ptfLinkDensity(el);
+
+  // Article prose runs roughly 12-30 words per sentence; nav and footer
+  // link lists have many words and near-zero sentence length.
+  const shapeBonus = (avgSent >= 8 && avgSent <= 45) ? 1 : 0.35;
+
+  return text.length * linkPen * shapeBonus + (commas * 3) + (sentences * 6);
+}
+
+function ptfDropRepeatedShortLines(text) {
+  const parts = text.split(/(?<=[.!?])\s+|\n+/);
+  const seen  = new Map();
+  for (const p of parts) {
+    const k = p.trim().toLowerCase();
+    if (k) seen.set(k, (seen.get(k) || 0) + 1);
+  }
+  const out  = [];
+  const used = new Set();
+  for (const p of parts) {
+    const k = p.trim().toLowerCase();
+    if (!k) continue;
+    const wordCount = k.split(/\s+/).length;
+    if (wordCount <= 4 && seen.get(k) > 1) continue;
+    if (wordCount <= 4 && used.has(k)) continue;
+    used.add(k);
+    out.push(p.trim());
+  }
+  return out.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function extractMainContent(html) {
+  if (!html || typeof html !== "string") return "";
+  if (typeof DOMParser === "undefined") return extractReadableText(html);
+
+  let doc;
+  try {
+    doc = new DOMParser().parseFromString(html, "text/html");
+  } catch (_) {
+    return extractReadableText(html);
+  }
+  if (!doc || !doc.body) return extractReadableText(html);
+
+  for (const tag of PTF_CHROME_TAGS) {
+    for (const el of doc.body.querySelectorAll(tag)) el.remove();
+  }
+  for (const el of doc.body.querySelectorAll("[class],[id],[role]")) {
+    const sig = `${el.getAttribute("class") || ""} ${el.getAttribute("id") || ""} ${el.getAttribute("role") || ""}`;
+    if (PTF_CHROME_PATTERN.test(sig)) el.remove();
+  }
+
+  const candidates = doc.body.querySelectorAll("article, main, section, div, td");
+  let best = null, bestScore = 0;
+  for (const el of candidates) {
+    const score = ptfScoreBlock(el);
+    if (score > bestScore) { bestScore = score; best = el; }
+  }
+
+  // Prefer the <article>/<main> landmark when it scores respectably, so a
+  // high-scoring inner div does not truncate the body.
+  const landmark = doc.body.querySelector("article, main");
+  if (landmark) {
+    const lScore = ptfScoreBlock(landmark);
+    if (lScore >= bestScore * 0.6) { best = landmark; bestScore = lScore; }
+  }
+
+  if (!best || bestScore < PTF_MIN_SCORE) {
+    return ptfDropRepeatedShortLines(extractReadableText(html));
+  }
+
+  const raw = (best.textContent || "").replace(/\s+/g, " ").trim();
+  return ptfDropRepeatedShortLines(raw);
 }
 
   function sliceFirstWords(text, maxWords) {
@@ -409,11 +587,15 @@ function extractReadableText(html) {
       return Object.freeze({ ok: false, error: "INVALID_URL", url });
     }
 
+    // FIX 5: hard network timeout. This path previously had none.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PTF_CONFIG.networkTimeoutMs);
+
     try {
       // Route through server-side relay to bypass browser CORS restrictions
       // Relay is read-only, public URLs only — NFIE compliant
       const relayUrl = "/api/fetch-source?url=" + encodeURIComponent(url);
-      const res = await fetch(relayUrl);
+      const res = await fetch(relayUrl, { signal: controller.signal });
 
       if (!res.ok) {
         return Object.freeze({ ok: false, error: "RELAY_HTTP_" + res.status, url });
@@ -425,23 +607,46 @@ function extractReadableText(html) {
         return Object.freeze({ ok: false, error: data.error, url });
       }
 
-      // Extract and slice — same pipeline as before
-      const readable = extractReadableText(data.html);
-      const text = sliceFirstWords(readable, 1200);
-      const wordCount = text.trim().split(/\s+/).length;
+      // FIX 6: extract the article before counting, so the word budget is
+      // spent on prose rather than on page furniture.
+      const rawText  = extractReadableText(data.html);
+      const readable = extractMainContent(data.html);
+      const text     = sliceFirstWords(readable, PTF_CONFIG.maxWords);
+      const wordCount = text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+
+      // Descriptive only — lets a caller see how much was furniture.
+      // Reports; does not act. NFIE compliant.
+      const rawWords = rawText ? rawText.trim().split(/\s+/).filter(Boolean).length : 0;
+      const keptWords = readable ? readable.trim().split(/\s+/).filter(Boolean).length : 0;
 
       return Object.freeze({
         ok: true,
         url,
         text,
         wordCount,
+        extraction: Object.freeze({
+          method:      (typeof DOMParser === "undefined") ? "fallback-regex" : "density",
+          rawWords,
+          extractedWords: keptWords,
+          droppedWords:   Math.max(0, rawWords - keptWords),
+          truncated:      keptWords > PTF_CONFIG.maxWords,
+          maxWords:       PTF_CONFIG.maxWords
+        }),
         host: data.host || (() => {
           try { return new URL(url).hostname; } catch (_) { return ""; }
         })()
       });
 
     } catch (e) {
-      return Object.freeze({ ok: false, error: "FETCH_FAILED", url });
+      const aborted = (e && (e.name === "AbortError" || e.code === 20));
+      return Object.freeze({
+        ok: false,
+        error: aborted ? "FETCH_TIMEOUT" : "FETCH_FAILED",
+        timeoutMs: aborted ? PTF_CONFIG.networkTimeoutMs : undefined,
+        url
+      });
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -450,7 +655,9 @@ function extractReadableText(html) {
     bounded: true,
     readOnly: true,
     nonSemantic: true,
-    maxWords: 1200
+    maxWords:         PTF_CONFIG.maxWords,
+    networkTimeoutMs: PTF_CONFIG.networkTimeoutMs,
+    extraction:       "density-v1"
   });
 
 })();
@@ -2193,7 +2400,8 @@ console.log(
 
    Architecture position:
      - Runs INSIDE runPTFPipeline() after Module 4b (PCA)
-     - Receives ptfText (already fetched, already bounded to 1,200 words)
+     - Receives ptfText (already fetched, already extracted and bounded —
+       see PTF_CONFIG.maxWords; was a flat 1,200 before 21 OCT 2026)
      - Calls sdsScan() once — SDS core untouched
      - Renders verbiage drift panel inside existing drift-timeline-panel
      - Emits two additive events: sovra:sds + fidarch:drift-lens
@@ -2302,7 +2510,7 @@ function runSDSDriftLens({ text = "", query = "", url = "", host = "", wordCount
       sourceQuality,
       scanId,
       admissionSignal:  "USER_QUERY_SUBMISSION",
-      extractionNotes:  "PTF pipeline fetch — first result, first 1200 words"
+      extractionNotes:  "PTF pipeline fetch — first result, density-extracted article text, word-bounded"
     })
   });
 
@@ -4575,16 +4783,58 @@ const COL_WEIGHTS_V2 = Object.freeze({
   culturalEvolutionPressure: 1,
   networkContagionDynamics:  1,
 });
- 
+
+/* Stoplist hoisted to module scope so the unigram filter and the bigram
+   filter share one list. CONTENTS UNCHANGED from the original inline set
+   — stoplist expansion is CDLM-V2 fix 4 and is NOT applied here.        */
+const SOVRA_V2_STOPS = Object.freeze(new Set([
+  "the","and","are","for","via","with","that","this","from",
+  "has","have","into","been","they","their","also","when","what","who","how",
+  "its","not","but","all","more","each","over","only","just","very","our","your"
+]));
+
+/* CDLM-V2 FIX 2 (21 OCT 2026) — PHANTOM BIGRAM ELIMINATION
+   Previously, bigrams were built from the ALREADY-STOPLISTED word list.
+   Removing a stopword closed the gap and joined two non-adjacent words
+   into a pair that never occurs in the source text — e.g.
+   "the roles and value of deservingness" yielded "roles value" and
+   "value deservingness". Measured: 278 of 544 lexicon bigrams (51.1%)
+   did not appear in their own source text. Because query text ran
+   through this same function, phantom bigrams matched phantom bigrams.
+
+   Bigrams are now formed from the UNFILTERED adjacent token stream, then
+   any bigram containing a stopword is dropped. No bigram can span a gap.
+   Unigram output is unchanged.                                          */
 function extractTermsV2(text) {
   const t = (text || "").toLowerCase();
   const quoted = (t.match(/'([^']{3,})'/g) || []).map(q => q.replace(/'/g,"").trim());
-  const stops = new Set(["the","and","are","for","via","with","that","this","from",
-    "has","have","into","been","they","their","also","when","what","who","how",
-    "its","not","but","all","more","each","over","only","just","very","our","your"]);
-  const words = (t.match(/\b[a-z][a-z\-]{2,}\b/g) || []).filter(w => !stops.has(w));
-  const bigrams = words.slice(0,-1).map((w,i) => `${w} ${words[i+1]}`);
+  const stops = SOVRA_V2_STOPS;
+  const allTokens = (t.match(/\b[a-z][a-z\-]{2,}\b/g) || []);
+  const words = allTokens.filter(w => !stops.has(w));
+  const bigrams = allTokens.slice(0,-1)
+    .map((w,i) => [w, allTokens[i+1]])
+    .filter(([a,b]) => !stops.has(a) && !stops.has(b))
+    .map(([a,b]) => `${a} ${b}`);
   return new Set([...quoted, ...words, ...bigrams]);
+}
+
+/* CDLM-V2 FIX 3 (21 OCT 2026) — BIGRAM / UNIGRAM SUBSUMPTION
+   A matched two-word phrase previously scored THREE times: both
+   constituent unigrams plus the bigram. Multiplied by COL_WEIGHTS_V2
+   (up to 3) and summed across nine areas, two words could dominate a
+   document. Measured before this fix: "branch race" returned 86
+   weighted hits from two words; "toward whiteness" returned 40.
+
+   A matched bigram now REPLACES its constituent unigram matches rather
+   than adding to them. Bigram evidence is still stronger than unigram
+   evidence — it simply is not counted three times.                      */
+function dedupeSubsumedV2(matched) {
+  const subsumed = new Set();
+  for (const term of matched) {
+    if (!term.includes(" ")) continue;
+    for (const part of term.split(" ")) subsumed.add(part);
+  }
+  return matched.filter(term => term.includes(" ") || !subsumed.has(term));
 }
  
 // Build column lexicons from SOVRA_9X9 (runs once at load)
@@ -4608,7 +4858,8 @@ function rankDomainsV2(text) {
     const colHits = {};
     for (const [col, weight] of Object.entries(COL_WEIGHTS_V2)) {
       const lexicon = SOVRA_9X9_LEXICONS[area][col];
-      const matched = [...qTerms].filter(t => lexicon.has(t));
+      // FIX 3: bigram matches subsume their constituent unigram matches
+      const matched = dedupeSubsumedV2([...qTerms].filter(t => lexicon.has(t)));
       if (matched.length) {
         colHits[col] = matched;
         total += matched.length * weight;
@@ -4787,13 +5038,20 @@ function renderWFE9x9Panel(payload) {
  
 function scanColumnV2(colName, text) {
   const t = (text || "").toLowerCase();
+  // Term extraction hoisted out of the area loop — it does not depend on
+  // area, and was previously recomputed nine times per call. Identical output.
+  const qTerms = [...(extractTermsV2(t))];
   const hits = [];
   for (const area of SOVRA_9X9.areas) {
     const lexicon = SOVRA_9X9_LEXICONS[area][colName];
     if (!lexicon) continue;
-    const matched = [...(extractTermsV2(t))].filter(term => lexicon.has(term));
+    // FIX 3: bigram matches subsume their constituent unigram matches
+    const matched = dedupeSubsumedV2(qTerms.filter(term => lexicon.has(term)));
     if (matched.length) hits.push({ area, matched });
   }
+  // NOTE: `count` here remains AREAS HIT, unchanged, because CDLM_SCANNERS
+  // and the nine scanX wrappers consume this shape. The per-area term counts
+  // live in `hits[].matched` and are what traverseCDLM9x9 now pivots on.
   return Object.freeze({ count: hits.length, hits: Object.freeze(hits) });
 }
  
@@ -4883,12 +5141,46 @@ function traverseCDLM(text, caller = "core_diagnostic_map") {
    - No aggregation, no scoring, no UI
    ============================================================ */
 
+/* CDLM-V2 FIX 1 (21 OCT 2026) — ROW AXIS PIVOT
+
+   PREVIOUSLY: the outer loop bound `rowName` but never passed it to
+   scanColumnV2, which scans all nine areas internally. Every cell in a
+   given column was therefore byte-identical, and the 81 cells collapsed
+   to 9 distinct values — measured, all nine columns returned exactly 1
+   distinct observation across their 9 rows. The row label carried no
+   information, so the grid could not distinguish Economics from Religion.
+   accumulateGridObservations() sums this into temporal memory, which
+   consequently recorded all nine areas activating identically on every
+   pass.
+
+   NOW: scanColumnV2 is called ONCE per column (9 calls, not 81) and its
+   per-area `hits` — which it already computed and discarded — are pivoted
+   onto the row axis. The grid holds 81 genuinely distinct cells.
+
+   SEMANTIC CHANGE, DISCLOSED: observation.count in THIS grid was
+   "areas hit by this column" (identical in all 9 rows); it is now
+   "terms matched in THIS area for this column". The only consumer is
+   accumulateGridObservations() at cell.hits += observation.count, whose
+   downstream reads (activeCells, repeatedCells, maxHits) are threshold
+   comparisons that remain valid — but activeCells will no longer always
+   be a multiple of 9, and maxHits moves to a different scale.
+   scanColumnV2's own return shape is UNCHANGED; CDLM_SCANNERS and the
+   nine scanX wrappers are unaffected.                                   */
 function traverseCDLM9x9(text, caller = "core_diagnostic_map") {
   const results = [];
-  for (const rowName of SOVRA_9X9.areas) {
-    for (const colName of SOVRA_9X9.columns) {
-      const observation = scanColumnV2(colName, text);
-      results.push({ row: rowName, col: colName, observation });
+  for (const colName of SOVRA_9X9.columns) {
+    const observation = scanColumnV2(colName, text);
+    const byArea = new Map((observation.hits || []).map(h => [h.area, h.matched]));
+    for (const rowName of SOVRA_9X9.areas) {
+      const matched = byArea.get(rowName) || [];
+      results.push({
+        row: rowName,
+        col: colName,
+        observation: Object.freeze({
+          count:   matched.length,
+          matched: Object.freeze([...matched])
+        })
+      });
     }
   }
   return Object.freeze({ caller, grid: Object.freeze(results) });
