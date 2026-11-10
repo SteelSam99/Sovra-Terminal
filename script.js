@@ -7352,40 +7352,92 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
 
 /* ============================================================
    F.I.D.A.R.C.H. PRIMARY SOURCE PIPELINE — Step 1
-   Fetches first result and pushes through all active modules.
-   Results stored on list[0]._ptf for card render + Sovra Speaks.
+   Fetches the first ADMISSIBLE result and pushes it through all
+   active modules. Walks down the result list (up to
+   PTF_MAX_ATTEMPTS fetches) when a source refuses the fetch, and
+   skips hosts on PTF_SKIP_HOSTS without fetching them.
+   Results stored on list[0]._ptf (and on the source's own entry)
+   for card render + Sovra Speaks.
    Score reinforcement (step 2) reads from list[0]._ptf.
    NFIE compliant — each module observes and reports only.
+   Every skipped or refused source is reported, never hidden.
    ============================================================ */
 (async function runPTFPipeline() {
-  const firstResult = list[0];
-  if (!firstResult?.link) return;
+  if (!list[0]?.link) return;
   if (window.Sovra.PublicTextFetcher.mode !== "live") return;
 
-  try {
-    const fetched = await window.Sovra.PublicTextFetcher.fetch(firstResult.link);
+  // Hosts known to refuse automated fetches. Matched as a substring of the
+  // hostname, so "amazon." covers amazon.com, amazon.co.uk, amazon.com.au, etc.
+  const PTF_SKIP_HOSTS = ["amazon."];
+  const PTF_MAX_ATTEMPTS = 3;
 
-    if (!fetched.ok) {
+  const hostOf = (link) => {
+    try { return new URL(link).hostname; } catch (_) { return ""; }
+  };
+
+  const ptfPanel = document.getElementById("ptf-panel");
+  const attempts = []; // { host, status } — shown to the user, in order
+
+  let firstResult = null; // the result actually scanned (name kept for downstream code)
+  let ptfIndex = -1;
+  let fetched = null;
+
+  try {
+    for (let i = 0; i < list.length && attempts.filter(a => a.status !== "skipped").length < PTF_MAX_ATTEMPTS; i++) {
+      const candidate = list[i];
+      if (!candidate?.link) continue;
+      const host = hostOf(candidate.link);
+
+      if (PTF_SKIP_HOSTS.some(h => host.includes(h))) {
+        attempts.push({ host, status: "skipped" });
+        continue;
+      }
+
+      const res = await window.Sovra.PublicTextFetcher.fetch(candidate.link);
+      if (res.ok) {
+        attempts.push({ host, status: "ok" });
+        firstResult = candidate;
+        ptfIndex = i;
+        fetched = res;
+        break;
+      }
+
+      attempts.push({ host, status: res.error || "refused" });
       SovraSyncTrigger.send({
         kind: "PTF_SKIP",
-        url: firstResult.link,
-        reason: fetched.error
+        url: candidate.link,
+        reason: res.error
       });
+    }
+
+    const attemptTrail = attempts
+      .map(a => `${a.host} (${a.status === "ok" ? "admitted" : a.status})`)
+      .join(" → ");
+
+    if (!fetched) {
       // Surface fetch status to user — structural observation, not error message
-      const ptfPanel = document.getElementById("ptf-panel");
       if (ptfPanel) {
-        let host = "";
-        try { host = new URL(firstResult.link).hostname; } catch (_) {}
         ptfPanel.innerHTML = `
-          <div class="ptf-header">&#10214;PTF&#10215; PRIMARY SOURCE · ${host}</div>
+          <div class="ptf-header">&#10214;PTF&#10215; PRIMARY SOURCE · none admitted</div>
           <div class="ptf-summ-signal">
-            Primary source not admissible to PTF pipeline · ${fetched.error}
-            · Analysis based on search excerpt only.
+            No result admissible to PTF pipeline · ${attemptTrail || "no candidates"}
+            · Analysis based on search excerpts only.
           </div>
         `;
         ptfPanel.classList.remove("hidden");
       }
       return;
+    }
+
+    // Success: replace any stale message from a previous search and show
+    // which source was scanned and what was passed over to reach it.
+    if (ptfPanel) {
+      ptfPanel.innerHTML = `
+        <div class="ptf-header">&#10214;PTF&#10215; PRIMARY SOURCE · ${fetched.host} · result #${ptfIndex + 1}</div>
+        ${ptfIndex > 0 || attempts.length > 1 ? `
+        <div class="ptf-summ-signal">Source path · ${attemptTrail}</div>` : ""}
+      `;
+      ptfPanel.classList.remove("hidden");
     }
 
     const ptfText = fetched.text;
@@ -7470,9 +7522,11 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
 
     // Attach to first result for card render to consume
     list[0]._ptf = ptfRecord;
+    if (ptfIndex > 0) list[ptfIndex]._ptf = ptfRecord;
 
     // Inject PTF summation into first card's provenance panel
-    const firstProvPanel = document.getElementById("prov-1");
+    // Summation goes on the card of the source that was actually scanned
+    const firstProvPanel = document.getElementById(`prov-${ptfIndex + 1}`);
     if (firstProvPanel) {
       const ptfSummary = document.createElement("div");
       ptfSummary.className = "ptf-summation";
