@@ -236,9 +236,17 @@ export default async function handler(req, res) {
   const zseOn = req.query.zse === "1";
   const apiKey = process.env.SERPAPI_KEY;
 
+  // Hosts removed from the result list (matched as a substring of the
+  // hostname, so "amazon." covers amazon.com, amazon.co.uk, amazon.com.au …).
+  // Removed hosts are reported back in `excluded` — never hidden silently.
+  const EXCLUDED_HOSTS = ["amazon."];
+  const RESULTS_SHOWN = 10;
+
+  // Ask for 20 so the list still has ~10 entries after exclusions.
+  // Same single SerpAPI call — num does not add a search.
   const endpoint =
     `https://serpapi.com/search.json?q=${encodeURIComponent(query)}` +
-    `&engine=google&api_key=${apiKey}`;
+    `&engine=google&num=20&api_key=${apiKey}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
@@ -276,6 +284,22 @@ export default async function handler(req, res) {
           predicate: []
         }))
       : [];
+
+    // Remove excluded hosts, keep a record of what was removed
+    const hostOf = (link) => {
+      try { return new URL(link).hostname; } catch (_) { return ""; }
+    };
+    const excluded = [];
+    organic_results = organic_results
+      .filter(r => {
+        const host = hostOf(r.link);
+        if (EXCLUDED_HOSTS.some(h => host.includes(h))) {
+          excluded.push(host);
+          return false;
+        }
+        return true;
+      })
+      .slice(0, RESULTS_SHOWN);
 
     // ============================================================
     // CORE DIAGNOSTIC PIPELINE (SERVER-SIDE ONLY)
@@ -338,6 +362,7 @@ export default async function handler(req, res) {
     res.status(200).json({
       query_token,
       organic_results,
+      excluded,
       zse,
       cdlm: cdlmTelemetry
     });
