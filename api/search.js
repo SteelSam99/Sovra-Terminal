@@ -234,6 +234,9 @@ export default async function handler(req, res) {
 
   const query_token = Buffer.from(query).toString("base64").slice(0, 16);
   const zseOn = req.query.zse === "1";
+  // Raw Data: return allow-listed run metadata (never the full upstream payload).
+  const rawOn = req.query.raw === "true";
+  const tServer0 = Date.now();
   const apiKey = process.env.SERPAPI_KEY;
 
   // Hosts removed from the result list (matched as a substring of the
@@ -252,12 +255,14 @@ export default async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
+    const tUp0 = Date.now();
     const response = await fetch(endpoint, {
       signal: controller.signal,
       headers: { "user-agent": "Sovra/1.0 (public-runtime)" }
     });
 
     clearTimeout(timeout);
+    const upstreamMs = Date.now() - tUp0;
 
     const contentType = response.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {
@@ -270,6 +275,7 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
+    const returnedByGoogle = Array.isArray(data.organic_results) ? data.organic_results.length : 0;
 
     // Normalize results
     let organic_results = Array.isArray(data.organic_results)
@@ -364,7 +370,31 @@ export default async function handler(req, res) {
       organic_results,
       excluded,
       zse,
-      cdlm: cdlmTelemetry
+      cdlm: cdlmTelemetry,
+      // Allow-list only: timing, counts, and Google's own metadata.
+      // No account-linked URLs, no ads, no full upstream payload.
+      raw: rawOn ? {
+        server: {
+          totalMs: Date.now() - tServer0,
+          upstreamMs,
+          requested: 20,
+          returnedByGoogle,
+          kept: organic_results.length,
+          excludedCount: excluded.length,
+          timedOut: false
+        },
+        google: {
+          searchId: data.search_metadata?.id ?? null,
+          status: data.search_metadata?.status ?? null,
+          createdAt: data.search_metadata?.created_at ?? null,
+          processedAt: data.search_metadata?.processed_at ?? null,
+          serviceTimeSec: data.search_metadata?.total_time_taken ?? null,
+          totalResults: data.search_information?.total_results ?? null,
+          googleTimeSec: data.search_information?.time_taken_displayed ?? null,
+          resultsState: data.search_information?.organic_results_state ?? null,
+          queryDisplayed: data.search_information?.query_displayed ?? null
+        }
+      } : null
     });
 
   } catch (error) {
@@ -376,7 +406,8 @@ export default async function handler(req, res) {
         organic_results: [],
         zse: zseOn ? runZSEStandalone(query) : null,
         cdlm: null,
-        timeout: true
+        timeout: true,
+        raw: rawOn ? { server: { totalMs: Date.now() - tServer0, timedOut: true } } : null
       });
       return;
     }
