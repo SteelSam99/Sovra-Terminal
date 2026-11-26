@@ -147,18 +147,20 @@ Machine‑Human Collaboration · Non‑Coercive Systems Interaction
 
       <h4>Zero-Sum</h4>
       <ul>
-        <li>Scans the words of your question for zero-sum narrative language: words that frame one group's gain as another's loss (for example "take from", "replace", "our jobs", "us vs them"), from overt wording through coded demographic-displacement wording.</li>
-        <li>When found, shows a "Zero-Sum Narrative Detected" block listing each term, with its inversion, its logic and its camouflage, and adds that context to the result cards.</li>
+        <li>Scans the text of a returned result for zero-sum narrative language: words that frame one group's gain as another's loss (for example "take from", "replace", "our jobs", "us vs them"), from overt wording through coded demographic-displacement wording.</li>
+        <li>The engine fetches the full text of the first result it can read (the primary source). If a site refuses, it moves down the list and shows the path it took.</li>
+        <li>When markers are found, shows <b>Zero-Sum Narrative Detected</b> with the source named (site, result number, words read), and each term with its inversion, its logic and its camouflage.</li>
+        <li>When none are found, it says so and names the source. When no result could be fetched, it says nothing was scanned.</li>
       </ul>
-      <p><b>How to read it:</b> it shows when the framing is already inside the question being asked, often borrowed from the way the subject is usually discussed. A match describes the wording, not the person asking.</p>
+      <p><b>How to read it:</b> a match means the language is present in that source. It does not mean the source endorses it. A page that explains or criticises a zero-sum idea uses the same words. Open the page and read it in context.</p>
 
       <h4>Sovra Speaks — <span class="manual-status">not active (known issue)</span></h4>
       <p>Intended: a short observation in Sovra's voice, drawn from the whole field of results, in the left column of the diagnostic bar.</p>
       <p>Current status: the checkbox is not connected to the engine, so ticking it has no effect yet. When connected, it will need Collapse / Contra on to be visible.</p>
 
-      <h4>Raw Data — <span class="manual-status">not active (known issue)</span></h4>
+      <h4>Raw Data — <span class="manual-status">connected, no output yet</span></h4>
       <p>Intended: show results without interpretation, for comparison.</p>
-      <p>Current status: the checkbox is not connected, and the search server does not yet use the raw setting. Ticking it has no effect on the search.</p>
+      <p>Current status: the checkbox is connected and shows as on in the gate list, but the search server does not yet use the raw setting, so it produces nothing of its own.</p>
 
       <button id="closeManualPanel" type="button">Close Manual</button>
     </div>
