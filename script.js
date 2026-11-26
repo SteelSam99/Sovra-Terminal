@@ -6981,6 +6981,171 @@ window.Sovra.PCS = Object.freeze({
   blocklistLength: PCS_BLOCKLIST.length
 });
 
+/* ============================================================
+   RAW DATA — RUN LOG (Raw Data gate)
+   Shows the machinery of a search, not an interpretation of it:
+   timing, the query as typed and as sent, every call made, the
+   gates and modules that ran, Google's own metadata (allow-listed
+   by the server), what was removed, and the versions in use.
+   Observes only: nothing here changes a search or its results.
+   Chassis: the Feb 10, 2026 server, which returned raw search data
+   when raw=true but was never displayed.
+   ============================================================ */
+window.__sovraRun = null;
+
+(function installSovraFetchLog() {
+  if (window.__sovraFetchLogInstalled) return;
+  window.__sovraFetchLogInstalled = true;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .raw-panel { margin: 14px 0; padding: 10px 12px; border: 1px solid #444; background: #111; color: #ddd;
+      font-family: ui-monospace, Consolas, monospace; font-size: 12px; line-height: 1.5; }
+    .raw-panel summary { cursor: pointer; color: #d4a017; font-weight: 600; }
+    .raw-panel h5 { margin: 10px 0 4px; color: #eee; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .raw-panel table { border-collapse: collapse; width: 100%; }
+    .raw-panel td { padding: 1px 8px 1px 0; vertical-align: top; }
+    .raw-panel td:first-child { color: #999; white-space: nowrap; width: 1%; }
+  `;
+  document.head.appendChild(style);
+
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async function (input, init) {
+    const url = typeof input === "string" ? input : (input && input.url) || "";
+    const run = window.__sovraRun;
+    let kind = null;
+    if (url.includes("/api/search")) {
+      let q = null;
+      try { q = new URL(url, location.origin).searchParams.get("q"); } catch (_) {}
+      kind = /[?&]raw=1\b/.test(url) ? "drift scan search"
+           : (run && q === run.querySent) ? "main search"
+           : "mainstream lane search";
+    } else if (url.includes("/api/fetch-source")) {
+      kind = "text fetch";
+    }
+    if (!run || !kind) return origFetch(input, init);
+
+    const t = performance.now();
+    const entry = { kind, ms: null, status: "pending" };
+    run.calls.push(entry);
+    try {
+      const r = await origFetch(input, init);
+      entry.status = r.status;
+      return r;
+    } catch (e) {
+      entry.status = "failed";
+      throw e;
+    } finally {
+      entry.ms = Math.round(performance.now() - t);
+      if (run === window.__sovraRun) renderRawPanel();
+    }
+  };
+})();
+
+function renderRawPanel() {
+  const run = window.__sovraRun;
+  if (!run || !run.gates.rawData) return;
+  const results = document.querySelector(".results-right");
+  if (!results) return;
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const row = (k, v) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`;
+  const ms = (v) => (v === null || v === undefined) ? "–" : `${v} ms`;
+
+  let panel = document.getElementById("raw-panel");
+  const wasOpen = panel ? panel.open : true;
+  if (!panel) {
+    panel = document.createElement("details");
+    panel.id = "raw-panel";
+    panel.className = "raw-panel";
+  }
+  results.appendChild(panel); // keep it last
+  panel.open = wasOpen;
+
+  const srv = run.server?.server || null;
+  const g = run.server?.google || null;
+  const done = run.calls.filter(c => c.ms !== null);
+  const pending = run.calls.length - done.length;
+  const sum = (kind) => done.filter(c => c.kind === kind).reduce((a, c) => a + c.ms, 0);
+  const count = (kind) => run.calls.filter(c => c.kind === kind).length;
+  const searches = run.calls.filter(c => c.kind.endsWith("search")).length;
+
+  const gatesOn = Object.entries({
+    "W-F": run.gates.welsingFuller, "Collapse / Contra": run.gates.contraCollapse,
+    "Drift Core": run.gates.driftCore, "Zero-Sum": run.gates.zeroSum,
+    "Raw Data": run.gates.rawData, "Sovra Speaks": run.gates.sovraSpeaks
+  }).filter(([, v]) => v).map(([k]) => k);
+
+  const modules = ["Search (Google, via search service)"];
+  if (run.wfe) modules.push(`W-F rewrite v${esc(run.wfe.version)} (${esc(run.wfe.voice)}, ${esc(run.wfe.scope)}, ${run.wfe.swaps} swap${run.wfe.swaps === 1 ? "" : "s"})`);
+  if (run.lanes.length > 1) modules.push("Two lanes (rephrase vs mainstream)");
+  if (run.gates.welsingFuller) modules.push("9×9 scan");
+  modules.push("Text fetcher (PTF): ZSE · Trifold · CDLM · PCA" + (run.gates.driftCore ? " · SDS drift lens · drift" : ""));
+  if (run.gates.contraCollapse) modules.push("Collapse / Contra scoring · VDU");
+  if (run.gates.driftCore) modules.push("Drift timeline");
+  if (run.gates.zeroSum) modules.push("Zero-Sum display (from fetched text)");
+
+  const callRows = run.calls.map((c, i) =>
+    row(`#${i + 1} ${c.kind}`, `${esc(c.status)} · ${ms(c.ms)}`)).join("");
+
+  const ptf = run.ptf
+    ? (run.ptf.none ? `none admitted · ${esc(run.ptf.trail || "no candidates")}`
+                    : `${esc(run.ptf.host)} · result #${run.ptf.rank} · ${esc(run.ptf.words)} words${run.ptf.trail ? " · path: " + esc(run.ptf.trail) : ""}`)
+    : (pending ? "running…" : "–");
+
+  panel.innerHTML = `
+    <summary>RAW · run log${pending ? " · " + pending + " call(s) still running" : ""}</summary>
+    <h5>Timing</h5>
+    <table>
+      ${row("started", esc(run.startedAt))}
+      ${row("main response at", ms(run.responseMs))}
+      ${row("results drawn at", ms(run.firstPaintMs))}
+      ${row("server total", ms(srv?.totalMs))}
+      ${row("server ↔ Google round trip", ms(srv?.upstreamMs))}
+      ${row("search service time", g?.serviceTimeSec != null ? esc(g.serviceTimeSec) + " s" : "–")}
+      ${row("Google's own time", g?.googleTimeSec != null ? esc(g.googleTimeSec) + " s" : "–")}
+      ${row("text fetching", ms(sum("text fetch") || null))}
+    </table>
+    <h5>Query</h5>
+    <table>
+      ${row("as typed", esc(run.queryTyped))}
+      ${row("as sent", esc(run.querySent))}
+      ${row("lanes", esc(run.lanes.join(" + ")))}
+      ${run.wfe && run.wfe.flagged && run.wfe.flagged.length ? row("left as typed (no source)", esc(run.wfe.flagged.join(", "))) : ""}
+    </table>
+    <h5>Calls</h5>
+    <table>
+      ${row("searches used", `${searches} (main ${count("main search")} · mainstream lane ${count("mainstream lane search")} · drift scan ${count("drift scan search")})`)}
+      ${row("text fetches", String(count("text fetch")))}
+      ${callRows}
+    </table>
+    <h5>Gates and modules</h5>
+    <table>
+      ${row("gates on", esc(gatesOn.join(", ") || "none"))}
+      ${row("modules run", modules.join("<br>"))}
+    </table>
+    <h5>Google's side</h5>
+    <table>
+      ${row("total results reported", esc(g?.totalResults ?? "–"))}
+      ${row("query Google displayed", esc(g?.queryDisplayed ?? "–"))}
+      ${row("results state", esc(g?.resultsState ?? "–"))}
+      ${row("search id", esc(g?.searchId ?? "–"))}
+      ${row("created", esc(g?.createdAt ?? "–"))}
+    </table>
+    <h5>What was removed</h5>
+    <table>
+      ${row("Google returned / kept", srv ? `${srv.returnedByGoogle} / ${srv.kept}` : "–")}
+      ${row("excluded hosts", esc((run.excluded || []).join(", ") || "none"))}
+      ${row("text fetcher", ptf)}
+    </table>
+    <h5>Versions</h5>
+    <table>
+      ${row("runtime", "Sovra-FCL-MHCE v3.0 · raw run log 1.0")}
+      ${row("W-F rewrite", run.wfe ? "v" + esc(run.wfe.version) : "not used")}
+    </table>
+  `;
+}
+
 window.searchSovra = async function () {
   const results = document.querySelector(".results-right");
   try {
@@ -6993,6 +7158,19 @@ window.searchSovra = async function () {
       return;
     }
 
+    // Raw Data run log: one record per search (observes only).
+    window.__sovraRun = {
+      t0: performance.now(), startedAt: new Date().toISOString(),
+      queryTyped: query, querySent: query, lanes: ["as typed"], calls: [],
+      gates: {
+        welsingFuller: SOVRA_GATES.welsingFuller(), contraCollapse: SOVRA_GATES.contraCollapse(),
+        driftCore: SOVRA_GATES.driftCore(), zeroSum: SOVRA_GATES.zeroSum(),
+        rawData: SOVRA_GATES.rawData(), sovraSpeaks: SOVRA_GATES.sovraSpeaks()
+      },
+      wfe: null, server: null, excluded: [], resultCount: null, ptf: null,
+      responseMs: null, firstPaintMs: null
+    };
+    const __run = window.__sovraRun;
     let wfeMeta = null;
     if (SOVRA_GATES.welsingFuller()) {
       const rewritten = applyWFEQueryRewrite(query);
@@ -7032,6 +7210,11 @@ window.searchSovra = async function () {
       `&wfe=${wfeOn}` +
       `&contra=${collapseContraOn}`;
 
+    __run.querySent = query;
+    __run.wfe = wfeMeta ? { version: wfeMeta.version, voice: wfeMeta.voice, scope: wfeMeta.scope,
+      swaps: (wfeMeta.swaps || []).length, flagged: wfeMeta.flagged || [] } : null;
+    if (wfeMeta && wfeMeta.scope === "rephrased") __run.lanes = ["W-F rephrase", "mainstream (as typed)"];
+
     // W-F two lanes: when the gate rephrased the query, also run the
     // question as typed (mainstream lane) so results only the rephrase
     // surfaces can be marked. One extra search, only when rephrased.
@@ -7059,6 +7242,13 @@ window.searchSovra = async function () {
     const wfeMainstreamLinks = (wfeMainstreamData && Array.isArray(wfeMainstreamData.organic_results))
       ? new Set(wfeMainstreamData.organic_results.map(r => wfeNorm(r.link)))
       : null;
+
+    // Raw Data run log: server metadata (allow-listed) and timing.
+    __run.server = data.raw || null;
+    __run.excluded = data.excluded || [];
+    __run.resultCount = Array.isArray(data.organic_results) ? data.organic_results.length : 0;
+    __run.responseMs = Math.round(performance.now() - __run.t0);
+    setTimeout(() => { __run.firstPaintMs = Math.round(performance.now() - __run.t0); renderRawPanel(); }, 0);
 
 /* --------------------------------
    Temporal Drift Timeline (LEFT COLUMN)
@@ -7502,6 +7692,7 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
         ptfPanel.classList.remove("hidden");
       }
       if (SOVRA_GATES.zeroSum()) renderZSEStandalone(null, { none: true, trail: attemptTrail });
+      if (window.__sovraRun) { window.__sovraRun.ptf = { none: true, trail: attemptTrail }; renderRawPanel(); }
       return;
     }
 
@@ -7603,6 +7794,10 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
     // Zero-Sum gate: show the zero-sum scan of the fetched source text.
     if (SOVRA_GATES.zeroSum()) {
       renderZSEStandalone(ptfZSE, { host: fetched.host, rank: ptfIndex + 1, words: fetched.wordCount });
+    }
+    if (window.__sovraRun) {
+      window.__sovraRun.ptf = { host: fetched.host, rank: ptfIndex + 1, words: fetched.wordCount, trail: attemptTrail };
+      renderRawPanel();
     }
 
     // Inject PTF summation into first card's provenance panel
