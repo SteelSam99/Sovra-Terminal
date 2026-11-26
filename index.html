@@ -158,9 +158,18 @@ Machine‑Human Collaboration · Non‑Coercive Systems Interaction
       <p>Intended: a short observation in Sovra's voice, drawn from the whole field of results, in the left column of the diagnostic bar.</p>
       <p>Current status: the checkbox is not connected to the engine, so ticking it has no effect yet. When connected, it will need Collapse / Contra on to be visible.</p>
 
-      <h4>Raw Data — <span class="manual-status">connected, no output yet</span></h4>
-      <p>Intended: show results without interpretation, for comparison.</p>
-      <p>Current status: the checkbox is connected and shows as on in the gate list, but the search server does not yet use the raw setting, so it produces nothing of its own.</p>
+      <h4>Raw Data</h4>
+      <p>Shows the machinery of a search, not an interpretation of it. A <b>RAW · run log</b> panel appears at the end of the results and fills in live as each step finishes.</p>
+      <ul>
+        <li><b>Timing:</b> when the search started, when the main response arrived and the results were drawn, the server's total time, the server-to-Google round trip, the search service's time, Google's own time, and time spent fetching page text.</li>
+        <li><b>Query:</b> the question as typed, the question as sent (after any W-F swap), which lanes ran, and any word left as typed because no recorded term exists.</li>
+        <li><b>Calls:</b> every call the engine made (main search, mainstream lane, drift scan, text fetch) with its status and time, and the total number of searches the run used.</li>
+        <li><b>Gates and modules:</b> which gates were on and which modules ran.</li>
+        <li><b>Google's side:</b> total results Google reported, the query Google displayed, the results state, the search ID and when it was created.</li>
+        <li><b>What was removed:</b> how many results Google returned against how many were kept, hosts excluded, and the text fetcher's path (which sites it tried and which it read).</li>
+        <li><b>Versions:</b> the runtime and the W-F rewrite version, so a result can be traced to the code that produced it.</li>
+      </ul>
+      <p><b>How to read it:</b> if <i>created</i> is earlier than <i>started</i>, the search service answered from its cache and Google was not asked again. Raw Data only observes; it never changes a search or its results.</p>
 
       <button id="closeManualPanel" type="button">Close Manual</button>
     </div>
