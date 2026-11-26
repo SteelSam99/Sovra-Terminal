@@ -1166,7 +1166,7 @@ welsingFuller: () =>
 
 
   rawData: () =>
-    !!document.getElementById("toggleRaw")?.checked,
+    !!document.getElementById("rawData")?.checked,
 
   sovraSpeaks: () =>
     !!document.getElementById("toggleSovraSpeaks")?.checked
@@ -5636,26 +5636,39 @@ const provBtn = e.target.closest
   }
 });
 
-function renderZSEStandalone(result) {
-  if (!result.detected) return;
-
+function renderZSEStandalone(result, src = null) {
   const container = document.querySelector(".results-right");
   if (!container) return;
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const where = src && src.host
+    ? ` · source: ${esc(src.host)} (result #${src.rank}${src.words ? ", " + src.words + " words" : ""})`
+    : "";
+
+  // Nothing detected: report what was scanned (or that nothing could be).
+  if (!result || !result.detected) {
+    if (!src) return;
+    const note = document.createElement("section");
+    note.className = "zse-block";
+    note.innerHTML = src.none
+      ? `<h3>Zero-Sum</h3><div class="zse-term">No result text could be fetched, so nothing was scanned${src.trail ? " (" + esc(src.trail) + ")" : ""}.</div>`
+      : `<h3>Zero-Sum</h3><div class="zse-term">No zero-sum markers in the fetched text${where}.</div>`;
+    container.prepend(note);
+    return;
+  }
 
   const block = document.createElement("section");
   block.className = "zse-block";
 
-
   block.innerHTML = `
-    <h3>Zero‑Sum Narrative Detected</h3>
+    <h3>Zero-Sum Narrative Detected${where}</h3>
     ${result.matches.map(m => `
       <div class="zse-term">
-        <strong>${m.term}</strong>
+        <strong>${esc(m.term)}</strong>
         ${m.payload ? `
           <ul>
-            <li>${m.payload.inversion}</li>
-            <li>${m.payload.logic}</li>
-            <li>${m.payload.camouflage}</li>
+            <li>${esc(m.payload.inversion)}</li>
+            <li>${esc(m.payload.logic)}</li>
+            <li>${esc(m.payload.camouflage)}</li>
           </ul>
         ` : ""}
       </div>
@@ -6972,7 +6985,7 @@ window.searchSovra = async function () {
   const results = document.querySelector(".results-right");
   try {
     let query = (document.getElementById("query")?.value || "").trim();
-    const compareRaw = document.getElementById("toggleRaw")?.checked || false;
+    const compareRaw = document.getElementById("rawData")?.checked || false;
 
     if (!results) return;
     if (!query) {
@@ -7005,7 +7018,9 @@ window.searchSovra = async function () {
       ts: new Date().toISOString()
     });
 
-    const zeroSumOn = SOVRA_GATES.zeroSum() ? "1" : "0";
+    // Zero-Sum scans the fetched result text (PTF Module 1), not the query,
+    // so the server-side query scan stays off.
+    const zeroSumOn = "0";
     const wfeOn = SOVRA_GATES.welsingFuller() ? "1" : "0";
     const collapseContraOn = SOVRA_GATES.contraCollapse() ? "1" : "0";
 
@@ -7081,9 +7096,8 @@ if (SOVRA_GATES.driftCore() && window.Sovra?.DriftScanner?.create) {
 }
 
 // Render Zero-Sum block once per query
-if (SOVRA_GATES.zeroSum() && data.zse) {
-  renderZSEStandalone(data.zse);
-}
+// Zero-Sum block is rendered by the primary-source pipeline (PTF) from the
+// fetched text of the returned result — see runPTFPipeline().
 
 function renderDriftTimeline(payload) {
   if (!payload || !payload.ok || payload.kind !== "DRIFT_TIMELINE") return;
@@ -7487,6 +7501,7 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
         `;
         ptfPanel.classList.remove("hidden");
       }
+      if (SOVRA_GATES.zeroSum()) renderZSEStandalone(null, { none: true, trail: attemptTrail });
       return;
     }
 
@@ -7584,6 +7599,11 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
     // Attach to first result for card render to consume
     list[0]._ptf = ptfRecord;
     if (ptfIndex > 0) list[ptfIndex]._ptf = ptfRecord;
+
+    // Zero-Sum gate: show the zero-sum scan of the fetched source text.
+    if (SOVRA_GATES.zeroSum()) {
+      renderZSEStandalone(ptfZSE, { host: fetched.host, rank: ptfIndex + 1, words: fetched.wordCount });
+    }
 
     // Inject PTF summation into first card's provenance panel
     // Summation goes on the card of the source that was actually scanned
