@@ -6325,108 +6325,137 @@ function extractKeyPhrases(cellText) {
 }
 
 /* ── MAIN REWRITE FUNCTION ─────────────────────────────────── */
+/* ============================================================
+   applyWFEQueryRewrite — V4 (Voice Rephrase, Sourced)
+   Re-asks the question as Dr. Frances Cress Welsing (default) or
+   Neely Fuller, Jr. would phrase it. In-place substitution only:
+   the query stays ONE question. Nothing is appended.
+   Every swap carries its source (video # + timestamp) from
+   "W-F Rephrase Vocabulary - Source Report (2026-11-26).md"
+   (E:\F.I.D.A.R.C.H. 3.0). Terms with no sourced mapping pass
+   through unchanged and are flagged. A voice never borrows the
+   other voice's term.
+   Replaces V3 (grid fragments joined by " | "), which grew an
+   11-word query to 164 words and collapsed Google's results.
+   Author: Samuel Paul Peacock | SOVRA-FCL-MHCE
+   NFIE Compliant · O_f = 0 · Descriptive only
+   ============================================================ */
+
+const WFE_LEXICON_V4 = Object.freeze([
+  // Order matters: most specific first.
+  { id: "adj-racist-q", whole: true,
+    pattern: /^(is|are|was|were)\s+(.+?)\s+racist\s*\?$/i,
+    build: (m, voice) => `${m[1].charAt(0).toUpperCase() + m[1].slice(1)} ${m[2]} a part of ${voice === "fuller" ? "the system of white supremacy" : "the system of racism, white supremacy"}?`,
+    src: { welsing: "v13 3:51-4:08", fuller: "v7 1:10:53; v7 45:37" } },
+  { id: "white-privilege", pattern: /\bwhite privilege\b/gi,
+    welsing: "the system of racism, white supremacy", fuller: "the system of white supremacy",
+    src: { welsing: "v13 2:40-2:57; v3 17:21", fuller: "v7 1:10:53" } },
+  { id: "whiteness", pattern: /\bwhiteness\b/gi,
+    welsing: "the system of racism, white supremacy", fuller: "the system of white supremacy",
+    src: { welsing: "v13 2:40-2:57", fuller: "v7 1:10:53" } },
+  { id: "systemic-racism", pattern: /\b(systemic|institutional|structural)\s+racism\b/gi,
+    welsing: "the system of racism, white supremacy", fuller: "the system of white supremacy",
+    src: { welsing: "v5 3:15", fuller: "v7 1:10:53" } },
+  { id: "racism", pattern: /\bracism\b/gi,
+    welsing: "the system of racism, white supremacy", fuller: "the system of white supremacy",
+    src: { welsing: "v3 3:52, 5:21; v4 0:57; v6 0:22", fuller: "v1 1:08; v7 1:10:53" } },
+  { id: "racists", pattern: /\bracists\b/gi,
+    welsing: null, fuller: "the white supremacists",
+    src: { fuller: "v1 1:26; v7" } },
+  { id: "white-people", pattern: /\bwhite (people|folks|americans)\b/gi,
+    welsing: "people who classify themselves as white", fuller: "people who are classified as white",
+    src: { welsing: "v2 10:40; v3 17:13; v5 3:23", fuller: "v10 22:12-22:19" } },
+  { id: "minorities", pattern: /\b(racial |ethnic )?minorit(y groups|ies)\b/gi,
+    welsing: "people of color", fuller: "non-white people",
+    src: { welsing: "v2 10:24; v5 2:45", fuller: "v1 1:08" } },
+  { id: "colorism", pattern: /\bcolou?rism\b/gi,
+    welsing: "color shade conflict", fuller: null,
+    src: { welsing: "v14 14:51-15:18" } },
+  { id: "spouse", pattern: /\b(spouse|husband|wife)\b/gi,
+    welsing: null, fuller: "care mate",
+    src: { fuller: "v7 9:31, 11:05" } },
+]);
+
+// No sourced mapping yet: passed through unchanged and flagged.
+const WFE_UNSOURCED_V4 = Object.freeze([
+  /\bprejudice\b/i, /\bbias(ed)?\b/i, /\bdiscriminat\w*/i, /\bhate( crimes?)?\b/i,
+  /\bracial\b/i, /\bracist\b/i, /\bsegregat\w*/i, /\bconspirac\w*/i,
+  /\bdiversity\b/i, /\binclusion\b/i, /\bDEI\b/
+]);
+
 function applyWFEQueryRewrite(originalQuery) {
-  const core = originalQuery;
+  const voice = document.getElementById("wfVoice")?.value === "fuller" ? "fuller" : "welsing";
+  let q = String(originalQuery || "").trim();
+  const swaps = [], missingInVoice = [], quoted = [], inserted = [];
 
-  // ── LAYER 1: Subject bridge ───────────────────────────────
-  const bridged = bridgeScore(core);
+  // Quoted phrases (titles, names) are never swapped.
+  q = q.replace(/"[^"]*"/g, (m) => { quoted.push(m); return `\u0000${quoted.length - 1}\u0000`; });
+  // Inserted phrases are locked so no later rule re-swaps them.
+  const lock = (t) => { inserted.push(t); return `\u0001${inserted.length - 1}\u0001`; };
 
-  // ── LAYER 2: Lexical grid match ───────────────────────────
-  const lexical = (typeof rankDomainsV2 === "function")
-    ? rankDomainsV2(core).filter(d => d.score > 0)
-    : [];
-
-  // ── MERGE: combine bridge + lexical, deduplicate by area ──
-  const areaMap = {};
-  for (const { area, score } of bridged) {
-    areaMap[area] = (areaMap[area] || 0) + score * 2; // bridge weighted higher
-  }
-  for (const d of lexical) {
-    areaMap[d.domain] = (areaMap[d.domain] || 0) + d.score;
-  }
-
-  const activatedAreas = Object.entries(areaMap)
-    .sort((a,b) => b[1] - a[1])
-    .map(([area]) => area);
-
-  // ── NO ACTIVATION: pass through ───────────────────────────
-  if (activatedAreas.length === 0) {
-    return {
-      rewrittenQuery: core,
-      meta: {
-        method: "Welsing-Fuller",
-        scope: "pass-through",
-        depth: "no-activation",
-        activatedAreas: [],
-        note: "No subject or lexical grid activation. Core query returned."
+  for (const e of WFE_LEXICON_V4) {
+    if (e.whole) {
+      const m = q.match(e.pattern);
+      if (m) {
+        const built = e.build(m, voice);
+        swaps.push({ from: m[0], to: built, rule: e.id, source: e.src[voice] });
+        q = lock(built);
       }
-    };
+      continue;
+    }
+    const to = e[voice];
+    q = q.replace(e.pattern, (hit) => {
+      if (!to) { missingInVoice.push({ term: hit, rule: e.id }); return hit; }
+      swaps.push({ from: hit, to, rule: e.id, source: e.src[voice] });
+      return lock(to);
+    });
   }
 
-  // ── LAYER 3: Extract grid content from activated areas ────
-  const expansionTerms = [];
-  const columnHitLog = [];
+  // Flag unsourced terms in the user's own words only.
+  const userWords = q.replace(/\u0001\d+\u0001/g, " ");
+  const flagged = WFE_UNSOURCED_V4
+    .map((re) => (userWords.match(re) || [])[0])
+    .filter(Boolean)
+    .filter((t, i, a) => a.indexOf(t) === i);
 
-  // For cross-cutting signals (racism etc.) — use top 2 areas only
-  // to avoid flooding the query with all 9 areas
-  const areasToExpand = activatedAreas.slice(0, 3);
+  q = q.replace(/\u0001(\d+)\u0001/g, (_, i) => inserted[+i])
+       .replace(/\u0000(\d+)\u0000/g, (_, i) => quoted[+i]);
 
-  for (const area of areasToExpand) {
-    const grid = (typeof SOVRA_9X9 !== "undefined" && SOVRA_9X9.columnGrid)
-      ? SOVRA_9X9.columnGrid[area]
-      : null;
-    if (!grid) continue;
-
-    // Column priority: outputSymptom and defensiveReaction are most
-    // search-relevant — they describe what we actually see and how
-    // the system responds. These produce the best search differentiation.
-    const priorityCols = [
-      "outputSymptom",
-      "defensiveReaction",
-      "memeticReplication",
-      "flowBehavior",
-      "branchingPattern",
-    ];
-
-    for (const col of priorityCols) {
-      const cellContent = grid[col] || "";
-      const phrases = extractKeyPhrases(cellContent);
-      expansionTerms.push(...phrases.slice(0, 3));
-      if (phrases.length) columnHitLog.push({ area, col, phrases: phrases.slice(0,3) });
-    }
-
-    // Add routing cues from activated area
-    if (grid.routingCues) {
-      const q = core.toLowerCase();
-      const newCues = grid.routingCues.filter(c => !q.includes(c.toLowerCase()));
-      expansionTerms.push(...newCues.slice(0, 2));
-    }
-  }
-
-  // ── DEDUPLICATE AND BUILD OUTBOUND QUERY ──────────────────
-  const unique = [...new Set(
-    expansionTerms
-      .map(t => (t || "").trim().toLowerCase())
-      .filter(t => t.length > 3 && !core.toLowerCase().includes(t))
-  )];
-
-  const rewrittenQuery = [core, ...unique].join(" | ");
-
+  const words = q.split(/\s+/).filter(Boolean).length;
   return {
-    rewrittenQuery,
+    rewrittenQuery: swaps.length ? q : String(originalQuery || "").trim(),
     meta: {
       method: "Welsing-Fuller",
-      scope: "grid-activated",
-      depth: "column-expansion",
-      languageMode: "functional",
-      activatedAreas,
-      expansionCount: unique.length,
-      columnHits: columnHitLog,
+      version: "4.0",
+      voice,
+      scope: swaps.length ? "rephrased" : "pass-through",
+      originalQuery: String(originalQuery || "").trim(),
+      swaps,
+      missingInVoice,
+      flagged,
+      words,
+      overLimit: words > 32,
+      sourceReport: "W-F Rephrase Vocabulary - Source Report (2026-11-26).md"
     }
   };
 }
 
-console.log("[WFE Rewrite v3.0] Subject bridge + grid activation loaded. NFIE compliant. O_f = 0.");
+// Explains every term used (Fuller: the person who uses a term should explain it).
+function renderWFESwaps(meta) {
+  if (!meta || meta.method !== "Welsing-Fuller") return "";
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const voiceName = meta.voice === "fuller" ? "Neely Fuller, Jr." : "Dr. Frances Cress Welsing";
+  const rows = [];
+  rows.push(`<div class="section-label">W-F rephrase · voice: ${esc(voiceName)} · ${esc(meta.scope)}</div>`);
+  if (meta.scope === "rephrased") rows.push(`<div class="wfe-line">Asked: ${esc(meta.originalQuery)}</div>`);
+  for (const s of meta.swaps) rows.push(`<div class="wfe-line">${esc(s.from)} → <b>${esc(s.to)}</b> <span class="wfe-src">[${esc(s.source || "")}]</span></div>`);
+  for (const m of meta.missingInVoice) rows.push(`<div class="wfe-line">${esc(m.term)}: no ${esc(voiceName)} source yet, left as typed</div>`);
+  if (meta.flagged.length) rows.push(`<div class="wfe-line">No sourced term yet, left as typed: ${esc(meta.flagged.join(", "))}</div>`);
+  if (meta.overLimit) rows.push(`<div class="wfe-line">Note: ${meta.words} words; Google reads about 32.</div>`);
+  return `<div class="wfe-swaps">${rows.join("")}</div>`;
+}
+
+console.log("[WFE Rewrite v4.0] Voice rephrase (Welsing default / Fuller), sourced, in-place. NFIE compliant. O_f = 0.");
 
 /* ============================================================
    VDU Module (Minimal Stub)
@@ -7113,6 +7142,9 @@ function renderDriftTimeline(payload) {
 }
 
 results.innerHTML = `<div class="section-label">Search results</div>`;
+
+// W-F gate: show every swap with its source, above the results.
+if (wfeMeta) results.innerHTML += renderWFESwaps(wfeMeta);
 
 const list = Array.isArray(data.organic_results) ? data.organic_results : [];
 if (!list.length) {
