@@ -7017,6 +7017,14 @@ window.searchSovra = async function () {
       `&wfe=${wfeOn}` +
       `&contra=${collapseContraOn}`;
 
+    // W-F two lanes: when the gate rephrased the query, also run the
+    // question as typed (mainstream lane) so results only the rephrase
+    // surfaces can be marked. One extra search, only when rephrased.
+    const wfeMainstreamP = (wfeMeta && wfeMeta.scope === "rephrased")
+      ? fetch(`/api/search?q=${encodeURIComponent(wfeMeta.originalQuery)}&raw=false&zse=0&wfe=0&contra=0`)
+          .then(r => r.json()).catch(() => null)
+      : Promise.resolve(null);
+
     const response = await fetch(endpoint);
     const contentType = response.headers.get("content-type") || "";
 
@@ -7026,6 +7034,16 @@ window.searchSovra = async function () {
     }
 
     const data = await response.json();
+
+    // Mainstream lane links, normalised (host without www + path) for comparison.
+    const wfeNorm = (u) => {
+      try { const x = new URL(u); return (x.hostname.replace(/^www\./, "") + x.pathname.replace(/\/$/, "")).toLowerCase(); }
+      catch (_) { return String(u || "").toLowerCase(); }
+    };
+    const wfeMainstreamData = await wfeMainstreamP;
+    const wfeMainstreamLinks = (wfeMainstreamData && Array.isArray(wfeMainstreamData.organic_results))
+      ? new Set(wfeMainstreamData.organic_results.map(r => wfeNorm(r.link)))
+      : null;
 
 /* --------------------------------
    Temporal Drift Timeline (LEFT COLUMN)
@@ -7144,7 +7162,17 @@ function renderDriftTimeline(payload) {
 results.innerHTML = `<div class="section-label">Search results</div>`;
 
 // W-F gate: show every swap with its source, above the results.
-if (wfeMeta) results.innerHTML += renderWFESwaps(wfeMeta);
+if (wfeMeta) {
+  let wfeLaneNote = "";
+  if (wfeMainstreamLinks) {
+    const wfeAll = Array.isArray(data.organic_results) ? data.organic_results : [];
+    const wfeFresh = wfeAll.filter(r => !wfeMainstreamLinks.has(wfeNorm(r.link))).length;
+    wfeLaneNote = `<div class="wfe-swaps"><div class="wfe-line">Two lanes: ${wfeFresh} of ${wfeAll.length} results surfaced only by the rephrase (marked W-F below). The other ${wfeAll.length - wfeFresh} also appear in the mainstream search for the question as typed.</div></div>`;
+  } else if (wfeMeta.scope === "rephrased") {
+    wfeLaneNote = `<div class="wfe-swaps"><div class="wfe-line">Mainstream lane unavailable this time; results not compared.</div></div>`;
+  }
+  results.innerHTML += renderWFESwaps(wfeMeta) + wfeLaneNote;
+}
 
 const list = Array.isArray(data.organic_results) ? data.organic_results : [];
 if (!list.length) {
@@ -7307,6 +7335,7 @@ list.forEach((r, i) => {
 
     <section class="card-body">
       <div class="source-id">Source — ${escapeHtml(host)}</div>
+      ${wfeMainstreamLinks && !wfeMainstreamLinks.has(wfeNorm(r.link)) ? '<div class="wfe-new" style="color:#d4a017;font-size:0.85em;">W-F: surfaced only by the rephrase — not in the mainstream results</div>' : ''}
       ${Array.isArray(r.predicate) ? r.predicate
         .filter(p => CONTEXT_FRAME_VISIBILITY[p.engine] !== false)
         .map(p => `
