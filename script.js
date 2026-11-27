@@ -6499,14 +6499,31 @@ function applyWFEQueryRewrite(originalQuery) {
   q = q.replace(/\u0001(\d+)\u0001/g, (_, i) => inserted[+i])
        .replace(/\u0000(\d+)\u0000/g, (_, i) => quoted[+i]);
 
+  // V5 (26 NOV 2026, Samuel): V4's sourced wording, run the way the original
+  // (v1, Feb 2026) ran mechanically. With the gate on, the query sent ALWAYS
+  // differs from the mainstream query, so Google returns a different top set
+  // (often from different sites) that is still relevant to the question.
+  // When no sourced term was swapped in, the voice's own recorded phrase is
+  // appended as plain words. Tested 26 Nov 2026 on 3 pass-through questions:
+  // "|" join (v1 style) returned 0 results on 3 of 3; a quoted phrase returned
+  // 0 on 1 of 3; plain words returned relevant results on 3 of 3.
+  const anchorPhrase = voice === "fuller" ? "system of white supremacy" : "system of racism white supremacy";
+  const anchorRule = WFE_LEXICON_V4.find((e) => e.id === "racism");
+  let anchor = null;
+  if (!q.toLowerCase().replace(/,/g, "").includes(anchorPhrase)) {
+    q = `${q} ${anchorPhrase}`;
+    anchor = { phrase: anchorPhrase, source: anchorRule ? anchorRule.src[voice] : "" };
+  }
+
   const words = q.split(/\s+/).filter(Boolean).length;
   return {
-    rewrittenQuery: swaps.length ? q : String(originalQuery || "").trim(),
+    rewrittenQuery: q,
     meta: {
       method: "Welsing-Fuller",
-      version: "4.0",
+      version: "5.0",
       voice,
-      scope: swaps.length ? "rephrased" : "pass-through",
+      scope: swaps.length ? "rephrased" : "anchored",
+      anchor,
       originalQuery: String(originalQuery || "").trim(),
       swaps,
       missingInVoice,
@@ -6525,15 +6542,16 @@ function renderWFESwaps(meta) {
   const voiceName = meta.voice === "fuller" ? "Neely Fuller, Jr." : "Dr. Frances Cress Welsing";
   const rows = [];
   rows.push(`<div class="section-label">W-F rephrase · voice: ${esc(voiceName)} · ${esc(meta.scope)}</div>`);
-  if (meta.scope === "rephrased") rows.push(`<div class="wfe-line">Asked: ${esc(meta.originalQuery)}</div>`);
+  if (meta.scope !== "pass-through") rows.push(`<div class="wfe-line">Asked: ${esc(meta.originalQuery)}</div>`);
   for (const s of meta.swaps) rows.push(`<div class="wfe-line">${esc(s.from)} → <b>${esc(s.to)}</b> <span class="wfe-src">[${esc(s.source || "")}]</span></div>`);
+  if (meta.anchor) rows.push(`<div class="wfe-line">Framed in the voice's own recorded words: <b>${esc(meta.anchor.phrase)}</b> <span class="wfe-src">[${esc(meta.anchor.source || "")}]</span></div>`);
   for (const m of meta.missingInVoice) rows.push(`<div class="wfe-line">${esc(m.term)}: no ${esc(voiceName)} source yet, left as typed</div>`);
   if (meta.flagged.length) rows.push(`<div class="wfe-line">No sourced term yet, left as typed: ${esc(meta.flagged.join(", "))}</div>`);
   if (meta.overLimit) rows.push(`<div class="wfe-line">Note: ${meta.words} words; Google reads about 32.</div>`);
   return `<div class="wfe-swaps">${rows.join("")}</div>`;
 }
 
-console.log("[WFE Rewrite v4.0] Voice rephrase (Welsing default / Fuller), sourced, in-place. NFIE compliant. O_f = 0.");
+console.log("[WFE Rewrite v5.0] Voice rephrase (Welsing default / Fuller), sourced, in-place + recorded framing phrase; always differs from mainstream. NFIE compliant. O_f = 0.");
 
 /* ============================================================
    VDU Module (Minimal Stub)
@@ -7282,12 +7300,12 @@ window.searchSovra = async function () {
     __run.querySent = query;
     __run.wfe = wfeMeta ? { version: wfeMeta.version, voice: wfeMeta.voice, scope: wfeMeta.scope,
       swaps: (wfeMeta.swaps || []).length, flagged: wfeMeta.flagged || [] } : null;
-    if (wfeMeta && wfeMeta.scope === "rephrased") __run.lanes = ["W-F rephrase", "mainstream (as typed)"];
+    if (wfeMeta && wfeMeta.scope !== "pass-through") __run.lanes = ["W-F rephrase", "mainstream (as typed)"];
 
     // W-F two lanes: when the gate rephrased the query, also run the
     // question as typed (mainstream lane) so results only the rephrase
     // surfaces can be marked. One extra search, only when rephrased.
-    const wfeMainstreamP = (wfeMeta && wfeMeta.scope === "rephrased")
+    const wfeMainstreamP = (wfeMeta && wfeMeta.scope !== "pass-through")
       ? (() => {
           const laneUrl = `/api/search?q=${encodeURIComponent(wfeMeta.originalQuery)}&raw=false&zse=0&wfe=0&contra=0`;
           // Same 8 s server limit as the main search: retry once on timeout.
@@ -7459,7 +7477,7 @@ if (wfeMeta) {
     const wfeAll = Array.isArray(data.organic_results) ? data.organic_results : [];
     const wfeFresh = wfeAll.filter(r => !wfeMainstreamLinks.has(wfeNorm(r.link))).length;
     wfeLaneNote = `<div class="wfe-swaps"><div class="wfe-line">Two lanes: ${wfeFresh} of ${wfeAll.length} results surfaced only by the rephrase (marked W-F below). The other ${wfeAll.length - wfeFresh} also appear in the mainstream search for the question as typed.</div></div>`;
-  } else if (wfeMeta.scope === "rephrased") {
+  } else if (wfeMeta.scope !== "pass-through") {
     wfeLaneNote = `<div class="wfe-swaps"><div class="wfe-line">Mainstream lane unavailable this time; results not compared.</div></div>`;
   }
   results.innerHTML += renderWFESwaps(wfeMeta) + wfeLaneNote;
