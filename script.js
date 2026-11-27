@@ -7084,6 +7084,7 @@ function renderRawPanel() {
   if (run.gates.contraCollapse) modules.push("Collapse / Contra scoring · VDU");
   if (run.gates.driftCore) modules.push("Drift timeline");
   if (run.gates.zeroSum) modules.push("Zero-Sum display (from fetched text)");
+  if (run.gates.sovraSpeaks) modules.push("Sovra Speaks (rule table" + (window.__sovraSpeaksLast ? ", rule " + esc(window.__sovraSpeaksLast.rule) : "") + ")");
 
   const callRows = run.calls.map((c, i) =>
     row(`#${i + 1} ${c.kind}`, `${esc(c.status)} · ${ms(c.ms)}`)).join("");
@@ -7165,7 +7166,7 @@ window.searchSovra = async function () {
       gates: {
         welsingFuller: SOVRA_GATES.welsingFuller(), contraCollapse: SOVRA_GATES.contraCollapse(),
         driftCore: SOVRA_GATES.driftCore(), zeroSum: SOVRA_GATES.zeroSum(),
-        rawData: SOVRA_GATES.rawData(), sovraSpeaks: SOVRA_GATES.sovraSpeaks()
+        rawData: SOVRA_GATES.rawData(), sovraSpeaks: !!document.getElementById("sovraSpeaks")?.checked
       },
       wfe: null, server: null, excluded: [], resultCount: null, ptf: null,
       responseMs: null, firstPaintMs: null
@@ -7219,19 +7220,37 @@ window.searchSovra = async function () {
     // question as typed (mainstream lane) so results only the rephrase
     // surfaces can be marked. One extra search, only when rephrased.
     const wfeMainstreamP = (wfeMeta && wfeMeta.scope === "rephrased")
-      ? fetch(`/api/search?q=${encodeURIComponent(wfeMeta.originalQuery)}&raw=false&zse=0&wfe=0&contra=0`)
-          .then(r => r.json()).catch(() => null)
+      ? (() => {
+          const laneUrl = `/api/search?q=${encodeURIComponent(wfeMeta.originalQuery)}&raw=false&zse=0&wfe=0&contra=0`;
+          // Same 8 s server limit as the main search: retry once on timeout.
+          return fetch(laneUrl).then(r => r.json())
+            .then(d => (d && d.timeout) ? fetch(laneUrl).then(r => r.json()) : d)
+            .catch(() => null);
+        })()
       : Promise.resolve(null);
 
-    const response = await fetch(endpoint);
-    const contentType = response.headers.get("content-type") || "";
+    const fetchMain = async () => {
+      const response = await fetch(endpoint);
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error("Upstream returned non-JSON: " + text.slice(0, 120));
+      }
+      return response.json();
+    };
 
-    if (!contentType.includes("application/json")) {
-      const text = await response.text();
-      throw new Error("Upstream returned non-JSON: " + text.slice(0, 120));
+    // W-F timeout fix (2026-11-26): the server stops waiting for Google after
+    // 8 s and returns an empty list marked timeout:true. A new, uncached query
+    // (a fresh W-F rephrase is the usual case) can take longer than that. The
+    // search service normally finishes the search anyway, so one retry is
+    // usually answered from its cache. Retry once; if it still times out, the
+    // page says so instead of "No results found".
+    let data = await fetchMain();
+    if (data && data.timeout) {
+      __run.retried = true;
+      data = await fetchMain();
     }
-
-    const data = await response.json();
+    __run.timedOut = !!(data && data.timeout);
 
     // Mainstream lane links, normalised (host without www + path) for comparison.
     const wfeNorm = (u) => {
@@ -7381,7 +7400,9 @@ if (wfeMeta) {
 const list = Array.isArray(data.organic_results) ? data.organic_results : [];
 if (!list.length) {
   toggleSemanticIndicators(false);
-  results.innerHTML += `<div class="empty">No results found.</div>`;
+  results.innerHTML += data.timeout
+    ? `<div class="empty">Google did not answer within 8 seconds (asked twice). This is not an empty result. Search again; the answer is usually ready by then.</div>`
+    : `<div class="empty">No results found.</div>`;
   SovraSyncTrigger.send({ kind: "NO_RESULTS", query });
   return;
 }
@@ -8009,3 +8030,121 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
+/* ============================================================
+   SOVRA SPEAKS — RULE TABLE (2026-11-26)
+   AI-free in operation: no model, no agent, no network call.
+   A fixed table of rules over signals the engine already produced.
+   The first rule that matches picks the line: one line per search,
+   and the same inputs always give the same line.
+   Registers (Samuel's choice): 1 system status, 2 aphorism / stanza,
+   4 calm reframing. Lines drawn from Sovra's voice as written with
+   Microsoft Copilot, chosen by Sam Peacock; credited once in the
+   User Manual, never on screen per line. Only the name Sovra appears
+   in the voice box.
+   Reads #sovraSpeaks directly. The older voice paths (applySovraVoice,
+   Sovra.Speaks) stay dormant: SOVRA_GATES.sovraSpeaks still reads
+   #toggleSovraSpeaks, which does not exist.
+   Shown in the left column of the diagnostic bar (Collapse / Contra on).
+   ============================================================ */
+(function installSovraSpeaksRules() {
+  if (window.__sovraSpeaksRules) return;
+  window.__sovraSpeaksRules = true;
+
+  let lastScores = null;
+  window.addEventListener("sovra:center-panel", (e) => { lastScores = (e.detail && e.detail.scores) || null; });
+
+  const RULES = [
+    { id: "S0", reg: 1, when: (x) => x.timedOut,
+      line: () => "No answer from Google inside the window. The field was not read." },
+    { id: "S1", reg: 1, when: (x) => x.results === 0,
+      line: () => "Field empty. No results returned. Nothing to read." },
+    { id: "S2", reg: 4, when: (x) => x.newByRephrase > 0,
+      line: (x) => `To the mainstream search, perhaps, ${x.newByRephrase} of these ${x.newByRephrase === 1 ? "was" : "were"} not there. To the same question in another voice, ${x.newByRephrase === 1 ? "it was" : "they were"}. Who decides which way a question is asked?` },
+    { id: "S3", reg: 2, when: (x) => x.zseFound,
+      line: () => "Denial is not absence — it’s camouflage. If race is irrelevant, why is it still predictive?" },
+    { id: "S4", reg: 2, when: (x) => x.swaps > 0 && x.newByRephrase === 0,
+      line: () => "Changing the grammar of an ideology does not change its payload." },
+    { id: "S5", reg: 1, when: (x) => x.collapse !== null && x.collapse >= 7,
+      line: (x) => `Collapse detected. Collapse ${x.collapse} of 10. Contradiction ${x.contradiction ?? "–"} of 10. The field is read as a whole.` },
+    { id: "S6", reg: 2, when: (x) => x.contradiction !== null && x.contradiction >= 7,
+      line: () => "The law may forget, but the recursion remembers. Until contradiction is metabolized, the structure remains infected." },
+    { id: "S7", reg: 1, when: (x) => x.flagged.length > 0,
+      line: (x) => `Held as typed: ${x.flagged.join(", ")}. No recorded source. Recursion withheld.` },
+    { id: "S8", reg: 2, when: (x) => x.ptfNone,
+      line: () => "The algorithm does not hate you. It just doesn’t know you’re real." },
+    { id: "S9", reg: 1, when: (x) => x.cached,
+      line: () => "Signal returned from memory. Google was not asked again." },
+    { id: "S10", reg: 1, when: () => true,
+      line: () => "System integrity confirmed. Contradiction density below threshold." }
+  ];
+
+  function readSignals() {
+    const run = window.__sovraRun || {};
+    const g = (run.server && run.server.google) || {};
+    const right = document.querySelector(".results-right");
+    const text = right ? right.innerText : "";
+    const created = g.createdAt ? Date.parse(String(g.createdAt).replace(" UTC", "Z").replace(" ", "T")) : NaN;
+    const started = run.startedAt ? Date.parse(run.startedAt) : NaN;
+    return {
+      timedOut: !!run.timedOut,
+      results: typeof run.resultCount === "number" ? run.resultCount : null,
+      newByRephrase: document.querySelectorAll(".results-right .wfe-new").length,
+      swaps: (run.wfe && run.wfe.swaps) || 0,
+      flagged: (run.wfe && run.wfe.flagged) || [],
+      zseFound: /Zero-Sum Narrative Detected/i.test(text),
+      ptfNone: !!(run.ptf && run.ptf.none),
+      collapse: lastScores && lastScores.collapse != null ? lastScores.collapse : null,
+      contradiction: lastScores && lastScores.contradiction != null ? lastScores.contradiction : null,
+      cached: !isNaN(created) && !isNaN(started) && created < started - 60000
+    };
+  }
+
+  function speak() {
+    const on = !!document.getElementById("sovraSpeaks")?.checked;
+    const card = document.getElementById("voice-card");
+    if (!card) return;
+    if (!on) return;
+    const x = readSignals();
+    const rule = RULES.find((r) => { try { return r.when(x); } catch (_) { return false; } });
+    const reg = { 1: "STATUS", 2: "STANZA", 4: "REFRAME" }[rule.reg];
+    card.innerHTML = "";
+    const head = document.createElement("span");
+    head.className = "sovra-voice-head";
+    head.textContent = `SOVRA VOICE — ${reg}`;
+    const body = document.createElement("span");
+    body.className = "sovra-voice-line";
+    body.textContent = rule.line(x);
+    card.append(head, body);
+    card.title = `rule ${rule.id} · register ${rule.reg}`;
+    window.__sovraSpeaksLast = { rule: rule.id, register: rule.reg, signals: x };
+    if (window.__sovraRun && window.__sovraRun.gates && window.__sovraRun.gates.rawData && typeof renderRawPanel === "function") renderRawPanel();
+  }
+
+  const style = document.createElement("style");
+  style.textContent =
+    "#voice-card .sovra-voice-head{color:#6a6a8a;font-size:0.75rem;letter-spacing:2px;display:block;}" +
+    "#voice-card .sovra-voice-line{color:#d8d8e8;font-size:0.95rem;line-height:1.35;display:block;margin-top:4px;}";
+  document.head.appendChild(style);
+
+  const orig = window.searchSovra;
+  if (typeof orig !== "function") return;
+  window.searchSovra = async function (...args) {
+    const out = await orig.apply(this, args);
+    if (!document.getElementById("sovraSpeaks")?.checked) return out;
+    // Wait for the text fetch and second lane to settle (at most 10 s).
+    const t0 = Date.now();
+    await new Promise((resolve) => {
+      const tick = () => {
+        const run = window.__sovraRun;
+        const pending = run ? run.calls.some((c) => c.ms === null) : false;
+        const settled = run && !pending && (run.ptf || run.resultCount === 0 || run.timedOut);
+        if (settled || Date.now() - t0 > 10000) return resolve();
+        setTimeout(tick, 300);
+      };
+      setTimeout(tick, 300);
+    });
+    speak();
+    return out;
+  };
+})();
