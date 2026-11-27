@@ -533,6 +533,63 @@ function ptfDropRepeatedShortLines(text) {
   return out.join(" ").replace(/\s+/g, " ").trim();
 }
 
+/* ============================================================
+   FIX 7 (26 NOV 2026) — INLINE FURNITURE STRIP
+   Requested by Samuel. Furniture that survives extraction because it
+   sits INSIDE the article block (bylines, "Updated" date stamps, photo
+   credits, in-article ad labels, read-time badges) spends word budget:
+   every leftover word near the top pushes one article word off the end
+   of the 2,000-word slice. Conservative patterns only. Everything
+   removed is returned so it can be reported, never hidden.
+   NFIE: removes page furniture, not content. O_f = 0.
+   ============================================================ */
+const PTF_NAME_TOKEN = "(?!(?:The|A|An|In|On|At|This|That|When|After|Last|For|As|It|He|She|They|We|Updated|Published)\\b)[A-Z][\\w'’.-]+";
+const PTF_MONTH = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\\.?";
+const PTF_INLINE_FURNITURE = Object.freeze([
+  // Byline: only searched in the first 400 characters of the article.
+  { kind: "byline", head: 400,
+    re: new RegExp("\\bBy\\s+" + PTF_NAME_TOKEN + "(?:\\s+" + PTF_NAME_TOKEN + "){1,3}" +
+      "(?:\\s*(?:,|and|&)\\s*" + PTF_NAME_TOKEN + "(?:\\s+" + PTF_NAME_TOKEN + "){1,3})*") },
+  // Date stamps: "Updated Nov 3, 2025, 4:10 PM ET", "Published 2025-11-03".
+  { kind: "date stamp",
+    re: new RegExp("\\b(?:Last updated|Updated|Published|Posted)(?:\\s+on)?:?\\s+(?:" +
+      PTF_MONTH + "\\s+\\d{1,2},?\\s+\\d{4}|\\d{1,2}\\s+" + PTF_MONTH + "\\s+\\d{4}|" +
+      "\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}|\\d{4}-\\d{2}-\\d{2})" +
+      "(?:,?\\s*(?:at\\s+)?\\d{1,2}:\\d{2}\\s*(?:[ap]\\.?m\\.?)?" +
+      "(?:\\s+(?:ET|EST|EDT|CT|CST|CDT|MT|PT|PST|PDT|UTC|GMT))?)?", "gi") },
+  // Photo credits.
+  { kind: "photo credit", re: /\((?:Photo|Image|Picture|Credit)s?(?:\s+credit)?:?[^)]{0,80}\)/gi },
+  { kind: "photo credit", re: /\b(?:Photo|Image|Picture)(?:\s+credit)?:\s+[^.|]{1,60}?(?:\/\s*|via\s+)(?:Getty Images|Shutterstock|AP|Reuters|AFP|Alamy|iStock)\b/g },
+  { kind: "photo credit", re: /\b(?:Getty Images|Shutterstock|iStockphoto|Alamy Stock Photo)\b/g },
+  // In-article ad labels.
+  { kind: "ad label", re: /\b(?:Story|Article) continues below (?:this )?advertisement\b/gi },
+  { kind: "ad label", re: /\b(?:ADVERTISEMENT|SPONSORED CONTENT)\b/g },
+  { kind: "ad label", re: /(?:^|(?<=[.!?]\s))Advertisement(?=\s+[A-Z])/g },
+  // Read-time badges: "5 min read".
+  { kind: "read time", re: /\b\d{1,3}\s*(?:min|minute)s?\.?\s+read\b/gi }
+]);
+
+function ptfStripInlineFurniture(text) {
+  if (!text) return { text: "", removed: [], removedWords: 0 };
+  const removed = [];
+  let t = text;
+  for (const p of PTF_INLINE_FURNITURE) {
+    if (p.head) {
+      const head = t.slice(0, p.head);
+      const m = head.match(p.re);
+      if (m) {
+        removed.push({ kind: p.kind, text: m[0] });
+        t = head.replace(p.re, " ") + t.slice(p.head);
+      }
+    } else {
+      t = t.replace(p.re, (m) => { removed.push({ kind: p.kind, text: m }); return " "; });
+    }
+  }
+  t = t.replace(/\s+/g, " ").trim();
+  const removedWords = removed.reduce((a, r) => a + r.text.trim().split(/\s+/).filter(Boolean).length, 0);
+  return { text: t, removed, removedWords };
+}
+
 function extractMainContent(html) {
   if (!html || typeof html !== "string") return "";
   if (typeof DOMParser === "undefined") return extractReadableText(html);
@@ -610,7 +667,10 @@ function extractMainContent(html) {
       // FIX 6: extract the article before counting, so the word budget is
       // spent on prose rather than on page furniture.
       const rawText  = extractReadableText(data.html);
-      const readable = extractMainContent(data.html);
+      // FIX 7: strip bylines / date stamps / credits / ad labels left inside
+      // the article block, so they do not spend the word budget.
+      const furniture = ptfStripInlineFurniture(extractMainContent(data.html));
+      const readable = furniture.text;
       const text     = sliceFirstWords(readable, PTF_CONFIG.maxWords);
       const wordCount = text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
 
@@ -623,6 +683,9 @@ function extractMainContent(html) {
         ok: true,
         url,
         text,
+        // FIX 7: the whole extracted article (furniture stripped, no word cap)
+        // for the counting detectors (PCA, Zero-Sum).
+        fullText: readable,
         wordCount,
         extraction: Object.freeze({
           method:      (typeof DOMParser === "undefined") ? "fallback-regex" : "density",
@@ -630,7 +693,9 @@ function extractMainContent(html) {
           extractedWords: keptWords,
           droppedWords:   Math.max(0, rawWords - keptWords),
           truncated:      keptWords > PTF_CONFIG.maxWords,
-          maxWords:       PTF_CONFIG.maxWords
+          maxWords:       PTF_CONFIG.maxWords,
+          furnitureWords: furniture.removedWords,
+          furnitureRemoved: Object.freeze(furniture.removed.slice(0, 20).map(r => Object.freeze(r)))
         }),
         host: data.host || (() => {
           try { return new URL(url).hostname; } catch (_) { return ""; }
@@ -7091,7 +7156,10 @@ function renderRawPanel() {
 
   const ptf = run.ptf
     ? (run.ptf.none ? `none admitted · ${esc(run.ptf.trail || "no candidates")}`
-                    : `${esc(run.ptf.host)} · result #${run.ptf.rank} · ${esc(run.ptf.words)} words${run.ptf.trail ? " · path: " + esc(run.ptf.trail) : ""}`)
+                    : `${esc(run.ptf.host)} · result #${run.ptf.rank} · ${esc(run.ptf.words)} words (modules)` +
+                      (run.ptf.fullWords != null ? ` · ${esc(run.ptf.fullWords)} words (PCA, Zero-Sum)` : "") +
+                      (run.ptf.furnitureWords ? ` · ${esc(run.ptf.furnitureWords)} furniture words removed` : "") +
+                      `${run.ptf.trail ? " · path: " + esc(run.ptf.trail) : ""}`)
     : (pending ? "running…" : "–");
 
   panel.innerHTML = `
@@ -7729,9 +7797,15 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
     }
 
     const ptfText = fetched.text;
+    // FIX 7 (26 NOV 2026, Samuel): the two counting detectors read the WHOLE
+    // extracted article, not the 2,000-word slice, so nothing past the cap is
+    // missed (a hit) or wrongly counted absent (an omission). Counting words
+    // is cheap. The heavier modules keep the slice.
+    const ptfFullText = fetched.fullText || ptfText;
+    const ptfFullWords = ptfFullText.trim().split(/\s+/).filter(Boolean).length;
 
     // --- Module 1: ZSE — zero-sum economic markers ---
-    const ptfZSE = runZSEStandalone(ptfText);
+    const ptfZSE = runZSEStandalone(ptfFullText);
 
     // --- Module 2: Trifold — rigidity / constraint / inspiration ---
     const ptfTrifold = TrifoldMirrorProtocol.evaluateClaim(ptfText).diagnostics;
@@ -7748,7 +7822,8 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
     });
 
     // --- Module 4b: PCA — measure what should have appeared but didn't ---
-    const ptfPCA = window.Sovra.PCA.measure(ptfText, query);
+    // FIX 7: whole article, not the slice.
+    const ptfPCA = window.Sovra.PCA.measure(ptfFullText, query);
 
     // --- Module 4c: SDS Drift Lens — verbiage drift on primary source ---
     // Same text, same moment, same pipe as all other scanners.
@@ -7814,10 +7889,11 @@ Sovra.drift.logVector([list.length, Number(list[0]?.confidence || 0)], {
 
     // Zero-Sum gate: show the zero-sum scan of the fetched source text.
     if (SOVRA_GATES.zeroSum()) {
-      renderZSEStandalone(ptfZSE, { host: fetched.host, rank: ptfIndex + 1, words: fetched.wordCount });
+      renderZSEStandalone(ptfZSE, { host: fetched.host, rank: ptfIndex + 1, words: ptfFullWords });
     }
     if (window.__sovraRun) {
-      window.__sovraRun.ptf = { host: fetched.host, rank: ptfIndex + 1, words: fetched.wordCount, trail: attemptTrail };
+      window.__sovraRun.ptf = { host: fetched.host, rank: ptfIndex + 1, words: fetched.wordCount, trail: attemptTrail,
+        fullWords: ptfFullWords, furnitureWords: fetched.extraction?.furnitureWords || 0 };
       renderRawPanel();
     }
 
