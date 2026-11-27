@@ -124,6 +124,7 @@ Machine‑Human Collaboration · Non‑Coercive Systems Interaction
       </ul>
       <p><b>How to read it:</b> unmarked results are what the mainstream search also returns. Marked results are what the Welsing-Fuller framing adds.</p>
       <p><b>Cost:</b> one extra search, only when a term was actually swapped. If nothing was swapped, the panel says "pass-through" and no extra search runs.</p>
+      <p><b>If Google is slow:</b> a new question can take Google more than 8 seconds to answer. The engine then asks once more, and the second answer usually comes back quickly. If there is still no answer, the page says Google did not answer, not that nothing was found. Search again.</p>
 
       <h4>Collapse / Contra</h4>
       <ul>
@@ -154,9 +155,14 @@ Machine‑Human Collaboration · Non‑Coercive Systems Interaction
       </ul>
       <p><b>How to read it:</b> a match means the language is present in that source. It does not mean the source endorses it. A page that explains or criticises a zero-sum idea uses the same words. Open the page and read it in context.</p>
 
-      <h4>Sovra Speaks — <span class="manual-status">not active (known issue)</span></h4>
-      <p>Intended: a short observation in Sovra's voice, drawn from the whole field of results, in the left column of the diagnostic bar.</p>
-      <p>Current status: the checkbox is not connected to the engine, so ticking it has no effect yet. When connected, it will need Collapse / Contra on to be visible.</p>
+      <h4>Sovra Speaks</h4>
+      <ul>
+        <li>Shows one short line in Sovra's voice in the left column of the diagnostic bar, after the search finishes. Collapse / Contra must be on for the bar to show.</li>
+        <li>No AI runs here. A fixed table of rules reads what the engine has already measured: how many results came back, how many only the W-F rephrase found, Zero-Sum markers in the fetched text, the Collapse and Contradiction scores, words left as typed, whether a page could be read, and whether the answer came from the search service's cache. The first rule that matches picks the line.</li>
+        <li>Three kinds of line: STATUS (what the system did), STANZA (a short verse line) and REFRAME (the same results seen from another position).</li>
+        <li>The same search gives the same line. Hover over the line to see which rule chose it.</li>
+      </ul>
+      <p><b>How to read it:</b> the line comes from the measurements, not from reading the pages. It points at something in the results; it does not tell you what to conclude.</p>
       <p>Credit: Sovra's voice draws on lines written with Microsoft Copilot (the "Vara" conversation, January–March 2026), voiced as Sovra and chosen by Sam Peacock. The credit is given here once rather than on each line.</p>
 
       <h4>Raw Data</h4>
